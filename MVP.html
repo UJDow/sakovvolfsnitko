@@ -115,12 +115,9 @@ function renderBlocksChips() {
 
 function getSelectionOffsets() {
   // Получаем смещения выделения относительно исходного текста
-  const range = window.getSelection().getRangeAt(0);
-  const pre = document.createElement('div');
-  pre.appendChild(range.cloneRange().commonAncestorContainer.cloneNode(true));
-  // Но проще держать “каноничный” текст в state и находить подстроку:
   const selected = window.getSelection().toString();
   if (!selected) return null;
+  // Берём первое вхождение выделения в исходном тексте
   const start = state.dreamText.indexOf(selected);
   if (start === -1) return null;
   return { start, end: start + selected.length };
