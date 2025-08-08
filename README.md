@@ -1,1 +1,319 @@
-# MVP
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Snova Web MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    textarea, input, button { font: inherit; }
+    textarea { width: 100%; min-height: 140px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
+    .dream-view { line-height: 1.6; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px dashed #ddd; min-height: 100px; white-space: pre-wrap; }
+    mark[data-block] { background: #ffe9a8; padding: 0 2px; border-radius: 3px; cursor: pointer; }
+    .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }
+    .chip.active { background: #2f6fff; color: #fff; }
+    .chat { display: flex; flex-direction: column; gap: 8px; height: 360px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
+    .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
+    .bot { background: #eef2ff; align-self: flex-start; }
+    .user { background: #eafbea; align-self: flex-end; }
+    .quick { display: flex; gap: 8px; margin-top: 6px; }
+    .muted { color: #666; font-size: 12px; }
+    .footer { margin-top: 12px; display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Snova — веб‑MVP (без хранения)</h1>
+
+  <div class="row">
+    <div class="card">
+      <h3>1) Введите сон</h3>
+      <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
+      <div class="controls">
+        <button id="render">Показать для выделения</button>
+        <button id="auto">Автоблоки (через предложения)</button>
+        <button id="clear">Очистить всё</button>
+        <button id="export">Экспорт JSON</button>
+        <input type="file" id="import" accept="application/json" />
+      </div>
+      <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
+      <div class="dream-view" id="dreamView"></div>
+      <div class="controls">
+        <button id="addBlock">Добавить блок по выделению</button>
+      </div>
+      <div class="blocks" id="blocks"></div>
+    </div>
+
+    <div class="card">
+      <h3>2) Диалог по блоку</h3>
+      <div id="currentBlock" class="muted">Блок не выбран</div>
+      <div class="chat" id="chat"></div>
+      <div class="footer">
+        <button class="primary" id="start">Начать/продолжить</button>
+        <button id="finish">Завершить анализ</button>
+        <button id="resetChat">Сбросить чат</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const state = {
+  dreamText: '',
+  blocks: [], // {id, start, end, text, done:false, chat: []}
+  currentBlockId: null,
+  nextBlockId: 1
+};
+
+function byId(id) { return document.getElementById(id); }
+
+function renderDreamView() {
+  const dv = byId('dreamView');
+  const t = state.dreamText || '';
+  if (!t) { dv.textContent = ''; return; }
+
+  // Оборачиваем диапазоны блоков в <mark data-block>
+  let parts = [];
+  const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
+  let idx = 0;
+  for (const b of sorted) {
+    if (b.start > idx) parts.push(escapeHtml(t.slice(idx, b.start)));
+    parts.push(`<mark data-block="${b.id}" title="Блок #${b.id}">${escapeHtml(t.slice(b.start, b.end))}</mark>`);
+    idx = b.end;
+  }
+  if (idx < t.length) parts.push(escapeHtml(t.slice(idx)));
+  dv.innerHTML = parts.join('');
+  // Клик по подсветке → выбрать блок
+  dv.querySelectorAll('mark[data-block]').forEach(m => {
+    m.addEventListener('click', () => selectBlock(Number(m.getAttribute('data-block'))));
+  });
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+function renderBlocksChips() {
+  const wrap = byId('blocks');
+  wrap.innerHTML = '';
+  state.blocks.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+    el.addEventListener('click', ()=>selectBlock(b.id));
+    wrap.appendChild(el);
+  });
+  const cb = byId('currentBlock');
+  const b = getCurrentBlock();
+  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  renderDreamView();
+  renderChat();
+}
+
+function getSelectionOffsets() {
+  // Получаем смещения выделения относительно исходного текста
+  const range = window.getSelection().getRangeAt(0);
+  const pre = document.createElement('div');
+  pre.appendChild(range.cloneRange().commonAncestorContainer.cloneNode(true));
+  // Но проще держать “каноничный” текст в state и находить подстроку:
+  const selected = window.getSelection().toString();
+  if (!selected) return null;
+  const start = state.dreamText.indexOf(selected);
+  if (start === -1) return null;
+  return { start, end: start + selected.length };
+}
+
+function addBlockFromSelection() {
+  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  const off = getSelectionOffsets();
+  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
+  // Проверяем пересечения с существующими блоками
+  for (const b of state.blocks) {
+    if (!(off.end <= b.start || off.start >= b.end)) {
+      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
+    }
+  }
+  const id = state.nextBlockId++;
+  const text = state.dreamText.slice(off.start, off.end);
+  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
+function autoSplitSentences() {
+  const t = (state.dreamText||'').trim();
+  if (!t) return;
+  const sentences = t.split(/(?<=[\.\!\?])\s+/).filter(s => s.length > 10).slice(0, 5);
+  state.blocks = [];
+  state.nextBlockId = 1;
+  let cursor = 0;
+  for (const s of sentences) {
+    const start = state.dreamText.indexOf(s, cursor);
+    const end = start + s.length;
+    const id = state.nextBlockId++;
+    state.blocks.push({ id, start, end, text: s, done: false, chat: [] });
+    cursor = end;
+  }
+  state.currentBlockId = state.blocks[0]?.id || null;
+  renderBlocksChips();
+}
+
+function selectBlock(id) {
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
+function getCurrentBlock() {
+  return state.blocks.find(b => b.id === state.currentBlockId) || null;
+}
+
+function renderChat() {
+  const chat = byId('chat');
+  const b = getCurrentBlock();
+  chat.innerHTML = '';
+  if (!b) return;
+  for (const m of b.chat) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
+    div.textContent = m.text;
+    chat.appendChild(div);
+    if (m.quickReplies?.length) {
+      const q = document.createElement('div');
+      q.className = 'quick';
+      m.quickReplies.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.addEventListener('click', ()=>sendAnswer(opt));
+        q.appendChild(btn);
+      });
+      chat.appendChild(q);
+    }
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function appendBot(text, quickReplies = []) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'bot', text, quickReplies });
+  renderChat();
+}
+
+function appendUser(text) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'user', text });
+  renderChat();
+}
+
+async function startOrContinue() {
+  const b = getCurrentBlock();
+  if (!b) return alert('Выберите блок.');
+  // Если чат пуст — начнём с первого вопроса
+  if (b.chat.length === 0) {
+    const first = await llmNextStep(b.text, []);
+    appendBot(first.question, first.quickReplies);
+  } else {
+    // Продолжим после последнего ответа пользователя
+    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
+    const next = await llmNextStep(b.text, history);
+    if (next.whenFinish && next.finalSummary) {
+      appendBot('Итоговая интерпретация: ' + next.finalSummary, []);
+      b.done = true;
+    } else {
+      appendBot(next.question, next.quickReplies);
+    }
+  }
+}
+
+function sendAnswer(ans) {
+  appendUser(ans);
+  startOrContinue();
+}
+
+function finishAnalysis() {
+  const b = getCurrentBlock(); if (!b) return;
+  b.done = true;
+  appendBot('Готов завершить. Сохранить вывод или продолжить уточнение?', ['Сохранить', 'Другая интерпретация', 'Написать свою']);
+}
+
+function resetChat() {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat = [];
+  b.done = false;
+  renderChat();
+}
+
+// Заглушка LLM: имитирует стиль вопросов из ТЗ/макета.
+// Позже заменим на вызов вашего прокси.
+async function llmNextStep(blockText, history) {
+  // Пример простейшего состояния
+  const lower = blockText.toLowerCase();
+  if (!history.length) {
+    return {
+      question: `Давай разберём блок: “${blockText.slice(0,80)}${blockText.length>80?'…':''}”. Что для тебя ключевое в этом фрагменте?`,
+      quickReplies: ['Герои/символы', 'Эмоции', 'Сюжет/действие']
+    };
+  }
+  const lastUser = [...history].reverse().find(m => m.role==='user')?.text || '';
+  if (/да|yes/i.test(lastUser)) {
+    return { question: 'Можно ли сказать, что этот блок о стремлении к неуязвимости?', quickReplies: ['Да','Нет','Не совсем'] };
+  }
+  if (/сохранить/i.test(lastUser)) {
+    return { whenFinish: true, finalSummary: 'Блок связан с желанием психологической неуязвимости после пережитого конфликта.' };
+  }
+  // Ветка для “шахматы”
+  if (lower.includes('шахмат')) {
+    if (history.filter(m=>m.role==='bot').length < 3) {
+      return { question: 'Важно ли для тебя побеждать в шахматах?', quickReplies: ['Да','Нет','Не совсем'] };
+    }
+    return { question: 'Можно ли сказать, что этот блок о вашем желании стать фигурой победителя?', quickReplies: ['Да','Нет','Не совсем'] };
+  }
+  // Общий вопрос по эмоциям
+  if (/эмоци/i.test(lastUser.toLowerCase())) {
+    return { question: 'Какая эмоция здесь сильнее всего?', quickReplies: ['Радость','Страх','Тревога','Грусть','Злость','Удивление'] };
+  }
+  // Финал по умолчанию
+  return { whenFinish: true, finalSummary: 'Блок указывает на способ справляться с давлением через обход и ловкость, что поддерживает чувство контроля.' };
+}
+
+// Экспорт/импорт
+function exportJSON() {
+  const data = { dreamText: state.dreamText, blocks: state.blocks };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'snova_session.json';
+  a.click();
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      state.dreamText = data.dreamText || '';
+      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[]}));
+      state.nextBlockId = Math.max(1, ...state.blocks.map(b=>b.id+1));
+      state.currentBlockId = state.blocks[0]?.id || null;
+      byId('dream').value = state.dreamText;
+      renderBlocksChips();
+    } catch(e) { alert('Не удалось импортировать JSON'); }
+  };
+  reader.readAsText(file);
+}
+
+// Handlers
+byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDreamView(); };
+byId('addBlock').onclick = addBlockFromSelection;
+byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
+byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
+byId('export').onclick = exportJSON;
+byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
+byId('start').onclick = startOrContinue;
+byId('finish').onclick = finishAnalysis;
+byId('resetChat').onclick = resetChat;
+</script>
+</body>
+</html>
