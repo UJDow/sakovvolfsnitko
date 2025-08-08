@@ -1,1 +1,319 @@
-<html><head><meta content="text/html; charset=UTF-8" http-equiv="content-type"><style type="text/css">ol{margin:0;padding:0}table td,table th{padding:0}.c1{color:#000000;font-weight:400;text-decoration:none;vertical-align:baseline;font-size:11pt;font-family:"Arial";font-style:normal}.c0{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:left}.c3{background-color:#ffffff;max-width:468pt;padding:72pt 72pt 72pt 72pt}.c2{height:11pt}.title{padding-top:0pt;color:#000000;font-size:26pt;padding-bottom:3pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}.subtitle{padding-top:0pt;color:#666666;font-size:15pt;padding-bottom:16pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}li{color:#000000;font-size:11pt;font-family:"Arial"}p{margin:0;color:#000000;font-size:11pt;font-family:"Arial"}h1{padding-top:20pt;color:#000000;font-size:20pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h2{padding-top:18pt;color:#000000;font-size:16pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h3{padding-top:16pt;color:#434343;font-size:14pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h4{padding-top:14pt;color:#666666;font-size:12pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h5{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h6{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;font-style:italic;orphans:2;widows:2;text-align:left}</style></head><body class="c3 doc-content"><p class="c0"><span class="c1">&lt;!doctype html&gt;</span></p><p class="c0"><span class="c1">&lt;html lang=&quot;ru&quot;&gt;</span></p><p class="c0"><span class="c1">&lt;head&gt;</span></p><p class="c0"><span class="c1">&nbsp; &lt;meta charset=&quot;utf-8&quot; /&gt;</span></p><p class="c0"><span class="c1">&nbsp; &lt;title&gt;Snova Web MVP&lt;/title&gt;</span></p><p class="c0"><span class="c1">&nbsp; &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;</span></p><p class="c0"><span class="c1">&nbsp; &lt;style&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; h1 { font-size: 20px; margin: 0 0 12px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; textarea, input, button { font: inherit; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; textarea { width: 100%; min-height: 140px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .dream-view { line-height: 1.6; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px dashed #ddd; min-height: 100px; white-space: pre-wrap; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; mark[data-block] { background: #ffe9a8; padding: 0 2px; border-radius: 3px; cursor: pointer; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .chip.active { background: #2f6fff; color: #fff; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .chat { display: flex; flex-direction: column; gap: 8px; height: 360px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .bot { background: #eef2ff; align-self: flex-start; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .user { background: #eafbea; align-self: flex-end; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .quick { display: flex; gap: 8px; margin-top: 6px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .muted { color: #666; font-size: 12px; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; .footer { margin-top: 12px; display: flex; gap: 8px; }</span></p><p class="c0"><span class="c1">&nbsp; &lt;/style&gt;</span></p><p class="c0"><span class="c1">&lt;/head&gt;</span></p><p class="c0"><span class="c1">&lt;body&gt;</span></p><p class="c0"><span class="c1">&nbsp; &lt;h1&gt;Snova &mdash; &#1074;&#1077;&#1073;&#8209;MVP (&#1073;&#1077;&#1079; &#1093;&#1088;&#1072;&#1085;&#1077;&#1085;&#1080;&#1103;)&lt;/h1&gt;</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">&nbsp; &lt;div class=&quot;row&quot;&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &lt;div class=&quot;card&quot;&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;h3&gt;1) &#1042;&#1074;&#1077;&#1076;&#1080;&#1090;&#1077; &#1089;&#1086;&#1085;&lt;/h3&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;textarea id=&quot;dream&quot; placeholder=&quot;&#1042;&#1089;&#1090;&#1072;&#1074;&#1100;&#1090;&#1077; &#1090;&#1077;&#1082;&#1089;&#1090; &#1089;&#1085;&#1072;...&quot;&gt;&lt;/textarea&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div class=&quot;controls&quot;&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;render&quot;&gt;&#1055;&#1086;&#1082;&#1072;&#1079;&#1072;&#1090;&#1100; &#1076;&#1083;&#1103; &#1074;&#1099;&#1076;&#1077;&#1083;&#1077;&#1085;&#1080;&#1103;&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;auto&quot;&gt;&#1040;&#1074;&#1090;&#1086;&#1073;&#1083;&#1086;&#1082;&#1080; (&#1095;&#1077;&#1088;&#1077;&#1079; &#1087;&#1088;&#1077;&#1076;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1103;)&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;clear&quot;&gt;&#1054;&#1095;&#1080;&#1089;&#1090;&#1080;&#1090;&#1100; &#1074;&#1089;&#1105;&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;export&quot;&gt;&#1069;&#1082;&#1089;&#1087;&#1086;&#1088;&#1090; JSON&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;input type=&quot;file&quot; id=&quot;import&quot; accept=&quot;application/json&quot; /&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;p class=&quot;muted&quot;&gt;&#1042;&#1099;&#1076;&#1077;&#1083;&#1080;&#1090;&#1077; &#1084;&#1099;&#1096;&#1082;&#1086;&#1081; &#1092;&#1088;&#1072;&#1075;&#1084;&#1077;&#1085;&#1090; &#1085;&#1080;&#1078;&#1077; &#1080; &#1085;&#1072;&#1078;&#1084;&#1080;&#1090;&#1077; &ldquo;&#1044;&#1086;&#1073;&#1072;&#1074;&#1080;&#1090;&#1100; &#1073;&#1083;&#1086;&#1082;&rdquo;.&lt;/p&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div class=&quot;dream-view&quot; id=&quot;dreamView&quot;&gt;&lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div class=&quot;controls&quot;&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;addBlock&quot;&gt;&#1044;&#1086;&#1073;&#1072;&#1074;&#1080;&#1090;&#1100; &#1073;&#1083;&#1086;&#1082; &#1087;&#1086; &#1074;&#1099;&#1076;&#1077;&#1083;&#1077;&#1085;&#1080;&#1102;&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div class=&quot;blocks&quot; id=&quot;blocks&quot;&gt;&lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &lt;/div&gt;</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &lt;div class=&quot;card&quot;&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;h3&gt;2) &#1044;&#1080;&#1072;&#1083;&#1086;&#1075; &#1087;&#1086; &#1073;&#1083;&#1086;&#1082;&#1091;&lt;/h3&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div id=&quot;currentBlock&quot; class=&quot;muted&quot;&gt;&#1041;&#1083;&#1086;&#1082; &#1085;&#1077; &#1074;&#1099;&#1073;&#1088;&#1072;&#1085;&lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div class=&quot;chat&quot; id=&quot;chat&quot;&gt;&lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;div class=&quot;footer&quot;&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button class=&quot;primary&quot; id=&quot;start&quot;&gt;&#1053;&#1072;&#1095;&#1072;&#1090;&#1100;/&#1087;&#1088;&#1086;&#1076;&#1086;&#1083;&#1078;&#1080;&#1090;&#1100;&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;finish&quot;&gt;&#1047;&#1072;&#1074;&#1077;&#1088;&#1096;&#1080;&#1090;&#1100; &#1072;&#1085;&#1072;&#1083;&#1080;&#1079;&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; &lt;button id=&quot;resetChat&quot;&gt;&#1057;&#1073;&#1088;&#1086;&#1089;&#1080;&#1090;&#1100; &#1095;&#1072;&#1090;&lt;/button&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &lt;/div&gt;</span></p><p class="c0"><span class="c1">&nbsp; &lt;/div&gt;</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">&lt;script&gt;</span></p><p class="c0"><span class="c1">const state = {</span></p><p class="c0"><span class="c1">&nbsp; dreamText: &#39;&#39;,</span></p><p class="c0"><span class="c1">&nbsp; blocks: [], // {id, start, end, text, done:false, chat: []}</span></p><p class="c0"><span class="c1">&nbsp; currentBlockId: null,</span></p><p class="c0"><span class="c1">&nbsp; nextBlockId: 1</span></p><p class="c0"><span class="c1">};</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function byId(id) { return document.getElementById(id); }</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function renderDreamView() {</span></p><p class="c0"><span class="c1">&nbsp; const dv = byId(&#39;dreamView&#39;);</span></p><p class="c0"><span class="c1">&nbsp; const t = state.dreamText || &#39;&#39;;</span></p><p class="c0"><span class="c1">&nbsp; if (!t) { dv.textContent = &#39;&#39;; return; }</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">&nbsp; // &#1054;&#1073;&#1086;&#1088;&#1072;&#1095;&#1080;&#1074;&#1072;&#1077;&#1084; &#1076;&#1080;&#1072;&#1087;&#1072;&#1079;&#1086;&#1085;&#1099; &#1073;&#1083;&#1086;&#1082;&#1086;&#1074; &#1074; &lt;mark data-block&gt;</span></p><p class="c0"><span class="c1">&nbsp; let parts = [];</span></p><p class="c0"><span class="c1">&nbsp; const sorted = [...state.blocks].sort((a,b)=&gt;a.start-b.start);</span></p><p class="c0"><span class="c1">&nbsp; let idx = 0;</span></p><p class="c0"><span class="c1">&nbsp; for (const b of sorted) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; if (b.start &gt; idx) parts.push(escapeHtml(t.slice(idx, b.start)));</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; parts.push(`&lt;mark data-block=&quot;${b.id}&quot; title=&quot;&#1041;&#1083;&#1086;&#1082; #${b.id}&quot;&gt;${escapeHtml(t.slice(b.start, b.end))}&lt;/mark&gt;`);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; idx = b.end;</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; if (idx &lt; t.length) parts.push(escapeHtml(t.slice(idx)));</span></p><p class="c0"><span class="c1">&nbsp; dv.innerHTML = parts.join(&#39;&#39;);</span></p><p class="c0"><span class="c1">&nbsp; // &#1050;&#1083;&#1080;&#1082; &#1087;&#1086; &#1087;&#1086;&#1076;&#1089;&#1074;&#1077;&#1090;&#1082;&#1077; &rarr; &#1074;&#1099;&#1073;&#1088;&#1072;&#1090;&#1100; &#1073;&#1083;&#1086;&#1082;</span></p><p class="c0"><span class="c1">&nbsp; dv.querySelectorAll(&#39;mark[data-block]&#39;).forEach(m =&gt; {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; m.addEventListener(&#39;click&#39;, () =&gt; selectBlock(Number(m.getAttribute(&#39;data-block&#39;))));</span></p><p class="c0"><span class="c1">&nbsp; });</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function escapeHtml(s){ return s.replace(/[&amp;&lt;&gt;&quot;&#39;]/g, c=&gt;({ &#39;&amp;&#39;:&#39;&amp;amp;&#39;,&#39;&lt;&#39;:&#39;&amp;lt;&#39;,&#39;&gt;&#39;:&#39;&amp;gt;&#39;,&#39;&quot;&#39;:&#39;&amp;quot;&#39;,&quot;&#39;&quot;:&#39;&amp;#39;&#39; }[c])); }</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function renderBlocksChips() {</span></p><p class="c0"><span class="c1">&nbsp; const wrap = byId(&#39;blocks&#39;);</span></p><p class="c0"><span class="c1">&nbsp; wrap.innerHTML = &#39;&#39;;</span></p><p class="c0"><span class="c1">&nbsp; state.blocks.forEach(b =&gt; {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const el = document.createElement(&#39;div&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; el.className = &#39;chip&#39; + (b.id === state.currentBlockId ? &#39; active&#39; : &#39;&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length&gt;20?&#39;&hellip;&#39;:&#39;&#39;}`;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; el.addEventListener(&#39;click&#39;, ()=&gt;selectBlock(b.id));</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; wrap.appendChild(el);</span></p><p class="c0"><span class="c1">&nbsp; });</span></p><p class="c0"><span class="c1">&nbsp; const cb = byId(&#39;currentBlock&#39;);</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock();</span></p><p class="c0"><span class="c1">&nbsp; cb.textContent = b ? `&#1058;&#1077;&#1082;&#1091;&#1097;&#1080;&#1081; &#1073;&#1083;&#1086;&#1082; #${b.id}: &ldquo;${b.text}&rdquo;` : &#39;&#1041;&#1083;&#1086;&#1082; &#1085;&#1077; &#1074;&#1099;&#1073;&#1088;&#1072;&#1085;&#39;;</span></p><p class="c0"><span class="c1">&nbsp; renderDreamView();</span></p><p class="c0"><span class="c1">&nbsp; renderChat();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function getSelectionOffsets() {</span></p><p class="c0"><span class="c1">&nbsp; // &#1055;&#1086;&#1083;&#1091;&#1095;&#1072;&#1077;&#1084; &#1089;&#1084;&#1077;&#1097;&#1077;&#1085;&#1080;&#1103; &#1074;&#1099;&#1076;&#1077;&#1083;&#1077;&#1085;&#1080;&#1103; &#1086;&#1090;&#1085;&#1086;&#1089;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086; &#1080;&#1089;&#1093;&#1086;&#1076;&#1085;&#1086;&#1075;&#1086; &#1090;&#1077;&#1082;&#1089;&#1090;&#1072;</span></p><p class="c0"><span class="c1">&nbsp; const range = window.getSelection().getRangeAt(0);</span></p><p class="c0"><span class="c1">&nbsp; const pre = document.createElement(&#39;div&#39;);</span></p><p class="c0"><span class="c1">&nbsp; pre.appendChild(range.cloneRange().commonAncestorContainer.cloneNode(true));</span></p><p class="c0"><span class="c1">&nbsp; // &#1053;&#1086; &#1087;&#1088;&#1086;&#1097;&#1077; &#1076;&#1077;&#1088;&#1078;&#1072;&#1090;&#1100; &ldquo;&#1082;&#1072;&#1085;&#1086;&#1085;&#1080;&#1095;&#1085;&#1099;&#1081;&rdquo; &#1090;&#1077;&#1082;&#1089;&#1090; &#1074; state &#1080; &#1085;&#1072;&#1093;&#1086;&#1076;&#1080;&#1090;&#1100; &#1087;&#1086;&#1076;&#1089;&#1090;&#1088;&#1086;&#1082;&#1091;:</span></p><p class="c0"><span class="c1">&nbsp; const selected = window.getSelection().toString();</span></p><p class="c0"><span class="c1">&nbsp; if (!selected) return null;</span></p><p class="c0"><span class="c1">&nbsp; const start = state.dreamText.indexOf(selected);</span></p><p class="c0"><span class="c1">&nbsp; if (start === -1) return null;</span></p><p class="c0"><span class="c1">&nbsp; return { start, end: start + selected.length };</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function addBlockFromSelection() {</span></p><p class="c0"><span class="c1">&nbsp; if (!state.dreamText) return alert(&#39;&#1057;&#1085;&#1072;&#1095;&#1072;&#1083;&#1072; &#1074;&#1089;&#1090;&#1072;&#1074;&#1100;&#1090;&#1077; &#1089;&#1086;&#1085; &#1080; &#1085;&#1072;&#1078;&#1084;&#1080;&#1090;&#1077; &ldquo;&#1055;&#1086;&#1082;&#1072;&#1079;&#1072;&#1090;&#1100; &#1076;&#1083;&#1103; &#1074;&#1099;&#1076;&#1077;&#1083;&#1077;&#1085;&#1080;&#1103;&rdquo;.&#39;);</span></p><p class="c0"><span class="c1">&nbsp; const off = getSelectionOffsets();</span></p><p class="c0"><span class="c1">&nbsp; if (!off) return alert(&#39;&#1053;&#1077; &#1091;&#1076;&#1072;&#1083;&#1086;&#1089;&#1100; &#1086;&#1087;&#1088;&#1077;&#1076;&#1077;&#1083;&#1080;&#1090;&#1100; &#1074;&#1099;&#1076;&#1077;&#1083;&#1077;&#1085;&#1080;&#1077;. &#1042;&#1099;&#1076;&#1077;&#1083;&#1080;&#1090;&#1077; &#1090;&#1077;&#1082;&#1089;&#1090; &#1074; &#1086;&#1073;&#1083;&#1072;&#1089;&#1090;&#1080; &#1085;&#1080;&#1078;&#1077;.&#39;);</span></p><p class="c0"><span class="c1">&nbsp; // &#1055;&#1088;&#1086;&#1074;&#1077;&#1088;&#1103;&#1077;&#1084; &#1087;&#1077;&#1088;&#1077;&#1089;&#1077;&#1095;&#1077;&#1085;&#1080;&#1103; &#1089; &#1089;&#1091;&#1097;&#1077;&#1089;&#1090;&#1074;&#1091;&#1102;&#1097;&#1080;&#1084;&#1080; &#1073;&#1083;&#1086;&#1082;&#1072;&#1084;&#1080;</span></p><p class="c0"><span class="c1">&nbsp; for (const b of state.blocks) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; if (!(off.end &lt;= b.start || off.start &gt;= b.end)) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; return alert(&#39;&#1069;&#1090;&#1086;&#1090; &#1092;&#1088;&#1072;&#1075;&#1084;&#1077;&#1085;&#1090; &#1087;&#1077;&#1088;&#1077;&#1089;&#1077;&#1082;&#1072;&#1077;&#1090;&#1089;&#1103; &#1089; &#1091;&#1078;&#1077; &#1076;&#1086;&#1073;&#1072;&#1074;&#1083;&#1077;&#1085;&#1085;&#1099;&#1084; &#1073;&#1083;&#1086;&#1082;&#1086;&#1084;.&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; const id = state.nextBlockId++;</span></p><p class="c0"><span class="c1">&nbsp; const text = state.dreamText.slice(off.start, off.end);</span></p><p class="c0"><span class="c1">&nbsp; state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });</span></p><p class="c0"><span class="c1">&nbsp; state.currentBlockId = id;</span></p><p class="c0"><span class="c1">&nbsp; renderBlocksChips();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function autoSplitSentences() {</span></p><p class="c0"><span class="c1">&nbsp; const t = (state.dreamText||&#39;&#39;).trim();</span></p><p class="c0"><span class="c1">&nbsp; if (!t) return;</span></p><p class="c0"><span class="c1">&nbsp; const sentences = t.split(/(?&lt;=[\.\!\?])\s+/).filter(s =&gt; s.length &gt; 10).slice(0, 5);</span></p><p class="c0"><span class="c1">&nbsp; state.blocks = [];</span></p><p class="c0"><span class="c1">&nbsp; state.nextBlockId = 1;</span></p><p class="c0"><span class="c1">&nbsp; let cursor = 0;</span></p><p class="c0"><span class="c1">&nbsp; for (const s of sentences) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const start = state.dreamText.indexOf(s, cursor);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const end = start + s.length;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const id = state.nextBlockId++;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; state.blocks.push({ id, start, end, text: s, done: false, chat: [] });</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; cursor = end;</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; state.currentBlockId = state.blocks[0]?.id || null;</span></p><p class="c0"><span class="c1">&nbsp; renderBlocksChips();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function selectBlock(id) {</span></p><p class="c0"><span class="c1">&nbsp; state.currentBlockId = id;</span></p><p class="c0"><span class="c1">&nbsp; renderBlocksChips();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function getCurrentBlock() {</span></p><p class="c0"><span class="c1">&nbsp; return state.blocks.find(b =&gt; b.id === state.currentBlockId) || null;</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function renderChat() {</span></p><p class="c0"><span class="c1">&nbsp; const chat = byId(&#39;chat&#39;);</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock();</span></p><p class="c0"><span class="c1">&nbsp; chat.innerHTML = &#39;&#39;;</span></p><p class="c0"><span class="c1">&nbsp; if (!b) return;</span></p><p class="c0"><span class="c1">&nbsp; for (const m of b.chat) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const div = document.createElement(&#39;div&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; div.className = &#39;msg &#39; + (m.role === &#39;bot&#39; ? &#39;bot&#39; : &#39;user&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; div.textContent = m.text;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; chat.appendChild(div);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; if (m.quickReplies?.length) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; const q = document.createElement(&#39;div&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; q.className = &#39;quick&#39;;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; m.quickReplies.forEach(opt =&gt; {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; const btn = document.createElement(&#39;button&#39;);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; btn.textContent = opt;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; btn.addEventListener(&#39;click&#39;, ()=&gt;sendAnswer(opt));</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; &nbsp; q.appendChild(btn);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; });</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; chat.appendChild(q);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; chat.scrollTop = chat.scrollHeight;</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function appendBot(text, quickReplies = []) {</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock(); if (!b) return;</span></p><p class="c0"><span class="c1">&nbsp; b.chat.push({ role: &#39;bot&#39;, text, quickReplies });</span></p><p class="c0"><span class="c1">&nbsp; renderChat();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function appendUser(text) {</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock(); if (!b) return;</span></p><p class="c0"><span class="c1">&nbsp; b.chat.push({ role: &#39;user&#39;, text });</span></p><p class="c0"><span class="c1">&nbsp; renderChat();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">async function startOrContinue() {</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock();</span></p><p class="c0"><span class="c1">&nbsp; if (!b) return alert(&#39;&#1042;&#1099;&#1073;&#1077;&#1088;&#1080;&#1090;&#1077; &#1073;&#1083;&#1086;&#1082;.&#39;);</span></p><p class="c0"><span class="c1">&nbsp; // &#1045;&#1089;&#1083;&#1080; &#1095;&#1072;&#1090; &#1087;&#1091;&#1089;&#1090; &mdash; &#1085;&#1072;&#1095;&#1085;&#1105;&#1084; &#1089; &#1087;&#1077;&#1088;&#1074;&#1086;&#1075;&#1086; &#1074;&#1086;&#1087;&#1088;&#1086;&#1089;&#1072;</span></p><p class="c0"><span class="c1">&nbsp; if (b.chat.length === 0) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const first = await llmNextStep(b.text, []);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; appendBot(first.question, first.quickReplies);</span></p><p class="c0"><span class="c1">&nbsp; } else {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; // &#1055;&#1088;&#1086;&#1076;&#1086;&#1083;&#1078;&#1080;&#1084; &#1087;&#1086;&#1089;&#1083;&#1077; &#1087;&#1086;&#1089;&#1083;&#1077;&#1076;&#1085;&#1077;&#1075;&#1086; &#1086;&#1090;&#1074;&#1077;&#1090;&#1072; &#1087;&#1086;&#1083;&#1100;&#1079;&#1086;&#1074;&#1072;&#1090;&#1077;&#1083;&#1103;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const history = b.chat.map(m =&gt; ({ role: m.role, text: m.text }));</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; const next = await llmNextStep(b.text, history);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; if (next.whenFinish &amp;&amp; next.finalSummary) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; appendBot(&#39;&#1048;&#1090;&#1086;&#1075;&#1086;&#1074;&#1072;&#1103; &#1080;&#1085;&#1090;&#1077;&#1088;&#1087;&#1088;&#1077;&#1090;&#1072;&#1094;&#1080;&#1103;: &#39; + next.finalSummary, []);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; b.done = true;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; } else {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; appendBot(next.question, next.quickReplies);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function sendAnswer(ans) {</span></p><p class="c0"><span class="c1">&nbsp; appendUser(ans);</span></p><p class="c0"><span class="c1">&nbsp; startOrContinue();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function finishAnalysis() {</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock(); if (!b) return;</span></p><p class="c0"><span class="c1">&nbsp; b.done = true;</span></p><p class="c0"><span class="c1">&nbsp; appendBot(&#39;&#1043;&#1086;&#1090;&#1086;&#1074; &#1079;&#1072;&#1074;&#1077;&#1088;&#1096;&#1080;&#1090;&#1100;. &#1057;&#1086;&#1093;&#1088;&#1072;&#1085;&#1080;&#1090;&#1100; &#1074;&#1099;&#1074;&#1086;&#1076; &#1080;&#1083;&#1080; &#1087;&#1088;&#1086;&#1076;&#1086;&#1083;&#1078;&#1080;&#1090;&#1100; &#1091;&#1090;&#1086;&#1095;&#1085;&#1077;&#1085;&#1080;&#1077;?&#39;, [&#39;&#1057;&#1086;&#1093;&#1088;&#1072;&#1085;&#1080;&#1090;&#1100;&#39;, &#39;&#1044;&#1088;&#1091;&#1075;&#1072;&#1103; &#1080;&#1085;&#1090;&#1077;&#1088;&#1087;&#1088;&#1077;&#1090;&#1072;&#1094;&#1080;&#1103;&#39;, &#39;&#1053;&#1072;&#1087;&#1080;&#1089;&#1072;&#1090;&#1100; &#1089;&#1074;&#1086;&#1102;&#39;]);</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function resetChat() {</span></p><p class="c0"><span class="c1">&nbsp; const b = getCurrentBlock(); if (!b) return;</span></p><p class="c0"><span class="c1">&nbsp; b.chat = [];</span></p><p class="c0"><span class="c1">&nbsp; b.done = false;</span></p><p class="c0"><span class="c1">&nbsp; renderChat();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">// &#1047;&#1072;&#1075;&#1083;&#1091;&#1096;&#1082;&#1072; LLM: &#1080;&#1084;&#1080;&#1090;&#1080;&#1088;&#1091;&#1077;&#1090; &#1089;&#1090;&#1080;&#1083;&#1100; &#1074;&#1086;&#1087;&#1088;&#1086;&#1089;&#1086;&#1074; &#1080;&#1079; &#1058;&#1047;/&#1084;&#1072;&#1082;&#1077;&#1090;&#1072;.</span></p><p class="c0"><span class="c1">// &#1055;&#1086;&#1079;&#1078;&#1077; &#1079;&#1072;&#1084;&#1077;&#1085;&#1080;&#1084; &#1085;&#1072; &#1074;&#1099;&#1079;&#1086;&#1074; &#1074;&#1072;&#1096;&#1077;&#1075;&#1086; &#1087;&#1088;&#1086;&#1082;&#1089;&#1080;.</span></p><p class="c0"><span class="c1">async function llmNextStep(blockText, history) {</span></p><p class="c0"><span class="c1">&nbsp; // &#1055;&#1088;&#1080;&#1084;&#1077;&#1088; &#1087;&#1088;&#1086;&#1089;&#1090;&#1077;&#1081;&#1096;&#1077;&#1075;&#1086; &#1089;&#1086;&#1089;&#1090;&#1086;&#1103;&#1085;&#1080;&#1103;</span></p><p class="c0"><span class="c1">&nbsp; const lower = blockText.toLowerCase();</span></p><p class="c0"><span class="c1">&nbsp; if (!history.length) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; return {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; question: `&#1044;&#1072;&#1074;&#1072;&#1081; &#1088;&#1072;&#1079;&#1073;&#1077;&#1088;&#1105;&#1084; &#1073;&#1083;&#1086;&#1082;: &ldquo;${blockText.slice(0,80)}${blockText.length&gt;80?&#39;&hellip;&#39;:&#39;&#39;}&rdquo;. &#1063;&#1090;&#1086; &#1076;&#1083;&#1103; &#1090;&#1077;&#1073;&#1103; &#1082;&#1083;&#1102;&#1095;&#1077;&#1074;&#1086;&#1077; &#1074; &#1101;&#1090;&#1086;&#1084; &#1092;&#1088;&#1072;&#1075;&#1084;&#1077;&#1085;&#1090;&#1077;?`,</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; quickReplies: [&#39;&#1043;&#1077;&#1088;&#1086;&#1080;/&#1089;&#1080;&#1084;&#1074;&#1086;&#1083;&#1099;&#39;, &#39;&#1069;&#1084;&#1086;&#1094;&#1080;&#1080;&#39;, &#39;&#1057;&#1102;&#1078;&#1077;&#1090;/&#1076;&#1077;&#1081;&#1089;&#1090;&#1074;&#1080;&#1077;&#39;]</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; };</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; const lastUser = [...history].reverse().find(m =&gt; m.role===&#39;user&#39;)?.text || &#39;&#39;;</span></p><p class="c0"><span class="c1">&nbsp; if (/&#1076;&#1072;|yes/i.test(lastUser)) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; return { question: &#39;&#1052;&#1086;&#1078;&#1085;&#1086; &#1083;&#1080; &#1089;&#1082;&#1072;&#1079;&#1072;&#1090;&#1100;, &#1095;&#1090;&#1086; &#1101;&#1090;&#1086;&#1090; &#1073;&#1083;&#1086;&#1082; &#1086; &#1089;&#1090;&#1088;&#1077;&#1084;&#1083;&#1077;&#1085;&#1080;&#1080; &#1082; &#1085;&#1077;&#1091;&#1103;&#1079;&#1074;&#1080;&#1084;&#1086;&#1089;&#1090;&#1080;?&#39;, quickReplies: [&#39;&#1044;&#1072;&#39;,&#39;&#1053;&#1077;&#1090;&#39;,&#39;&#1053;&#1077; &#1089;&#1086;&#1074;&#1089;&#1077;&#1084;&#39;] };</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; if (/&#1089;&#1086;&#1093;&#1088;&#1072;&#1085;&#1080;&#1090;&#1100;/i.test(lastUser)) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; return { whenFinish: true, finalSummary: &#39;&#1041;&#1083;&#1086;&#1082; &#1089;&#1074;&#1103;&#1079;&#1072;&#1085; &#1089; &#1078;&#1077;&#1083;&#1072;&#1085;&#1080;&#1077;&#1084; &#1087;&#1089;&#1080;&#1093;&#1086;&#1083;&#1086;&#1075;&#1080;&#1095;&#1077;&#1089;&#1082;&#1086;&#1081; &#1085;&#1077;&#1091;&#1103;&#1079;&#1074;&#1080;&#1084;&#1086;&#1089;&#1090;&#1080; &#1087;&#1086;&#1089;&#1083;&#1077; &#1087;&#1077;&#1088;&#1077;&#1078;&#1080;&#1090;&#1086;&#1075;&#1086; &#1082;&#1086;&#1085;&#1092;&#1083;&#1080;&#1082;&#1090;&#1072;.&#39; };</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; // &#1042;&#1077;&#1090;&#1082;&#1072; &#1076;&#1083;&#1103; &ldquo;&#1096;&#1072;&#1093;&#1084;&#1072;&#1090;&#1099;&rdquo;</span></p><p class="c0"><span class="c1">&nbsp; if (lower.includes(&#39;&#1096;&#1072;&#1093;&#1084;&#1072;&#1090;&#39;)) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; if (history.filter(m=&gt;m.role===&#39;bot&#39;).length &lt; 3) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; return { question: &#39;&#1042;&#1072;&#1078;&#1085;&#1086; &#1083;&#1080; &#1076;&#1083;&#1103; &#1090;&#1077;&#1073;&#1103; &#1087;&#1086;&#1073;&#1077;&#1078;&#1076;&#1072;&#1090;&#1100; &#1074; &#1096;&#1072;&#1093;&#1084;&#1072;&#1090;&#1072;&#1093;?&#39;, quickReplies: [&#39;&#1044;&#1072;&#39;,&#39;&#1053;&#1077;&#1090;&#39;,&#39;&#1053;&#1077; &#1089;&#1086;&#1074;&#1089;&#1077;&#1084;&#39;] };</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; return { question: &#39;&#1052;&#1086;&#1078;&#1085;&#1086; &#1083;&#1080; &#1089;&#1082;&#1072;&#1079;&#1072;&#1090;&#1100;, &#1095;&#1090;&#1086; &#1101;&#1090;&#1086;&#1090; &#1073;&#1083;&#1086;&#1082; &#1086; &#1074;&#1072;&#1096;&#1077;&#1084; &#1078;&#1077;&#1083;&#1072;&#1085;&#1080;&#1080; &#1089;&#1090;&#1072;&#1090;&#1100; &#1092;&#1080;&#1075;&#1091;&#1088;&#1086;&#1081; &#1087;&#1086;&#1073;&#1077;&#1076;&#1080;&#1090;&#1077;&#1083;&#1103;?&#39;, quickReplies: [&#39;&#1044;&#1072;&#39;,&#39;&#1053;&#1077;&#1090;&#39;,&#39;&#1053;&#1077; &#1089;&#1086;&#1074;&#1089;&#1077;&#1084;&#39;] };</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; // &#1054;&#1073;&#1097;&#1080;&#1081; &#1074;&#1086;&#1087;&#1088;&#1086;&#1089; &#1087;&#1086; &#1101;&#1084;&#1086;&#1094;&#1080;&#1103;&#1084;</span></p><p class="c0"><span class="c1">&nbsp; if (/&#1101;&#1084;&#1086;&#1094;&#1080;/i.test(lastUser.toLowerCase())) {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; return { question: &#39;&#1050;&#1072;&#1082;&#1072;&#1103; &#1101;&#1084;&#1086;&#1094;&#1080;&#1103; &#1079;&#1076;&#1077;&#1089;&#1100; &#1089;&#1080;&#1083;&#1100;&#1085;&#1077;&#1077; &#1074;&#1089;&#1077;&#1075;&#1086;?&#39;, quickReplies: [&#39;&#1056;&#1072;&#1076;&#1086;&#1089;&#1090;&#1100;&#39;,&#39;&#1057;&#1090;&#1088;&#1072;&#1093;&#39;,&#39;&#1058;&#1088;&#1077;&#1074;&#1086;&#1075;&#1072;&#39;,&#39;&#1043;&#1088;&#1091;&#1089;&#1090;&#1100;&#39;,&#39;&#1047;&#1083;&#1086;&#1089;&#1090;&#1100;&#39;,&#39;&#1059;&#1076;&#1080;&#1074;&#1083;&#1077;&#1085;&#1080;&#1077;&#39;] };</span></p><p class="c0"><span class="c1">&nbsp; }</span></p><p class="c0"><span class="c1">&nbsp; // &#1060;&#1080;&#1085;&#1072;&#1083; &#1087;&#1086; &#1091;&#1084;&#1086;&#1083;&#1095;&#1072;&#1085;&#1080;&#1102;</span></p><p class="c0"><span class="c1">&nbsp; return { whenFinish: true, finalSummary: &#39;&#1041;&#1083;&#1086;&#1082; &#1091;&#1082;&#1072;&#1079;&#1099;&#1074;&#1072;&#1077;&#1090; &#1085;&#1072; &#1089;&#1087;&#1086;&#1089;&#1086;&#1073; &#1089;&#1087;&#1088;&#1072;&#1074;&#1083;&#1103;&#1090;&#1100;&#1089;&#1103; &#1089; &#1076;&#1072;&#1074;&#1083;&#1077;&#1085;&#1080;&#1077;&#1084; &#1095;&#1077;&#1088;&#1077;&#1079; &#1086;&#1073;&#1093;&#1086;&#1076; &#1080; &#1083;&#1086;&#1074;&#1082;&#1086;&#1089;&#1090;&#1100;, &#1095;&#1090;&#1086; &#1087;&#1086;&#1076;&#1076;&#1077;&#1088;&#1078;&#1080;&#1074;&#1072;&#1077;&#1090; &#1095;&#1091;&#1074;&#1089;&#1090;&#1074;&#1086; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1103;.&#39; };</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">// &#1069;&#1082;&#1089;&#1087;&#1086;&#1088;&#1090;/&#1080;&#1084;&#1087;&#1086;&#1088;&#1090;</span></p><p class="c0"><span class="c1">function exportJSON() {</span></p><p class="c0"><span class="c1">&nbsp; const data = { dreamText: state.dreamText, blocks: state.blocks };</span></p><p class="c0"><span class="c1">&nbsp; const blob = new Blob([JSON.stringify(data, null, 2)], {type:&#39;application/json&#39;});</span></p><p class="c0"><span class="c1">&nbsp; const a = document.createElement(&#39;a&#39;);</span></p><p class="c0"><span class="c1">&nbsp; a.href = URL.createObjectURL(blob);</span></p><p class="c0"><span class="c1">&nbsp; a.download = &#39;snova_session.json&#39;;</span></p><p class="c0"><span class="c1">&nbsp; a.click();</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">function importJSON(file) {</span></p><p class="c0"><span class="c1">&nbsp; const reader = new FileReader();</span></p><p class="c0"><span class="c1">&nbsp; reader.onload = () =&gt; {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; try {</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; const data = JSON.parse(reader.result);</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; state.dreamText = data.dreamText || &#39;&#39;;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; state.blocks = (data.blocks || []).map(b =&gt; ({...b, chat: b.chat||[]}));</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; state.nextBlockId = Math.max(1, ...state.blocks.map(b=&gt;b.id+1));</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; state.currentBlockId = state.blocks[0]?.id || null;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; byId(&#39;dream&#39;).value = state.dreamText;</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; &nbsp; renderBlocksChips();</span></p><p class="c0"><span class="c1">&nbsp; &nbsp; } catch(e) { alert(&#39;&#1053;&#1077; &#1091;&#1076;&#1072;&#1083;&#1086;&#1089;&#1100; &#1080;&#1084;&#1087;&#1086;&#1088;&#1090;&#1080;&#1088;&#1086;&#1074;&#1072;&#1090;&#1100; JSON&#39;); }</span></p><p class="c0"><span class="c1">&nbsp; };</span></p><p class="c0"><span class="c1">&nbsp; reader.readAsText(file);</span></p><p class="c0"><span class="c1">}</span></p><p class="c0 c2"><span class="c1"></span></p><p class="c0"><span class="c1">// Handlers</span></p><p class="c0"><span class="c1">byId(&#39;render&#39;).onclick = () =&gt; { state.dreamText = byId(&#39;dream&#39;).value; renderDreamView(); };</span></p><p class="c0"><span class="c1">byId(&#39;addBlock&#39;).onclick = addBlockFromSelection;</span></p><p class="c0"><span class="c1">byId(&#39;auto&#39;).onclick = () =&gt; { state.dreamText = byId(&#39;dream&#39;).value; autoSplitSentences(); };</span></p><p class="c0"><span class="c1">byId(&#39;clear&#39;).onclick = () =&gt; { state.dreamText = &#39;&#39;; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId(&#39;dream&#39;).value=&#39;&#39;; renderBlocksChips(); };</span></p><p class="c0"><span class="c1">byId(&#39;export&#39;).onclick = exportJSON;</span></p><p class="c0"><span class="c1">byId(&#39;import&#39;).onchange = e =&gt; e.target.files[0] &amp;&amp; importJSON(e.target.files[0]);</span></p><p class="c0"><span class="c1">byId(&#39;start&#39;).onclick = startOrContinue;</span></p><p class="c0"><span class="c1">byId(&#39;finish&#39;).onclick = finishAnalysis;</span></p><p class="c0"><span class="c1">byId(&#39;resetChat&#39;).onclick = resetChat;</span></p><p class="c0"><span class="c1">&lt;/script&gt;</span></p><p class="c0"><span class="c1">&lt;/body&gt;</span></p><p class="c0"><span>&lt;/html&gt;</span></p></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Snova Web MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    textarea, input, button { font: inherit; }
+    textarea { width: 100%; min-height: 140px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
+    .dream-view { line-height: 1.6; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px dashed #ddd; min-height: 100px; white-space: pre-wrap; }
+    mark[data-block] { background: #ffe9a8; padding: 0 2px; border-radius: 3px; cursor: pointer; }
+    .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }
+    .chip.active { background: #2f6fff; color: #fff; }
+    .chat { display: flex; flex-direction: column; gap: 8px; height: 360px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
+    .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
+    .bot { background: #eef2ff; align-self: flex-start; }
+    .user { background: #eafbea; align-self: flex-end; }
+    .quick { display: flex; gap: 8px; margin-top: 6px; }
+    .muted { color: #666; font-size: 12px; }
+    .footer { margin-top: 12px; display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Snova — веб‑MVP (без хранения)</h1>
+
+  <div class="row">
+    <div class="card">
+      <h3>1) Введите сон</h3>
+      <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
+      <div class="controls">
+        <button id="render">Показать для выделения</button>
+        <button id="auto">Автоблоки (через предложения)</button>
+        <button id="clear">Очистить всё</button>
+        <button id="export">Экспорт JSON</button>
+        <input type="file" id="import" accept="application/json" />
+      </div>
+      <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
+      <div class="dream-view" id="dreamView"></div>
+      <div class="controls">
+        <button id="addBlock">Добавить блок по выделению</button>
+      </div>
+      <div class="blocks" id="blocks"></div>
+    </div>
+
+    <div class="card">
+      <h3>2) Диалог по блоку</h3>
+      <div id="currentBlock" class="muted">Блок не выбран</div>
+      <div class="chat" id="chat"></div>
+      <div class="footer">
+        <button class="primary" id="start">Начать/продолжить</button>
+        <button id="finish">Завершить анализ</button>
+        <button id="resetChat">Сбросить чат</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const state = {
+  dreamText: '',
+  blocks: [], // {id, start, end, text, done:false, chat: []}
+  currentBlockId: null,
+  nextBlockId: 1
+};
+
+function byId(id) { return document.getElementById(id); }
+
+function renderDreamView() {
+  const dv = byId('dreamView');
+  const t = state.dreamText || '';
+  if (!t) { dv.textContent = ''; return; }
+
+  // Оборачиваем диапазоны блоков в <mark data-block>
+  let parts = [];
+  const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
+  let idx = 0;
+  for (const b of sorted) {
+    if (b.start > idx) parts.push(escapeHtml(t.slice(idx, b.start)));
+    parts.push(`<mark data-block="${b.id}" title="Блок #${b.id}">${escapeHtml(t.slice(b.start, b.end))}</mark>`);
+    idx = b.end;
+  }
+  if (idx < t.length) parts.push(escapeHtml(t.slice(idx)));
+  dv.innerHTML = parts.join('');
+  // Клик по подсветке → выбрать блок
+  dv.querySelectorAll('mark[data-block]').forEach(m => {
+    m.addEventListener('click', () => selectBlock(Number(m.getAttribute('data-block'))));
+  });
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+function renderBlocksChips() {
+  const wrap = byId('blocks');
+  wrap.innerHTML = '';
+  state.blocks.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+    el.addEventListener('click', ()=>selectBlock(b.id));
+    wrap.appendChild(el);
+  });
+  const cb = byId('currentBlock');
+  const b = getCurrentBlock();
+  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  renderDreamView();
+  renderChat();
+}
+
+function getSelectionOffsets() {
+  // Получаем смещения выделения относительно исходного текста
+  const range = window.getSelection().getRangeAt(0);
+  const pre = document.createElement('div');
+  pre.appendChild(range.cloneRange().commonAncestorContainer.cloneNode(true));
+  // Но проще держать “каноничный” текст в state и находить подстроку:
+  const selected = window.getSelection().toString();
+  if (!selected) return null;
+  const start = state.dreamText.indexOf(selected);
+  if (start === -1) return null;
+  return { start, end: start + selected.length };
+}
+
+function addBlockFromSelection() {
+  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  const off = getSelectionOffsets();
+  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
+  // Проверяем пересечения с существующими блоками
+  for (const b of state.blocks) {
+    if (!(off.end <= b.start || off.start >= b.end)) {
+      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
+    }
+  }
+  const id = state.nextBlockId++;
+  const text = state.dreamText.slice(off.start, off.end);
+  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
+function autoSplitSentences() {
+  const t = (state.dreamText||'').trim();
+  if (!t) return;
+  const sentences = t.split(/(?<=[\.\!\?])\s+/).filter(s => s.length > 10).slice(0, 5);
+  state.blocks = [];
+  state.nextBlockId = 1;
+  let cursor = 0;
+  for (const s of sentences) {
+    const start = state.dreamText.indexOf(s, cursor);
+    const end = start + s.length;
+    const id = state.nextBlockId++;
+    state.blocks.push({ id, start, end, text: s, done: false, chat: [] });
+    cursor = end;
+  }
+  state.currentBlockId = state.blocks[0]?.id || null;
+  renderBlocksChips();
+}
+
+function selectBlock(id) {
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
+function getCurrentBlock() {
+  return state.blocks.find(b => b.id === state.currentBlockId) || null;
+}
+
+function renderChat() {
+  const chat = byId('chat');
+  const b = getCurrentBlock();
+  chat.innerHTML = '';
+  if (!b) return;
+  for (const m of b.chat) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
+    div.textContent = m.text;
+    chat.appendChild(div);
+    if (m.quickReplies?.length) {
+      const q = document.createElement('div');
+      q.className = 'quick';
+      m.quickReplies.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.addEventListener('click', ()=>sendAnswer(opt));
+        q.appendChild(btn);
+      });
+      chat.appendChild(q);
+    }
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function appendBot(text, quickReplies = []) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'bot', text, quickReplies });
+  renderChat();
+}
+
+function appendUser(text) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'user', text });
+  renderChat();
+}
+
+async function startOrContinue() {
+  const b = getCurrentBlock();
+  if (!b) return alert('Выберите блок.');
+  // Если чат пуст — начнём с первого вопроса
+  if (b.chat.length === 0) {
+    const first = await llmNextStep(b.text, []);
+    appendBot(first.question, first.quickReplies);
+  } else {
+    // Продолжим после последнего ответа пользователя
+    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
+    const next = await llmNextStep(b.text, history);
+    if (next.whenFinish && next.finalSummary) {
+      appendBot('Итоговая интерпретация: ' + next.finalSummary, []);
+      b.done = true;
+    } else {
+      appendBot(next.question, next.quickReplies);
+    }
+  }
+}
+
+function sendAnswer(ans) {
+  appendUser(ans);
+  startOrContinue();
+}
+
+function finishAnalysis() {
+  const b = getCurrentBlock(); if (!b) return;
+  b.done = true;
+  appendBot('Готов завершить. Сохранить вывод или продолжить уточнение?', ['Сохранить', 'Другая интерпретация', 'Написать свою']);
+}
+
+function resetChat() {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat = [];
+  b.done = false;
+  renderChat();
+}
+
+// Заглушка LLM: имитирует стиль вопросов из ТЗ/макета.
+// Позже заменим на вызов вашего прокси.
+async function llmNextStep(blockText, history) {
+  // Пример простейшего состояния
+  const lower = blockText.toLowerCase();
+  if (!history.length) {
+    return {
+      question: `Давай разберём блок: “${blockText.slice(0,80)}${blockText.length>80?'…':''}”. Что для тебя ключевое в этом фрагменте?`,
+      quickReplies: ['Герои/символы', 'Эмоции', 'Сюжет/действие']
+    };
+  }
+  const lastUser = [...history].reverse().find(m => m.role==='user')?.text || '';
+  if (/да|yes/i.test(lastUser)) {
+    return { question: 'Можно ли сказать, что этот блок о стремлении к неуязвимости?', quickReplies: ['Да','Нет','Не совсем'] };
+  }
+  if (/сохранить/i.test(lastUser)) {
+    return { whenFinish: true, finalSummary: 'Блок связан с желанием психологической неуязвимости после пережитого конфликта.' };
+  }
+  // Ветка для “шахматы”
+  if (lower.includes('шахмат')) {
+    if (history.filter(m=>m.role==='bot').length < 3) {
+      return { question: 'Важно ли для тебя побеждать в шахматах?', quickReplies: ['Да','Нет','Не совсем'] };
+    }
+    return { question: 'Можно ли сказать, что этот блок о вашем желании стать фигурой победителя?', quickReplies: ['Да','Нет','Не совсем'] };
+  }
+  // Общий вопрос по эмоциям
+  if (/эмоци/i.test(lastUser.toLowerCase())) {
+    return { question: 'Какая эмоция здесь сильнее всего?', quickReplies: ['Радость','Страх','Тревога','Грусть','Злость','Удивление'] };
+  }
+  // Финал по умолчанию
+  return { whenFinish: true, finalSummary: 'Блок указывает на способ справляться с давлением через обход и ловкость, что поддерживает чувство контроля.' };
+}
+
+// Экспорт/импорт
+function exportJSON() {
+  const data = { dreamText: state.dreamText, blocks: state.blocks };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'snova_session.json';
+  a.click();
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      state.dreamText = data.dreamText || '';
+      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[]}));
+      state.nextBlockId = Math.max(1, ...state.blocks.map(b=>b.id+1));
+      state.currentBlockId = state.blocks[0]?.id || null;
+      byId('dream').value = state.dreamText;
+      renderBlocksChips();
+    } catch(e) { alert('Не удалось импортировать JSON'); }
+  };
+  reader.readAsText(file);
+}
+
+// Handlers
+byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDreamView(); };
+byId('addBlock').onclick = addBlockFromSelection;
+byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
+byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
+byId('export').onclick = exportJSON;
+byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
+byId('start').onclick = startOrContinue;
+byId('finish').onclick = finishAnalysis;
+byId('resetChat').onclick = resetChat;
+</script>
+</body>
+</html>
