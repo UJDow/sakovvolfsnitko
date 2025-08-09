@@ -245,37 +245,99 @@ function resetChat() {
   renderChat();
 }
 
-// Заглушка LLM: имитирует стиль вопросов из ТЗ/макета.
-// Позже заменим на вызов вашего прокси.
+// Заменяем заглушку на реальную интеграцию с DeepSeek API
 async function llmNextStep(blockText, history) {
-  // Пример простейшего состояния
-  const lower = blockText.toLowerCase();
-  if (!history.length) {
+  // 1. Формируем системный промпт для AI
+  const systemPrompt = `Ты — опытный аналитик снов. Помоги пользователю проанализировать фрагмент сна. 
+  Твоя роль: задавай наводящие вопросы, чтобы пользователь сам пришел к выводам. 
+  Стиль общения: поддерживающий, любопытный, без категоричных утверждений.
+  Формат ответа: 
+    - Всегда задавай только один вопрос за раз
+    - В конце ответа предлагай 3 варианта быстрых ответов в формате: [Вариант1|Вариант2|Вариант3]
+    - Если пользователь завершает анализ - дай итоговую интерпретацию в ОДНОМ предложении`;
+
+  // 2. Формируем историю диалога в формате DeepSeek API
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: `Фрагмент сна для анализа: "${blockText}"` },
+    ...history.map(msg => ({
+      role: msg.role === "bot" ? "assistant" : "user",
+      content: msg.text
+    }))
+  ];
+
+  // 3. URL вашего прокси-сервера (ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ АДРЕС)
+  const PROXY_URL = "https://ваш-домен.ру/deepseek-proxy";
+
+  try {
+    // 4. Отправляем запрос через ваш прокси
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 500
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
+
+    // 5. Парсим ответ AI (извлекаем вопрос и варианты ответов)
+    return parseAIResponse(aiResponse);
+
+  } catch (error) {
+    console.error("Failed to call AI:", error);
     return {
-      question: `Давай разберём блок: “${blockText.slice(0,80)}${blockText.length>80?'…':''}”. Что для тебя ключевое в этом фрагменте?`,
-      quickReplies: ['Герои/символы', 'Эмоции', 'Сюжет/действие']
+      question: "Ошибка подключения к AI. Проверьте интернет и попробуйте позже.",
+      quickReplies: ["Повторить запрос"]
     };
   }
-  const lastUser = [...history].reverse().find(m => m.role==='user')?.text || '';
-  if (/да|yes/i.test(lastUser)) {
-    return { question: 'Можно ли сказать, что этот блок о стремлении к неуязвимости?', quickReplies: ['Да','Нет','Не совсем'] };
+}
+
+// 6. Функция для парсинга ответа AI
+function parseAIResponse(response) {
+  // Определяем финальный ли это ответ (содержит ключевые слова)
+  const isFinal = /интерпретация|итог|вывод|заключение/i.test(response);
+  
+  // Извлекаем быстрые ответы из конца сообщения
+  const quickReplyMatch = response.match(/\[([^\]]+)\]\s*$/);
+  let quickReplies = ["Да", "Нет", "Не уверен"]; // значения по умолчанию
+  
+  if (quickReplyMatch) {
+    quickReplies = quickReplyMatch[1].split("|").map(s => s.trim());
+    // Удаляем часть с быстрыми ответами из основного сообщения
+    response = response.replace(quickReplyMatch[0], "").trim();
   }
-  if (/сохранить/i.test(lastUser)) {
-    return { whenFinish: true, finalSummary: 'Блок связан с желанием психологической неуязвимости после пережитого конфликта.' };
+
+  // 7. Форматируем результат для фронтенда
+  if (isFinal) {
+    return { 
+      whenFinish: true, 
+      finalSummary: response 
+    };
+  } else {
+    return { 
+      question: response,
+      quickReplies: quickReplies.slice(0, 3) // не больше 3 вариантов
+    };
   }
-  // Ветка для “шахматы”
-  if (lower.includes('шахмат')) {
-    if (history.filter(m=>m.role==='bot').length < 3) {
-      return { question: 'Важно ли для тебя побеждать в шахматах?', quickReplies: ['Да','Нет','Не совсем'] };
-    }
-    return { question: 'Можно ли сказать, что этот блок о вашем желании стать фигурой победителя?', quickReplies: ['Да','Нет','Не совсем'] };
-  }
-  // Общий вопрос по эмоциям
-  if (/эмоци/i.test(lastUser.toLowerCase())) {
-    return { question: 'Какая эмоция здесь сильнее всего?', quickReplies: ['Радость','Страх','Тревога','Грусть','Злость','Удивление'] };
-  }
-  // Финал по умолчанию
-  return { whenFinish: true, finalSummary: 'Блок указывает на способ справляться с давлением через обход и ловкость, что поддерживает чувство контроля.' };
+}
+
+// 8. Обновляем функцию finishAnalysis для корректного завершения
+function finishAnalysis() {
+  const b = getCurrentBlock(); 
+  if (!b) return;
+  
+  // Добавляем специальный триггер для AI
+  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
+  startOrContinue();
 }
 
 // Экспорт/импорт
