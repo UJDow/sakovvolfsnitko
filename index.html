@@ -271,16 +271,16 @@ async function llmNextStep(blockText, history) {
 
   try {
     // 4. Отправляем запрос через ваш прокси
-    const response = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 500
-      })
-    });
+const response = await fetch(PROXY_URL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    model: "gpt-4.1",
+    messages: messages,
+    temperature: 0.7,
+    max_tokens: 500
+  })
+});
 
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
