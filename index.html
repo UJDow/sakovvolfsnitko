@@ -269,14 +269,14 @@ async function llmNextStep(blockText, history) {
   ];
 
   // URL вашего Cloudflare Worker
-  const PROXY_URL = "https://abacus-api-key.lexsnitko.workers.dev/";
+  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
     const response = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "abacus-llama-3-8b", // Уточните модель у AbacusAI
+        model: "deepseek-llm", // Уточните модель у AbacusAI
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
