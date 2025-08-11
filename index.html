@@ -206,7 +206,33 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   renderChat();
 }
-
+// Новая функция для парсинга ответов ИИ
+function parseAIResponse(text) {
+  // Ищем быстрые ответы в формате [Вариант1|Вариант2|Вариант3]
+  const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
+  let quickReplies = [];
+  let cleanText = text;
+  let isFinal = false;
+  
+  if (quickMatch) {
+    // Извлекаем варианты ответов
+    quickReplies = quickMatch[1].split(/\s*\|\s*/).slice(0, 3);
+    // Убираем блок с вариантами из основного текста
+    cleanText = text.substring(0, quickMatch.index).trim();
+  }
+  
+  // Проверяем, является ли ответ итоговым
+  const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
+  isFinal = finalKeywords.some(keyword => 
+    cleanText.toLowerCase().includes(keyword.toLowerCase())
+  );
+  
+  return {
+    question: cleanText,
+    quickReplies,
+    isFinal
+  };
+}
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
@@ -269,18 +295,18 @@ async function llmNextStep(blockText, history) {
   ];
 
   // URL вашего Cloudflare Worker
-  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
+  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/"; // ЗАМЕНЕН НА РЕАЛЬНЫЙ URL
 
   try {
     const response = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "deepseek-llm", // Уточните модель у AbacusAI
+        model: "deepseek-chat", // Используем правильную модель
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
-        stream: false // Важно для JSON ответов
+        stream: false
       })
     });
 
@@ -294,17 +320,18 @@ async function llmNextStep(blockText, history) {
     // Логирование для отладки
     console.log("API Response:", data);
     
-    // Извлекаем контент из ответа AbacusAI
+    // Извлекаем контент из ответа
     const aiResponse = data.choices[0].message.content;
     
-    // Парсим ответ
+    // Парсим ответ с помощью новой функции
     return parseAIResponse(aiResponse);
     
   } catch (error) {
     console.error("API Error:", error);
     return {
       question: `Ошибка API: ${error.message || "Проверьте подключение"}`,
-      quickReplies: ["Повторить запрос"]
+      quickReplies: ["Повторить запрос"],
+      isFinal: false
     };
   }
 }
@@ -316,7 +343,33 @@ function finishAnalysis() {
   
   // Добавляем специальный триггер для AI
   appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
-  startOrContinue();
+  
+  // Показать индикатор
+  const finishBtn = byId('finish');
+  finishBtn.disabled = true;
+  finishBtn.textContent = "Формируем итог...";
+  
+  // Запускаем процесс
+  setTimeout(() => {
+    startOrContinue();
+    finishBtn.disabled = false;
+    finishBtn.textContent = "Завершить анализ";
+  }, 500);
+}
+    
+    // Если это финальный ответ
+    if (next.isFinal) {
+      b.done = true;
+      appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
+    }
+  } catch (e) {
+    console.error(e);
+    appendBot("Ошибка при обработке запроса", ["Повторить"]);
+  } finally {
+    // Восстановить кнопку
+    startBtn.disabled = false;
+    startBtn.textContent = "Начать/продолжить";
+  }
 }
 
 // Экспорт/импорт
