@@ -71,7 +71,7 @@ const state = {
 };
 
 function byId(id) { return document.getElementById(id); }
-
+  
 function renderDreamView() {
   const dv = byId('dreamView');
   const t = state.dreamText || '';
@@ -206,7 +206,7 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   renderChat();
 }
-// Новая функция для парсинга ответов ИИ
+// Функция для парсинга ответов ИИ
 function parseAIResponse(text) {
   // Ищем быстрые ответы в формате [Вариант1|Вариант2|Вариант3]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
@@ -233,50 +233,84 @@ function parseAIResponse(text) {
     isFinal
   };
 }
-async function startOrContinue() {
-  const b = getCurrentBlock();
-  if (!b) return alert('Выберите блок.');
-  // Если чат пуст — начнём с первого вопроса
-  if (b.chat.length === 0) {
-    const first = await llmNextStep(b.text, []);
-    appendBot(first.question, first.quickReplies);
-  } else {
-    // Продолжим после последнего ответа пользователя
-    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
-    const next = await llmNextStep(b.text, history);
-    if (next.whenFinish && next.finalSummary) {
-      appendBot('Итоговая интерпретация: ' + next.finalSummary, []);
-      b.done = true;
-    } else {
-      appendBot(next.question, next.quickReplies);
-    }
-  }
-}
 
+// Отправка ответа пользователя
 function sendAnswer(ans) {
   appendUser(ans);
   startOrContinue();
 }
 
+// Основная функция для работы с ИИ
+async function startOrContinue() {
+  const b = getCurrentBlock();
+  if (!b) return alert('Выберите блок.');
+  
+  // Показать индикатор
+  const startBtn = byId('start');
+  startBtn.disabled = true;
+  startBtn.textContent = "Генерируем...";
+  
+  try {
+    // Собираем историю для запроса
+    const history = b.chat.map(m => ({ 
+      role: m.role, 
+      text: m.text 
+    }));
+    
+    const next = await llmNextStep(b.text, history);
+    
+    appendBot(next.question, next.quickReplies);
+    
+    // Если это финальный ответ
+    if (next.isFinal) {
+      b.done = true;
+      appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
+    }
+  } catch (e) {
+    console.error(e);
+    appendBot("Ошибка при обработке запроса", ["Повторить"]);
+  } finally {
+    // Восстановить кнопку
+    startBtn.disabled = false;
+    startBtn.textContent = "Начать/продолжить";
+  }
+}
+
+// Функция завершения анализа - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function finishAnalysis() {
-  const b = getCurrentBlock(); if (!b) return;
-  b.done = true;
-  appendBot('Готов завершить. Сохранить вывод или продолжить уточнение?', ['Сохранить', 'Другая интерпретация', 'Написать свою']);
+  const b = getCurrentBlock(); 
+  if (!b) return;
+  
+  // Добавляем специальный триггер для AI
+  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
+  
+  // Показать индикатор
+  const finishBtn = byId('finish');
+  finishBtn.disabled = true;
+  finishBtn.textContent = "Формируем итог...";
+  
+  // Запускаем процесс
+  startOrContinue().finally(() => {
+    finishBtn.disabled = false;
+    finishBtn.textContent = "Завершить анализ";
+  });
 }
 
 function resetChat() {
-  const b = getCurrentBlock(); if (!b) return;
+  const b = getCurrentBlock(); 
+  if (!b) return;
   b.chat = [];
   b.done = false;
   renderChat();
 }
 
-// Заменяем заглушку на реальную интеграцию с DeepSeek API
+// Интеграция с DeepSeek API
 async function llmNextStep(blockText, history) {
   const b = getCurrentBlock();
   if (!b) return {
     question: "Ошибка: блок не выбран",
-    quickReplies: ["Повторить"]
+    quickReplies: ["Повторить"],
+    isFinal: false
   };
 
   // Формируем системный промпт
@@ -294,15 +328,15 @@ async function llmNextStep(blockText, history) {
     }))
   ];
 
-  // URL вашего Cloudflare Worker
-  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/"; // ЗАМЕНЕН НА РЕАЛЬНЫЙ URL
+  // URL вашего Cloudflare Worker (ЗАМЕНИТЕ НА СВОЙ)
+  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
     const response = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "deepseek-chat", // Используем правильную модель
+        model: "deepseek-chat",
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
@@ -316,14 +350,12 @@ async function llmNextStep(blockText, history) {
     }
 
     const data = await response.json();
-    
-    // Логирование для отладки
     console.log("API Response:", data);
     
     // Извлекаем контент из ответа
     const aiResponse = data.choices[0].message.content;
     
-    // Парсим ответ с помощью новой функции
+    // Парсим ответ
     return parseAIResponse(aiResponse);
     
   } catch (error) {
@@ -333,42 +365,6 @@ async function llmNextStep(blockText, history) {
       quickReplies: ["Повторить запрос"],
       isFinal: false
     };
-  }
-}
-
-// 8. Обновляем функцию finishAnalysis для корректного завершения
-function finishAnalysis() {
-  const b = getCurrentBlock(); 
-  if (!b) return;
-  
-  // Добавляем специальный триггер для AI
-  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
-  
-  // Показать индикатор
-  const finishBtn = byId('finish');
-  finishBtn.disabled = true;
-  finishBtn.textContent = "Формируем итог...";
-  
-  // Запускаем процесс
-  setTimeout(() => {
-    startOrContinue();
-    finishBtn.disabled = false;
-    finishBtn.textContent = "Завершить анализ";
-  }, 500);
-}
-    
-    // Если это финальный ответ
-    if (next.isFinal) {
-      b.done = true;
-      appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
-    }
-  } catch (e) {
-    console.error(e);
-    appendBot("Ошибка при обработке запроса", ["Повторить"]);
-  } finally {
-    // Восстановить кнопку
-    startBtn.disabled = false;
-    startBtn.textContent = "Начать/продолжить";
   }
 }
 
