@@ -114,13 +114,12 @@ function renderBlocksChips() {
 }
 
 function getSelectionOffsets() {
-  // Получаем смещения выделения относительно исходного текста
-  const range = window.getSelection().getRangeAt(0);
-  const pre = document.createElement('div');
-  pre.appendChild(range.cloneRange().commonAncestorContainer.cloneNode(true));
-  // Но проще держать “каноничный” текст в state и находить подстроку:
-  const selected = window.getSelection().toString();
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const selected = sel.toString();
   if (!selected) return null;
+
+  // Находим позицию выбранного текста в исходном state.dreamText
   const start = state.dreamText.indexOf(selected);
   if (start === -1) return null;
   return { start, end: start + selected.length };
@@ -345,9 +344,15 @@ async function llmNextStep(blockText, history) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || response.statusText);
+      let errJson = null;
+      try { errJson = await response.json(); } catch {}
+      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
+        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
+        }
+      const msg = errJson?.message || response.statusText;
+      throw new Error(msg);
     }
+    
 
     const data = await response.json();
     console.log("API Response:", data);
