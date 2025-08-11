@@ -247,85 +247,64 @@ function resetChat() {
 
 // Заменяем заглушку на реальную интеграцию с DeepSeek API
 async function llmNextStep(blockText, history) {
-  // 1. Формируем системный промпт для AI
-  const systemPrompt = `Ты — опытный аналитик снов. Помоги пользователю проанализировать фрагмент сна. 
-  Твоя роль: задавай наводящие вопросы, чтобы пользователь сам пришел к выводам. 
-  Стиль общения: поддерживающий, любопытный, без категоричных утверждений.
-  Формат ответа: 
-    - Всегда задавай только один вопрос за раз
-    - В конце ответа предлагай 3 варианта быстрых ответов в формате: [Вариант1|Вариант2|Вариант3]
-    - Если пользователь завершает анализ - дай итоговую интерпретацию в ОДНОМ предложении`;
+  const b = getCurrentBlock();
+  if (!b) return {
+    question: "Ошибка: блок не выбран",
+    quickReplies: ["Повторить"]
+  };
 
-  // 2. Формируем историю диалога в формате DeepSeek API
+  // Формируем системный промпт
+  const systemPrompt = `Ты — опытный аналитик снов. Помоги пользователю проанализировать фрагмент сна: 
+  "${b.text}". 
+  Задавай наводящие вопросы. Стиль: поддерживающий, без категоричных утверждений.
+  В конце ответа предлагай 3 варианта быстрых ответов в формате: [Вариант1|Вариант2|Вариант3]`;
+
+  // Формируем историю диалога
   const messages = [
     { role: "system", content: systemPrompt },
-    { role: "user", content: `Фрагмент сна для анализа: "${blockText}"` },
     ...history.map(msg => ({
       role: msg.role === "bot" ? "assistant" : "user",
       content: msg.text
     }))
   ];
 
-  // 3. URL вашего прокси-сервера (ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ АДРЕС)
-  const PROXY_URL = "https://abacus-api-key.lexsnitko.workers.dev/";
+  // URL вашего Cloudflare Worker
+  const PROXY_URL = "https://your-worker.your-subdomain.workers.dev/";
 
   try {
-    // 4. Отправляем запрос через ваш прокси
-const response = await fetch(PROXY_URL, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    model: "meta/llama-3.1-8b-instruct",
-    messages: messages,
-    temperature: 0.7,
-    max_tokens: 500
-  })
-});
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "abacus-llama-3-8b", // Уточните модель у AbacusAI
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 500,
+        stream: false // Важно для JSON ответов
+      })
+    });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      const error = await response.json();
+      throw new Error(error.error?.message || response.statusText);
     }
 
     const data = await response.json();
+    
+    // Логирование для отладки
+    console.log("API Response:", data);
+    
+    // Извлекаем контент из ответа AbacusAI
     const aiResponse = data.choices[0].message.content;
-
-    // 5. Парсим ответ AI (извлекаем вопрос и варианты ответов)
+    
+    // Парсим ответ
     return parseAIResponse(aiResponse);
-
+    
   } catch (error) {
-    console.error("Failed to call AI:", error);
+    console.error("API Error:", error);
     return {
-      question: "Ошибка подключения к AI. Проверьте интернет и попробуйте позже.",
+      question: `Ошибка API: ${error.message || "Проверьте подключение"}`,
       quickReplies: ["Повторить запрос"]
-    };
-  }
-}
-
-// 6. Функция для парсинга ответа AI
-function parseAIResponse(response) {
-  // Определяем финальный ли это ответ (содержит ключевые слова)
-  const isFinal = /интерпретация|итог|вывод|заключение/i.test(response);
-  
-  // Извлекаем быстрые ответы из конца сообщения
-  const quickReplyMatch = response.match(/\[([^\]]+)\]\s*$/);
-  let quickReplies = ["Да", "Нет", "Не уверен"]; // значения по умолчанию
-  
-  if (quickReplyMatch) {
-    quickReplies = quickReplyMatch[1].split("|").map(s => s.trim());
-    // Удаляем часть с быстрыми ответами из основного сообщения
-    response = response.replace(quickReplyMatch[0], "").trim();
-  }
-
-  // 7. Форматируем результат для фронтенда
-  if (isFinal) {
-    return { 
-      whenFinish: true, 
-      finalSummary: response 
-    };
-  } else {
-    return { 
-      question: response,
-      quickReplies: quickReplies.slice(0, 3) // не больше 3 вариантов
     };
   }
 }
