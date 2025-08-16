@@ -1,0 +1,15 @@
+{
+  "name": "vite-obfuscation",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && npm run obfuscate-check",
+    "preview": "vite preview --port 4173 --strictPort",
+    "obfuscate-check": "node ./scripts/obfuscate-check.cjs"
+  },
+  "devDependencies": {
+    "vite": "^7.1.2",
+    "vite-plugin-javascript-obfuscator": "^3.1.0"
+  }
+}
