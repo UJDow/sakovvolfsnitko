@@ -321,3 +321,18 @@ byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]
 byId('start').onclick = startOrContinue;
 byId('finish').onclick = finishAnalysis;
 byId('resetChat').onclick = resetChat;
+
+// --- Новое: обработка ручного ввода ответа ---
+byId('sendAnswerBtn').onclick = () => {
+  const val = byId('userInput').value.trim();
+  if (!val) return;
+  sendAnswer(val);
+  byId('userInput').value = '';
+};
+
+byId('userInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    byId('sendAnswerBtn').click();
+  }
+});
