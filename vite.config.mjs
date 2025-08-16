@@ -1,10 +1,12 @@
 // vite.config.mjs
-import { defineConfig } from 'vite';
-import obfuscatorPlugin from 'vite-plugin-javascript-obfuscator';
+import { defineConfig } from 'vite'
+import obfuscatorPlugin from 'vite-plugin-obfuscator'
 
 export default defineConfig({
   plugins: [
     obfuscatorPlugin({
+      compact: true,
+      controlFlowFlattening: true,
       // Базовые настройки
       compact: true,
       selfDefending: true,
