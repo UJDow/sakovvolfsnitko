@@ -1,9 +1,10 @@
+// vite.config.mjs
 import { defineConfig } from 'vite'
-import obfuscatorPlugin from 'vite-plugin-obfuscator'
+import obfuscator from 'vite-plugin-javascript-obfuscator'
 
 export default defineConfig({
   plugins: [
-    obfuscatorPlugin({
+    obfuscator({
       compact: true,
       selfDefending: true,
       debugProtection: true,
