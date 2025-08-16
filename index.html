@@ -303,7 +303,6 @@ function resetChat() {
   renderChat();
 }
 
-// Интеграция с DeepSeek API
 async function llmNextStep(blockText, history) {
   const b = getCurrentBlock();
   if (!b) return {
@@ -312,22 +311,7 @@ async function llmNextStep(blockText, history) {
     isFinal: false
   };
 
-  // Формируем системный промпт
-  const systemPrompt = `Ты — опытный аналитик снов. Помоги пользователю проанализировать фрагмент сна: 
-  "${b.text}". 
-  Задавай наводящие вопросы. Стиль: поддерживающий, без категоричных утверждений.
-  В конце ответа предлагай 3 варианта быстрых ответов в формате: [Вариант1|Вариант2|Вариант3]`;
-
-  // Формируем историю диалога
-  const messages = [
-    { role: "system", content: systemPrompt },
-    ...history.map(msg => ({
-      role: msg.role === "bot" ? "assistant" : "user",
-      content: msg.text
-    }))
-  ];
-
-  // URL вашего Cloudflare Worker (ЗАМЕНИТЕ НА СВОЙ)
+  // Теперь отправляем только blockText и history!
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
@@ -335,11 +319,11 @@ async function llmNextStep(blockText, history) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 500,
-        stream: false
+        blockText: b.text,
+        history: b.chat.map(m => ({
+          role: m.role === "bot" ? "assistant" : "user",
+          content: m.text
+        }))
       })
     });
 
@@ -348,23 +332,16 @@ async function llmNextStep(blockText, history) {
       try { errJson = await response.json(); } catch {}
       if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
         throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
-        }
+      }
       const msg = errJson?.message || response.statusText;
       throw new Error(msg);
     }
-    
 
     const data = await response.json();
-    console.log("API Response:", data);
-    
-    // Извлекаем контент из ответа
     const aiResponse = data.choices[0].message.content;
-    
-    // Парсим ответ
     return parseAIResponse(aiResponse);
-    
+
   } catch (error) {
-    console.error("API Error:", error);
     return {
       question: `Ошибка API: ${error.message || "Проверьте подключение"}`,
       quickReplies: ["Повторить запрос"],
