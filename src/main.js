@@ -320,7 +320,7 @@ byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
 byId('finish').onclick = finishAnalysis;
-byId('resetChat').onclick = resetChat;
+byId('blockInterpret').onclick = resetChat;
 
 // --- Новое: обработка ручного ввода ответа ---
 byId('sendAnswerBtn').onclick = () => {
