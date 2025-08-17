@@ -85,6 +85,7 @@ function addWholeBlock() {
   renderBlocksChips();
 }
 
+Copy
 function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
   const off = getSelectionOffsets();
@@ -102,6 +103,17 @@ function addBlockFromSelection() {
   renderBlocksChips();
 }
 
+function addWholeBlock() {
+  if (!state.dreamText) return;
+  if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
+    alert('Весь текст уже добавлен как блок.');
+    return;
+  }
+  const id = state.nextBlockId++;
+  state.blocks.push({ id, start: 0, end: state.dreamText.length, text: state.dreamText, done: false, chat: [] });
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
 function autoSplitSentences() {
   const t = (state.dreamText||'').trim();
   if (!t) return;
