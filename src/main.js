@@ -60,8 +60,8 @@ function getSelectionOffsets() {
   const normSelected = selected.replace(/\s+/g, ' ').trim();
   const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
 
-  // Если выделено всё, что есть в dreamView — значит, пользователь выделил весь сон
-  if (normSelected === normDreamView) {
+  // Если длины совпадают (или отличаются не больше чем на 2 символа), считаем что выделено всё
+  if (Math.abs(normSelected.length - normDreamView.length) < 3) {
     return { start: 0, end: state.dreamText.length };
   }
 
