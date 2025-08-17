@@ -31,10 +31,18 @@
 
     /* Поле для ответов пользователя */
     #userInput {
-      min-height: 100px;
-      max-height: 100px; /* фиксированная высота */
-      margin-bottom: 8px;
-    }
+  width: 100%;
+  min-height: 80px;           /* просторное поле */
+  max-height: 80px;           /* фиксированная высота */
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: none;               /* запрет растягивания */
+  box-sizing: border-box;
+  margin-bottom: 12px;        /* отделить от кнопок */
+}
 
     .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
