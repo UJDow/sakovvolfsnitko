@@ -27,14 +27,7 @@
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
     /* Новое: для поля ввода и кнопки */
-    #userInput {
-  flex: 1;
-  min-height: 60px; 
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  resize: vertical; /* можно тянуть мышкой */
-}
+    #userInput { flex:1; padding:8px; border-radius:8px; border:1px solid #ddd; }
     #sendAnswerBtn { padding:8px 12px; border-radius:8px; border:1px solid #2f6fff; background:#2f6fff; color:#fff; }
   </style>
 </head>
@@ -65,14 +58,13 @@
       <div id="currentBlock" class="muted">Блок не выбран</div>
       <div class="chat" id="chat"></div>
       <!-- Новое: поле ввода и кнопка отправки -->
-<!-- Новое: поле ввода и кнопка отправки -->
-<div class="footer">
-  <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
-  <button class="primary" id="sendAnswerBtn">Ответить</button>
-  <button class="primary" id="start">Начать/продолжить</button>
-  <button id="finish">Итоговое Толкование</button>
-  <button id="blockInterpret">Толкование блока</button>
-</div>
+      <div class="footer">
+        <input id="userInput" type="text" placeholder="Введите свой ответ..." />
+        <button class="primary" id="sendAnswerBtn">Ответить</button>
+        <button class="primary" id="start">Начать/продолжить</button>
+        <button id="finish">Завершить анализ</button>
+        <button id="resetChat">Сбросить чат</button>
+      </div>
     </div>
   </div>
 
