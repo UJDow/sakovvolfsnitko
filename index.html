@@ -19,7 +19,7 @@
     .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }
     .chip.active { background: #2f6fff; color: #fff; }
-    .chat { display: flex; flex-direction: column; gap: 8px; height: 360px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
+    .chat { display: flex; flex-direction: column; gap: 8px; height: 240px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
     .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
     .bot { background: #eef2ff; align-self: flex-start; }
     .user { background: #eafbea; align-self: flex-end; }
@@ -27,7 +27,19 @@
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
     /* Новое: для поля ввода и кнопки */
-    #userInput { flex:1; padding:8px; border-radius:8px; border:1px solid #ddd; }
+    #userInput {
+  width: 100%;
+  min-height: 100px;
+  max-height: 100px; /* фикс */
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: none; /* запрет растягивания */
+  box-sizing: border-box;
+  margin-bottom: 8px; /* отступ до кнопок */
+}
     #sendAnswerBtn { padding:8px 12px; border-radius:8px; border:1px solid #2f6fff; background:#2f6fff; color:#fff; }
   </style>
 </head>
