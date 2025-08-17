@@ -322,7 +322,7 @@ byId('start').onclick = startOrContinue;
 byId('finish').onclick = finishAnalysis;
 byId('resetChat').onclick = resetChat;
 
-// --- Обработка ручного ввода ответа ---
+// --- Новое: обработка ручного ввода ответа ---
 byId('sendAnswerBtn').onclick = () => {
   const val = byId('userInput').value.trim();
   if (!val) return;
@@ -330,9 +330,8 @@ byId('sendAnswerBtn').onclick = () => {
   byId('userInput').value = '';
 };
 
-// Enter = отправка, Shift+Enter = перенос строки
 byId('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === 'Enter') {
     e.preventDefault();
     byId('sendAnswerBtn').click();
   }
