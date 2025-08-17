@@ -75,6 +75,19 @@ function getSelectionOffsets() {
   return null;
 }
 
+function addWholeBlock() {
+  if (!state.dreamText) return;
+  // Проверяем, что такого блока ещё нет
+  if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
+    alert('Весь текст уже добавлен как блок.');
+    return;
+  }
+  const id = state.nextBlockId++;
+  state.blocks.push({ id, start: 0, end: state.dreamText.length, text: state.dreamText, done: false, chat: [] });
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
 function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
   const off = getSelectionOffsets();
@@ -336,6 +349,7 @@ byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]
 byId('start').onclick = startOrContinue;
 byId('finish').onclick = finishAnalysis;
 byId('blockInterpret').onclick = resetChat;
+byId('addWholeBlock').onclick = addWholeBlock;
 
 // --- Новое: обработка ручного ввода ответа ---
 byId('sendAnswerBtn').onclick = () => {
