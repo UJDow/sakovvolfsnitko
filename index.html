@@ -10,13 +10,33 @@
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
     textarea, input, button { font: inherit; }
-textarea { 
-  width: 100%; 
-  min-height: 140px; 
-  padding: 10px; 
-  border: 1px solid #ddd; 
-  border-radius: 8px; 
-}    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+    /* Базовый стиль для всех textarea */
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-sizing: border-box;
+      resize: none; /* 🚫 запрет растягивания */
+    }
+
+    /* Поле "Введите сон" */
+    #dream {
+      min-height: 140px;
+      max-height: 140px; /* фиксированная высота */
+    }
+
+    /* Поле для ответов пользователя */
+    #userInput {
+      min-height: 100px;
+      max-height: 100px; /* фиксированная высота */
+      margin-bottom: 8px;
+    }
+
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
     button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
     .dream-view { line-height: 1.6; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px dashed #ddd; min-height: 100px; white-space: pre-wrap; }
@@ -31,20 +51,7 @@ textarea {
     .quick { display: flex; gap: 8px; margin-top: 6px; }
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
-    /* Новое: для поля ввода и кнопки */
-    #userInput {
-  width: 100%;
-  min-height: 100px;
-  max-height: 100px; /* фикс */
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  font-size: 14px;
-  line-height: 1.4;
-  resize: none; /* запрет растягивания */
-  box-sizing: border-box;
-  margin-bottom: 8px; /* отступ до кнопок */
-}
+
     #sendAnswerBtn { padding:8px 12px; border-radius:8px; border:1px solid #2f6fff; background:#2f6fff; color:#fff; }
   </style>
 </head>
