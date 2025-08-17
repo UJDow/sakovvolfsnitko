@@ -54,26 +54,21 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
+  // Получаем текст из dreamView (как он отображается)
+  const dreamViewText = document.getElementById('dreamView').textContent || '';
   // Нормализуем оба текста
-  const normSelected = selected.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
-  const normDream = state.dreamText.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+  const normSelected = selected.replace(/\s+/g, ' ').trim();
+  const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
 
-  // Если длины совпадают (или отличаются не больше чем на 1-2 символа), считаем что выделено всё
-  if (Math.abs(normSelected.length - normDream.length) < 3) {
+  // Если выделено всё, что есть в dreamView — значит, пользователь выделил весь сон
+  if (normSelected === normDreamView) {
     return { start: 0, end: state.dreamText.length };
   }
 
-  // Пробуем найти выделение в исходном тексте
+  // Обычный поиск (на случай, если выделен не весь текст)
   const start = state.dreamText.indexOf(selected);
   if (start !== -1) {
     return { start, end: start + selected.length };
-  }
-
-  // Если не нашли — пробуем найти нормализованный кусок
-  const normStart = normDream.indexOf(normSelected);
-  if (normStart !== -1) {
-    // Восстановить реальные индексы сложно, но можно вернуть весь текст
-    return { start: 0, end: state.dreamText.length };
   }
 
   // Не удалось определить выделение
