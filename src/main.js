@@ -54,18 +54,21 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Обычный поиск (для фрагментов)
+  // Получаем текст из dreamView (как он отображается)
+  const dreamViewText = document.getElementById('dreamView').textContent || '';
+  // Нормализуем оба текста
+  const normSelected = selected.replace(/\s+/g, ' ').trim();
+  const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
+
+  // Если длины совпадают (или отличаются не больше чем на 2 символа), считаем что выделено всё
+  if (Math.abs(normSelected.length - normDreamView.length) < 3) {
+    return { start: 0, end: state.dreamText.length };
+  }
+
+  // Обычный поиск (на случай, если выделен не весь текст)
   const start = state.dreamText.indexOf(selected);
   if (start !== -1) {
     return { start, end: start + selected.length };
-  }
-
-  // Если не нашли — возможно, выделен весь текст (с пробелами/переносами)
-  const dreamViewText = document.getElementById('dreamView').textContent || '';
-  const normSelected = selected.replace(/\s+/g, ' ').trim();
-  const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
-  if (normSelected === normDreamView) {
-    return { start: 0, end: state.dreamText.length };
   }
 
   // Не удалось определить выделение
@@ -85,7 +88,6 @@ function addWholeBlock() {
   renderBlocksChips();
 }
 
-Copy
 function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
   const off = getSelectionOffsets();
@@ -103,17 +105,6 @@ function addBlockFromSelection() {
   renderBlocksChips();
 }
 
-function addWholeBlock() {
-  if (!state.dreamText) return;
-  if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
-    alert('Весь текст уже добавлен как блок.');
-    return;
-  }
-  const id = state.nextBlockId++;
-  state.blocks.push({ id, start: 0, end: state.dreamText.length, text: state.dreamText, done: false, chat: [] });
-  state.currentBlockId = id;
-  renderBlocksChips();
-}
 function autoSplitSentences() {
   const t = (state.dreamText||'').trim();
   if (!t) return;
