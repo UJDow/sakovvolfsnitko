@@ -12,6 +12,7 @@ function renderDreamView() {
   const t = state.dreamText || '';
   if (!t) { dv.textContent = ''; return; }
 
+  // Оборачиваем диапазоны блоков в <mark data-block>
   let parts = [];
   const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
   let idx = 0;
@@ -22,6 +23,7 @@ function renderDreamView() {
   }
   if (idx < t.length) parts.push(escapeHtml(t.slice(idx)));
   dv.innerHTML = parts.join('');
+  // Клик по подсветке → выбрать блок
   dv.querySelectorAll('mark[data-block]').forEach(m => {
     m.addEventListener('click', () => selectBlock(Number(m.getAttribute('data-block'))));
   });
@@ -52,6 +54,7 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
+  // Находим позицию выбранного текста в исходном state.dreamText
   const start = state.dreamText.indexOf(selected);
   if (start === -1) return null;
   return { start, end: start + selected.length };
@@ -61,6 +64,7 @@ function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
   const off = getSelectionOffsets();
   if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
+  // Проверяем пересечения с существующими блоками
   for (const b of state.blocks) {
     if (!(off.end <= b.start || off.start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
@@ -136,19 +140,22 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   renderChat();
 }
-
-// Парсим ответ ИИ
+// Функция для парсинга ответов ИИ
 function parseAIResponse(text) {
+  // Ищем быстрые ответы в формате [Вариант1|Вариант2|Вариант3]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
   let cleanText = text;
   let isFinal = false;
   
   if (quickMatch) {
+    // Извлекаем варианты ответов
     quickReplies = quickMatch[1].split(/\s*\|\s*/).slice(0, 3);
+    // Убираем блок с вариантами из основного текста
     cleanText = text.substring(0, quickMatch.index).trim();
   }
   
+  // Проверяем, является ли ответ итоговым
   const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
   isFinal = finalKeywords.some(keyword => 
     cleanText.toLowerCase().includes(keyword.toLowerCase())
@@ -161,29 +168,34 @@ function parseAIResponse(text) {
   };
 }
 
+// Отправка ответа пользователя
 function sendAnswer(ans) {
   appendUser(ans);
   startOrContinue();
 }
 
-// Основной процесс
+// Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
   
+  // Показать индикатор
   const startBtn = byId('start');
   startBtn.disabled = true;
   startBtn.textContent = "Генерируем...";
   
   try {
+    // Собираем историю для запроса
     const history = b.chat.map(m => ({ 
       role: m.role, 
       text: m.text 
     }));
     
     const next = await llmNextStep(b.text, history);
+    
     appendBot(next.question, next.quickReplies);
     
+    // Если это финальный ответ
     if (next.isFinal) {
       b.done = true;
       appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
@@ -192,51 +204,30 @@ async function startOrContinue() {
     console.error(e);
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
+    // Восстановить кнопку
     startBtn.disabled = false;
     startBtn.textContent = "Начать/продолжить";
   }
 }
 
-// Итоговое толкование по всем блокам
-async function finishAnalysis() {
-  if (!state.blocks.length) return alert("Нет блоков для анализа!");
-
-  let allInterpretations = [];
-  for (const b of state.blocks) {
-    if (!b.chat.length) continue;
-    const history = b.chat.map(m => ({
-      role: m.role === "bot" ? "assistant" : "user",
-      content: m.text
-    }));
-    try {
-      appendUser(`[Итог для блока #${b.id}] Пожалуйста, заверши интерпретацию этого блока.`);
-      const next = await llmNextStep(b.text, history);
-      allInterpretations.push(`Блок #${b.id}: ${next.question}`);
-    } catch (e) {
-      allInterpretations.push(`Блок #${b.id}: Ошибка при анализе`);
-    }
-  }
-
-  const summary = "## Итоговое толкование сна\n\n" + allInterpretations.join("\n\n");
-  appendBot(summary);
-}
-
-// Интерпретация только выбранного блока
-async function blockInterpretation() {
-  const b = getCurrentBlock();
-  if (!b) return alert('Выберите блок.');
-
-  appendUser("Сделай, пожалуйста, интерпретацию этого блока целиком.");
-
-  try {
-    const next = await llmNextStep(b.text, b.chat.map(m => ({
-      role: m.role === "bot" ? "assistant" : "user",
-      content: m.text
-    })));
-    appendBot("Интерпретация блока:\n" + next.question);
-  } catch (e) {
-    appendBot("Ошибка при толковании блока");
-  }
+// Функция завершения анализа - ИСПРАВЛЕННАЯ ВЕРСИЯ
+function finishAnalysis() {
+  const b = getCurrentBlock(); 
+  if (!b) return;
+  
+  // Добавляем специальный триггер для AI
+  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
+  
+  // Показать индикатор
+  const finishBtn = byId('finish');
+  finishBtn.disabled = true;
+  finishBtn.textContent = "Формируем итог...";
+  
+  // Запускаем процесс
+  startOrContinue().finally(() => {
+    finishBtn.disabled = false;
+    finishBtn.textContent = "Завершить анализ";
+  });
 }
 
 function resetChat() {
@@ -255,6 +246,7 @@ async function llmNextStep(blockText, history) {
     isFinal: false
   };
 
+  // Теперь отправляем только blockText и history!
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
@@ -328,9 +320,9 @@ byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
 byId('finish').onclick = finishAnalysis;
-byId('blockInterpret').onclick = blockInterpretation;
+byId('resetChat').onclick = resetChat;
 
-// Обновлённый ввод ответа
+// --- Новое: обработка ручного ввода ответа ---
 byId('sendAnswerBtn').onclick = () => {
   const val = byId('userInput').value.trim();
   if (!val) return;
@@ -339,7 +331,7 @@ byId('sendAnswerBtn').onclick = () => {
 };
 
 byId('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === 'Enter') {
     e.preventDefault();
     byId('sendAnswerBtn').click();
   }
