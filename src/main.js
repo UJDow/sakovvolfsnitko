@@ -54,7 +54,16 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Находим позицию выбранного текста в исходном state.dreamText
+  // Убираем лишние пробелы и переносы для сравнения
+  const normSelected = selected.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+  const normDream = state.dreamText.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Если выделен весь текст (с учётом нормализации)
+  if (normSelected === normDream) {
+    return { start: 0, end: state.dreamText.length };
+  }
+
+  // Обычный поиск (на случай, если выделен не весь текст)
   const start = state.dreamText.indexOf(selected);
   if (start === -1) return null;
   return { start, end: start + selected.length };
