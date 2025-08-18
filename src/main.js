@@ -55,7 +55,7 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
-  const plainText = byId("dreamView").innerText; // ← текст без <mark> и без артефактов HTML
+  const plainText = byId("dreamView").textContent; // ← текст без <mark> и без артефактов HTML
 
   const start = plainText.indexOf(selected);
   if (start === -1) return null;
