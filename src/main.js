@@ -84,15 +84,18 @@ function addWholeBlock() {
     return;
   }
   const id = state.nextBlockId++;
-state.blocks.push({
-  id,
-  start,
-  end,
-  text,
-  done: false,
-  chat: [],
-  finalInterpretation: null // новое поле
-});
+  const start = 0;
+  const end = state.dreamText.length;
+  const text = state.dreamText;
+  state.blocks.push({
+    id,
+    start,
+    end,
+    text,
+    done: false,
+    chat: [],
+    finalInterpretation: null // новое поле
+  });
   state.currentBlockId = id;
   renderBlocksChips();
 }
@@ -318,18 +321,8 @@ async function blockInterpretation() {
   showBlockFinalInterpretation(b.finalInterpretation);
 }
 
-  // Добавляем специальный запрос пользователя в историю
-  const history = [
-    ...b.chat.map(m => ({ role: m.role, text: m.text })),
-    { role: 'user', text: 'Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.' }
-  ];
-
-  // Запрашиваем у LLM итоговое толкование
-  const next = await llmNextStep(b.text, history);
-
-  // Сохраняем и показываем итог
-  b.finalInterpretation = next.question;
-  appendFinalInterpretation(b.finalInterpretation);
+function showBlockFinalInterpretation(text) {
+  appendFinalInterpretation(text);
 }
 
 async function overallInterpretation() {
