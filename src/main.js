@@ -1,8 +1,9 @@
 const state = {
   dreamText: '',
-  blocks: [], // {id, start, end, text, done:false, chat: []}
+  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: null}
   currentBlockId: null,
-  nextBlockId: 1
+  nextBlockId: 1,
+  overallInterpretation: null // новое поле для общего толкования
 };
 
 function byId(id) { return document.getElementById(id); }
@@ -83,7 +84,15 @@ function addWholeBlock() {
     return;
   }
   const id = state.nextBlockId++;
-  state.blocks.push({ id, start: 0, end: state.dreamText.length, text: state.dreamText, done: false, chat: [] });
+state.blocks.push({
+  id,
+  start,
+  end,
+  text,
+  done: false,
+  chat: [],
+  finalInterpretation: null // новое поле
+});
   state.currentBlockId = id;
   renderBlocksChips();
 }
