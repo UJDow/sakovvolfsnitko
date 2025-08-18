@@ -64,13 +64,39 @@ function getSelectionOffsets() {
   // Получаем исходный текст сна
   const t = state.dreamText;
 
-  // Находим выделенный текст в dream-view (без разметки)
-  // Для этого ищем selected в t (с учётом возможных пробелов)
-  const start = t.indexOf(selected);
+  // Ищем выделенный текст в исходном тексте, начиная с позиции, соответствующей смещению выделения в dream-view
+  // Это защищает от ошибок, если одинаковый текст встречается несколько раз
+
+  // Получаем смещение выделения относительно dream-view
+  let anchorNode = range.startContainer;
+  let offsetInView = 0;
+  // Считаем длину текста до выделения
+  function getTextBefore(node, offset) {
+    let text = '';
+    function walk(n) {
+      if (n === node) {
+        text += n.textContent.slice(0, offset);
+        return true;
+      }
+      if (n.nodeType === 3) { // text node
+        text += n.textContent;
+      }
+      for (let child = n.firstChild; child; child = child.nextSibling) {
+        if (walk(child)) return true;
+      }
+      return false;
+    }
+    walk(dreamView);
+    return text;
+  }
+  offsetInView = getTextBefore(anchorNode, range.startOffset).length;
+
+  // Теперь ищем selected в t, начиная с offsetInView
+  let start = t.indexOf(selected, offsetInView);
+  if (start === -1) start = t.indexOf(selected); // fallback
   if (start === -1) return null;
   const end = start + selected.length;
 
-  // Проверяем, что выделение не пустое и не выходит за пределы текста
   if (start === end || end > t.length) return null;
 
   return { start, end };
