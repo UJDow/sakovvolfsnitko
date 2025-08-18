@@ -457,3 +457,42 @@ byId('userInput').addEventListener('keydown', e => {
     byId('sendAnswerBtn').click();
   }
 });
+
+// --- Глушим сторонние overlay, тултипы и popover ---
+const blockOverlayPopups = () => {
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll('body > *').forEach(el => {
+      const style = window.getComputedStyle(el);
+      // Удаляем все элементы, которые не твои основные контейнеры и выглядят как overlay
+      if (
+        (style.position === 'fixed' || style.position === 'absolute') &&
+        parseInt(style.zIndex) > 1000 &&
+        !el.matches('#app, #root, main, .card, .row, .footer, .chat, .dream-view, .blocks')
+      ) {
+        el.remove();
+      }
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+};
+
+blockOverlayPopups();
+
+// Отключаем стандартное и кастомное контекстное меню
+window.addEventListener('contextmenu', e => e.preventDefault(), true);
+
+// Отключаем всплывающие тултипы по mouseup/selection
+window.addEventListener('mouseup', e => {
+  // Убираем любые всплывающие div поверх
+  setTimeout(() => {
+    document.querySelectorAll('body > div, body > span').forEach(el => {
+      const style = window.getComputedStyle(el);
+      if (
+        (style.position === 'fixed' || style.position === 'absolute') &&
+        parseInt(style.zIndex) > 1000
+      ) {
+        el.remove();
+      }
+    });
+  }, 100);
+}, true);
