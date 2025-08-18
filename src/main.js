@@ -52,28 +52,28 @@ function renderBlocksChips() {
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  const dreamView = byId('dreamView');
+  // Проверяем, что выделение внутри dream-view
+  if (!dreamView.contains(range.commonAncestorContainer)) return null;
+
+  // Получаем выделенный текст
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Получаем текст из dreamView (как он отображается)
-  const dreamViewText = document.getElementById('dreamView').textContent || '';
-  // Нормализуем оба текста
-  const normSelected = selected.replace(/\s+/g, ' ').trim();
-  const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
+  // Получаем исходный текст сна
+  const t = state.dreamText;
 
-  // Если длины совпадают (или отличаются не больше чем на 2 символа), считаем что выделено всё
-  if (Math.abs(normSelected.length - normDreamView.length) < 3) {
-    return { start: 0, end: state.dreamText.length };
-  }
+  // Находим выделенный текст в dream-view (без разметки)
+  // Для этого ищем selected в t (с учётом возможных пробелов)
+  const start = t.indexOf(selected);
+  if (start === -1) return null;
+  const end = start + selected.length;
 
-  // Обычный поиск (на случай, если выделен не весь текст)
-  const start = state.dreamText.indexOf(selected);
-  if (start !== -1) {
-    return { start, end: start + selected.length };
-  }
+  // Проверяем, что выделение не пустое и не выходит за пределы текста
+  if (start === end || end > t.length) return null;
 
-  // Не удалось определить выделение
-  return null;
+  return { start, end };
 }
 
 function addWholeBlock() {
@@ -84,15 +84,18 @@ function addWholeBlock() {
     return;
   }
   const id = state.nextBlockId++;
-state.blocks.push({
-  id,
-  start,
-  end,
-  text,
-  done: false,
-  chat: [],
-  finalInterpretation: null // новое поле
-});
+  const start = 0;
+  const end = state.dreamText.length;
+  const text = state.dreamText;
+  state.blocks.push({
+    id,
+    start,
+    end,
+    text,
+    done: false,
+    chat: [],
+    finalInterpretation: null // новое поле
+  });
   state.currentBlockId = id;
   renderBlocksChips();
 }
@@ -211,6 +214,13 @@ function sendAnswer(ans) {
   startOrContinue();
 }
 
+function getOtherBlocksFinals(currentBlockId) {
+  return state.blocks
+    .filter(b => b.id !== currentBlockId && b.finalInterpretation)
+    .map((b, i) => `Блок #${b.id}: ${b.finalInterpretation}`)
+    .join('\n\n');
+}
+
 // Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
@@ -276,24 +286,43 @@ async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return;
 
-  // Если итог уже есть — просто показываем в чате
   if (b.finalInterpretation) {
-    appendFinalInterpretation(b.finalInterpretation);
+    showBlockFinalInterpretation(b.finalInterpretation);
     return;
   }
 
-  // Добавляем специальный запрос пользователя в историю
+  // Итоги других блоков
+  const otherFinals = getOtherBlocksFinals(b.id);
+  let systemPrompt = '';
+  if (otherFinals) {
+    systemPrompt = 'Вот итоговые толкования других фрагментов сна:\n' + otherFinals +
+      '\n\nПожалуйста, учитывай их при анализе этого блока.';
+  }
+
+  // История чата + специальный запрос пользователя
   const history = [
     ...b.chat.map(m => ({ role: m.role, text: m.text })),
     { role: 'user', text: 'Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.' }
   ];
 
-  // Запрашиваем у LLM итоговое толкование
-  const next = await llmNextStep(b.text, history);
+  // Если есть итоги других блоков — добавляем их как system prompt
+  let result;
+  if (systemPrompt) {
+    // Можно добавить как отдельное сообщение с ролью "system"
+    result = await llmNextStep(b.text, [
+      { role: 'system', text: systemPrompt },
+      ...history
+    ]);
+  } else {
+    result = await llmNextStep(b.text, history);
+  }
 
-  // Сохраняем и показываем итог
-  b.finalInterpretation = next.question;
-  appendFinalInterpretation(b.finalInterpretation);
+  b.finalInterpretation = result.question;
+  showBlockFinalInterpretation(b.finalInterpretation);
+}
+
+function showBlockFinalInterpretation(text) {
+  appendFinalInterpretation(text);
 }
 
 async function overallInterpretation() {
@@ -397,7 +426,7 @@ byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDr
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
 byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
-byId('export').onclick = exportJSON;
+byId('exportTxt').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
 byId('blockInterpret').onclick = blockInterpretation;
@@ -418,3 +447,42 @@ byId('userInput').addEventListener('keydown', e => {
     byId('sendAnswerBtn').click();
   }
 });
+
+// --- Глушим сторонние overlay, тултипы и popover ---
+const blockOverlayPopups = () => {
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll('body > *').forEach(el => {
+      const style = window.getComputedStyle(el);
+      // Удаляем все элементы, которые не твои основные контейнеры и выглядят как overlay
+      if (
+        (style.position === 'fixed' || style.position === 'absolute') &&
+        parseInt(style.zIndex) > 1000 &&
+        !el.matches('#app, #root, main, .card, .row, .footer, .chat, .dream-view, .blocks')
+      ) {
+        el.remove();
+      }
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+};
+
+blockOverlayPopups();
+
+// Отключаем стандартное и кастомное контекстное меню
+window.addEventListener('contextmenu', e => e.preventDefault(), true);
+
+// Отключаем всплывающие тултипы по mouseup/selection
+window.addEventListener('mouseup', e => {
+  // Убираем любые всплывающие div поверх
+  setTimeout(() => {
+    document.querySelectorAll('body > div, body > span').forEach(el => {
+      const style = window.getComputedStyle(el);
+      if (
+        (style.position === 'fixed' || style.position === 'absolute') &&
+        parseInt(style.zIndex) > 1000
+      ) {
+        el.remove();
+      }
+    });
+  }, 100);
+}, true);
