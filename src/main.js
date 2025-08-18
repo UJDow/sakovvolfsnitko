@@ -397,14 +397,7 @@ async function llmNextStep(blockText, history) {
 
 // Экспорт/импорт
 function exportJSON() {
-  const data = {
-    dreamText: state.dreamText,
-    blocks: state.blocks.map(b => ({
-      ...b,
-      finalInterpretation: b.finalInterpretation || null
-    })),
-    overallInterpretation: state.overallInterpretation || null
-  };
+  const data = { dreamText: state.dreamText, blocks: state.blocks };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -418,19 +411,11 @@ function importJSON(file) {
     try {
       const data = JSON.parse(reader.result);
       state.dreamText = data.dreamText || '';
-      state.blocks = (data.blocks || []).map(b => ({
-        ...b,
-        chat: b.chat || [],
-        finalInterpretation: b.finalInterpretation || null
-      }));
+      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[]}));
       state.nextBlockId = Math.max(1, ...state.blocks.map(b=>b.id+1));
       state.currentBlockId = state.blocks[0]?.id || null;
-      state.overallInterpretation = data.overallInterpretation || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
-      if (state.overallInterpretation) appendOverallInterpretation(state.overallInterpretation);
-      const b = getCurrentBlock();
-      if (b && b.finalInterpretation) showBlockFinalInterpretation(b.finalInterpretation);
     } catch(e) { alert('Не удалось импортировать JSON'); }
   };
   reader.readAsText(file);
