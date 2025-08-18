@@ -53,42 +53,27 @@ function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
-  // Проверяем, что выделение внутри dream-view
   const dreamView = byId('dreamView');
+  // Проверяем, что выделение внутри dream-view
   if (!dreamView.contains(range.commonAncestorContainer)) return null;
 
+  // Получаем выделенный текст
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Нормализуем выделение и исходный текст
-  const normSelected = selected.replace(/\s+/g, ' ').trim();
-  const normDream = state.dreamText.replace(/\s+/g, ' ').trim();
+  // Получаем исходный текст сна
+  const t = state.dreamText;
 
-  // Пробуем найти нормализованное выделение в нормализованном тексте
-  const start = normDream.indexOf(normSelected);
-  if (start !== -1) {
-    // Теперь ищем соответствие в оригинальном тексте
-    // Считаем, что символы без пробелов идут в том же порядке
-    let origStart = 0, normIdx = 0;
-    for (let i = 0; i < state.dreamText.length; i++) {
-      if (state.dreamText[i].match(/\s/)) continue;
-      if (normIdx === start) {
-        origStart = i;
-        break;
-      }
-      normIdx++;
-    }
-    // Теперь ищем длину выделения в оригинале
-    let origEnd = origStart, count = 0;
-    for (let i = origStart; i < state.dreamText.length && count < normSelected.length; i++) {
-      if (!state.dreamText[i].match(/\s/)) count++;
-      origEnd = i + 1;
-    }
-    return { start: origStart, end: origEnd };
-  }
+  // Находим выделенный текст в dream-view (без разметки)
+  // Для этого ищем selected в t (с учётом возможных пробелов)
+  const start = t.indexOf(selected);
+  if (start === -1) return null;
+  const end = start + selected.length;
 
-  // Не удалось определить выделение
-  return null;
+  // Проверяем, что выделение не пустое и не выходит за пределы текста
+  if (start === end || end > t.length) return null;
+
+  return { start, end };
 }
 
 function addWholeBlock() {
