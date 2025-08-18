@@ -3,64 +3,58 @@ const state = {
   blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: null}
   currentBlockId: null,
   nextBlockId: 1,
-  overallInterpretation: null // новое поле для общего толкования
+  overallInterpretation: null
 };
 
 function byId(id) { return document.getElementById(id); }
-  
+
+// Новый renderDreamView — только createTextNode и mark
 function renderDreamView() {
   const dv = byId('dreamView');
   const t = state.dreamText || '';
-  if (!t) { dv.textContent = ''; return; }
+  dv.innerHTML = ''; // очистили
 
-  // Оборачиваем диапазоны блоков в <mark data-block>
-  let parts = [];
-  const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
+  if (!t) return;
+
+  const sorted = [...state.blocks].sort((a, b) => a.start - b.start);
   let idx = 0;
+
   for (const b of sorted) {
-    if (b.start > idx) parts.push(escapeHtml(t.slice(idx, b.start)));
-    parts.push(`<mark data-block="${b.id}" title="Блок #${b.id}">${escapeHtml(t.slice(b.start, b.end))}</mark>`);
+    if (b.start > idx) {
+      dv.appendChild(document.createTextNode(t.slice(idx, b.start)));
+    }
+
+    const mark = document.createElement('mark');
+    mark.dataset.block = b.id;
+    mark.title = `Блок #${b.id}`;
+    mark.textContent = t.slice(b.start, b.end);
+    mark.addEventListener('click', () => selectBlock(b.id));
+    dv.appendChild(mark);
+
     idx = b.end;
   }
-  if (idx < t.length) parts.push(escapeHtml(t.slice(idx)));
-  dv.innerHTML = parts.join('');
-  // Клик по подсветке → выбрать блок
-  dv.querySelectorAll('mark[data-block]').forEach(m => {
-    m.addEventListener('click', () => selectBlock(Number(m.getAttribute('data-block'))));
-  });
+
+  if (idx < t.length) {
+    dv.appendChild(document.createTextNode(t.slice(idx)));
+  }
 }
 
-function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
-
-function renderBlocksChips() {
-  const wrap = byId('blocks');
-  wrap.innerHTML = '';
-  state.blocks.forEach(b => {
-    const el = document.createElement('div');
-    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
-    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
-    el.addEventListener('click', ()=>selectBlock(b.id));
-    wrap.appendChild(el);
-  });
-  const cb = byId('currentBlock');
-  const b = getCurrentBlock();
-  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
-  renderDreamView();
-  renderChat();
-}
-
+// Новый getSelectionOffsets — через Range
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
-  const selected = sel.toString();
+
+  const range = sel.getRangeAt(0);
+  const preRange = range.cloneRange();
+  preRange.selectNodeContents(byId("dreamView"));
+  preRange.setEnd(range.startContainer, range.startOffset);
+
+  const start = preRange.toString().length;
+  const selected = range.toString();
   if (!selected) return null;
 
-  const plainText = byId("dreamView").textContent; // ← текст без <mark> и без артефактов HTML
-
-  const start = plainText.indexOf(selected);
-  if (start === -1) return null;
-
-  return { start, end: start + selected.length };
+  const end = start + selected.length;
+  return { start, end };
 }
 
 function addBlockFromSelection() {
