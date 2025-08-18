@@ -52,17 +52,17 @@ function renderBlocksChips() {
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
-  const range = sel.getRangeAt(0);
+  const selected = sel.toString();
+  if (!selected) return null;
 
-  const preRange = range.cloneRange();
-  preRange.selectNodeContents(byId("dreamView"));
-  preRange.setEnd(range.startContainer, range.startOffset);
+  // Берём текст без HTML‑разметки
+  const plainText = byId("dreamView").innerText;
 
-  const start = preRange.toString().length;
-  const end = start + range.toString().length;
+  // Позиция первого вхождения внутри plainText
+  const start = plainText.indexOf(selected);
+  if (start === -1) return null;
 
-  if (start === end) return null;
-  return { start, end };
+  return { start, end: start + selected.length };
 }
 
 function addBlockFromSelection() {
