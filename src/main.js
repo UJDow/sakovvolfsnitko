@@ -54,34 +54,25 @@ function getSelectionOffsets() {
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
   const dreamView = byId('dreamView');
-  // Проверяем, что выделение внутри dream-view
   if (!dreamView.contains(range.commonAncestorContainer)) return null;
 
-  // Получаем выделенный текст
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Получаем исходный текст сна
   const t = state.dreamText;
 
-  // Ищем выделенный текст в исходном тексте, начиная с позиции, соответствующей смещению выделения в dream-view
-  // Это защищает от ошибок, если одинаковый текст встречается несколько раз
-
-  // Получаем смещение выделения относительно dream-view
-  let anchorNode = range.startContainer;
-  let offsetInView = 0;
-  // Считаем длину текста до выделения
-  function getTextBefore(node, offset) {
+  // 1. Получаем весь текст до начала выделения в dream-view (без разметки)
+  function getTextBeforeSelection() {
     let text = '';
-    function walk(n) {
-      if (n === node) {
-        text += n.textContent.slice(0, offset);
+    function walk(node) {
+      if (node === range.startContainer) {
+        text += node.textContent.slice(0, range.startOffset);
         return true;
       }
-      if (n.nodeType === 3) { // text node
-        text += n.textContent;
+      if (node.nodeType === 3) { // text node
+        text += node.textContent;
       }
-      for (let child = n.firstChild; child; child = child.nextSibling) {
+      for (let child = node.firstChild; child; child = child.nextSibling) {
         if (walk(child)) return true;
       }
       return false;
@@ -89,14 +80,22 @@ function getSelectionOffsets() {
     walk(dreamView);
     return text;
   }
-  offsetInView = getTextBefore(anchorNode, range.startOffset).length;
 
-  // Теперь ищем selected в t, начиная с offsetInView
-  let start = t.indexOf(selected, offsetInView);
-  if (start === -1) start = t.indexOf(selected); // fallback
+  const before = getTextBeforeSelection();
+  // 2. Ищем в исходном тексте ближайшее вхождение selected после before.length
+  let start = -1;
+  let searchFrom = before.length;
+  // Иногда из-за пробелов/разметки может быть несовпадение, ищем ближайшее вхождение
+  for (let i = Math.max(0, searchFrom - 10); i <= searchFrom + 10; i++) {
+    if (t.slice(i, i + selected.length) === selected) {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) start = t.indexOf(selected, searchFrom);
+  if (start === -1) start = t.indexOf(selected);
   if (start === -1) return null;
   const end = start + selected.length;
-
   if (start === end || end > t.length) return null;
 
   return { start, end };
