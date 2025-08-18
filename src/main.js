@@ -247,32 +247,76 @@ async function startOrContinue() {
   }
 }
 
-// Функция завершения анализа - ИСПРАВЛЕННАЯ ВЕРСИЯ
-function finishAnalysis() {
-  const b = getCurrentBlock(); 
+function appendFinalInterpretation(text) {
+  const b = getCurrentBlock();
   if (!b) return;
-  
-  // Добавляем специальный триггер для AI
-  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
-  
-  // Показать индикатор
-  const finishBtn = byId('finish');
-  finishBtn.disabled = true;
-  finishBtn.textContent = "Формируем итог...";
-  
-  // Запускаем процесс
-  startOrContinue().finally(() => {
-    finishBtn.disabled = false;
-    finishBtn.textContent = "Завершить анализ";
-  });
+  // Проверяем, есть ли уже финальное сообщение в чате
+  if (b.chat.some(m => m.role === 'final')) return;
+  b.chat.push({ role: 'final', text });
+  renderChat();
 }
 
-function resetChat() {
-  const b = getCurrentBlock(); 
+function appendOverallInterpretation(text) {
+  let el = byId('overallInterpretation');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'overallInterpretation';
+    el.style.marginTop = '16px';
+    el.style.background = '#e0d6ff';
+    el.style.color = '#2f1a7f';
+    el.style.padding = '12px';
+    el.style.borderRadius = '10px';
+    el.style.fontWeight = 'bold';
+    byId('chat').parentNode.appendChild(el);
+  }
+  el.textContent = text;
+}
+
+async function blockInterpretation() {
+  const b = getCurrentBlock();
   if (!b) return;
-  b.chat = [];
-  b.done = false;
-  renderChat();
+
+  // Если итог уже есть — просто показываем в чате
+  if (b.finalInterpretation) {
+    appendFinalInterpretation(b.finalInterpretation);
+    return;
+  }
+
+  // Добавляем специальный запрос пользователя в историю
+  const history = [
+    ...b.chat.map(m => ({ role: m.role, text: m.text })),
+    { role: 'user', text: 'Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.' }
+  ];
+
+  // Запрашиваем у LLM итоговое толкование
+  const next = await llmNextStep(b.text, history);
+
+  // Сохраняем и показываем итог
+  b.finalInterpretation = next.question;
+  appendFinalInterpretation(b.finalInterpretation);
+}
+
+async function overallInterpretation() {
+  // Собираем все итоговые толкования блоков
+  const finals = state.blocks.map(b => b.finalInterpretation);
+
+  // Проверяем, что у всех блоков есть итог
+  if (finals.some(f => !f)) {
+    appendOverallInterpretation('Не для всех блоков получено итоговое толкование!');
+    return;
+  }
+
+  // Формируем текст для LLM
+  const prompt = 'Вот итоговые толкования по каждому фрагменту сна:\n\n' +
+    finals.map((f, i) => `Блок ${i + 1}: ${f}`).join('\n\n') +
+    '\n\nПожалуйста, сделай общий вывод и интерпретацию по всему сновидению, учитывая все эти итоги.';
+
+  // Отправляем в LLM (используем тот же llmNextStep, но без истории чата)
+  const result = await llmNextStep(prompt, []);
+
+  // Сохраняем и показываем общий итог
+  state.overallInterpretation = result.question;
+  appendOverallInterpretation(state.overallInterpretation);
 }
 
 async function llmNextStep(blockText, history) {
@@ -356,8 +400,8 @@ byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.c
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
-byId('finish').onclick = finishAnalysis;
-byId('blockInterpret').onclick = resetChat;
+byId('blockInterpret').onclick = blockInterpretation;
+byId('finalInterpret').onclick = overallInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
 
 // --- Новое: обработка ручного ввода ответа ---
