@@ -401,7 +401,6 @@ function exportJSON() {
     dreamText: state.dreamText,
     blocks: state.blocks.map(b => ({
       ...b,
-      // на всякий случай явно укажем итог
       finalInterpretation: b.finalInterpretation || null
     })),
     overallInterpretation: state.overallInterpretation || null
@@ -429,9 +428,7 @@ function importJSON(file) {
       state.overallInterpretation = data.overallInterpretation || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
-      // Показываем итоговые толкования, если они есть
       if (state.overallInterpretation) appendOverallInterpretation(state.overallInterpretation);
-      // Можно также показать итог по текущему блоку, если есть
       const b = getCurrentBlock();
       if (b && b.finalInterpretation) showBlockFinalInterpretation(b.finalInterpretation);
     } catch(e) { alert('Не удалось импортировать JSON'); }
@@ -444,7 +441,7 @@ byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDr
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
 byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
-byId('exportTxt').onclick = exportTXT;
+byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
 byId('blockInterpret').onclick = blockInterpretation;
