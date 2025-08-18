@@ -52,13 +52,17 @@ function renderBlocksChips() {
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
-  const selected = sel.toString();
-  if (!selected) return null;
+  const range = sel.getRangeAt(0);
 
-  // Находим позицию выбранного текста в исходном state.dreamText
-  const start = state.dreamText.indexOf(selected);
-  if (start === -1) return null;
-  return { start, end: start + selected.length };
+  const preRange = range.cloneRange();
+  preRange.selectNodeContents(byId("dreamView"));
+  preRange.setEnd(range.startContainer, range.startOffset);
+
+  const start = preRange.toString().length;
+  const end = start + range.toString().length;
+
+  if (start === end) return null;
+  return { start, end };
 }
 
 function addBlockFromSelection() {
@@ -275,7 +279,6 @@ async function blockInterpretation() {
     return;
   }
 
-  // Итоги других блоков
   const otherFinals = getOtherBlocksFinals(b.id);
   let systemPrompt = '';
   if (otherFinals) {
@@ -283,16 +286,13 @@ async function blockInterpretation() {
       '\n\nПожалуйста, учитывай их при анализе этого блока.';
   }
 
-  // История чата + специальный запрос пользователя
   const history = [
     ...b.chat.map(m => ({ role: m.role, text: m.text })),
     { role: 'user', text: 'Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.' }
   ];
 
-  // Если есть итоги других блоков — добавляем их как system prompt
   let result;
   if (systemPrompt) {
-    // Можно добавить как отдельное сообщение с ролью "system"
     result = await llmNextStep(b.text, [
       { role: 'system', text: systemPrompt },
       ...history
@@ -302,7 +302,7 @@ async function blockInterpretation() {
   }
 
   b.finalInterpretation = result.question;
-  showBlockFinalInterpretation(b.finalInterpretation);
+  appendFinalInterpretation(b.finalInterpretation);
 }
 
 function showBlockFinalInterpretation(text) {
@@ -333,14 +333,6 @@ async function overallInterpretation() {
 }
 
 async function llmNextStep(blockText, history) {
-  const b = getCurrentBlock();
-  if (!b) return {
-    question: "Ошибка: блок не выбран",
-    quickReplies: ["Повторить"],
-    isFinal: false
-  };
-
-  // Теперь отправляем только blockText и history!
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
@@ -348,10 +340,12 @@ async function llmNextStep(blockText, history) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        blockText: b.text,
-        history: b.chat.map(m => ({
-          role: m.role === "bot" ? "assistant" : "user",
-          content: m.text
+        blockText,
+        history: history.map(m => ({
+          role: m.role === "bot" ? "assistant" 
+               : m.role === "system" ? "system" 
+               : "user",
+          content: m.text || m.content
         }))
       })
     });
@@ -362,8 +356,7 @@ async function llmNextStep(blockText, history) {
       if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
         throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
       }
-      const msg = errJson?.message || response.statusText;
-      throw new Error(msg);
+      throw new Error(errJson?.message || response.statusText);
     }
 
     const data = await response.json();
