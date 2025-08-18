@@ -55,38 +55,35 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Получаем текст из dreamView (как он отображается)
-  const dreamViewText = document.getElementById('dreamView').textContent || '';
+  // Нормализуем выделение и исходный текст
+  const normSelected = selected.replace(/\s+/g, ' ').trim();
+  const normDream = state.dreamText.replace(/\s+/g, ' ').trim();
 
-  // Нормализуем: убираем все пробелы, переносы, табы
-  const normSelected = selected.replace(/\s+/g, '');
-  const normDreamView = dreamViewText.replace(/\s+/g, '');
-  const normDream = state.dreamText.replace(/\s+/g, '');
-
-  // Ищем выделение в нормализованном dreamView
-  const normStart = normDreamView.indexOf(normSelected);
-  if (normStart === -1) return null;
-
-  // Теперь ищем этот же кусок в нормализованном state.dreamText
-  const origStart = normDream.indexOf(normSelected);
-  if (origStart === -1) return null;
-
-  // Теперь восстанавливаем индексы в оригинальном тексте сна
-  let realStart = 0, realEnd = 0, count = 0;
-  for (let i = 0; i < state.dreamText.length; i++) {
-    if (!state.dreamText[i].match(/\s/)) {
-      if (count === origStart) realStart = i;
-      if (count === origStart + normSelected.length - 1) {
-        realEnd = i + 1;
+  // Пробуем найти нормализованное выделение в нормализованном тексте
+  const start = normDream.indexOf(normSelected);
+  if (start !== -1) {
+    // Теперь ищем соответствие в оригинальном тексте
+    // Считаем, что символы без пробелов идут в том же порядке
+    let origStart = 0, normIdx = 0;
+    for (let i = 0; i < state.dreamText.length; i++) {
+      if (state.dreamText[i].match(/\s/)) continue;
+      if (normIdx === start) {
+        origStart = i;
         break;
       }
-      count++;
+      normIdx++;
     }
+    // Теперь ищем длину выделения в оригинале
+    let origEnd = origStart, count = 0;
+    for (let i = origStart; i < state.dreamText.length && count < normSelected.length; i++) {
+      if (!state.dreamText[i].match(/\s/)) count++;
+      origEnd = i + 1;
+    }
+    return { start: origStart, end: origEnd };
   }
-  // Если не нашли realEnd, ставим в конец текста
-  if (realEnd === 0) realEnd = state.dreamText.length;
 
-  return { start: realStart, end: realEnd };
+  // Не удалось определить выделение
+  return null;
 }
 
 function addWholeBlock() {
@@ -111,18 +108,6 @@ function addWholeBlock() {
   });
   state.currentBlockId = id;
   renderBlocksChips();
-}
-
-function getSelectionOffsets() {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return null;
-  const selected = sel.toString();
-  if (!selected) return null;
-
-  // Находим позицию выбранного текста в исходном state.dreamText
-  const start = state.dreamText.indexOf(selected);
-  if (start === -1) return null;
-  return { start, end: start + selected.length };
 }
 
 function addBlockFromSelection() {
