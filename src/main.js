@@ -55,21 +55,31 @@ function getSelectionOffsets() {
   const selected = sel.toString();
   if (!selected) return null;
 
-  // Получаем текст из dreamView (как он отображается)
-  const dreamViewText = document.getElementById('dreamView').textContent || '';
-  // Нормализуем оба текста
+  // Нормализуем выделение и исходный текст
   const normSelected = selected.replace(/\s+/g, ' ').trim();
-  const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
+  const normDream = state.dreamText.replace(/\s+/g, ' ').trim();
 
-  // Если длины совпадают (или отличаются не больше чем на 2 символа), считаем что выделено всё
-  if (Math.abs(normSelected.length - normDreamView.length) < 3) {
-    return { start: 0, end: state.dreamText.length };
-  }
-
-  // Обычный поиск (на случай, если выделен не весь текст)
-  const start = state.dreamText.indexOf(selected);
+  // Пробуем найти нормализованное выделение в нормализованном тексте
+  const start = normDream.indexOf(normSelected);
   if (start !== -1) {
-    return { start, end: start + selected.length };
+    // Теперь ищем соответствие в оригинальном тексте
+    // Считаем, что символы без пробелов идут в том же порядке
+    let origStart = 0, normIdx = 0;
+    for (let i = 0; i < state.dreamText.length; i++) {
+      if (state.dreamText[i].match(/\s/)) continue;
+      if (normIdx === start) {
+        origStart = i;
+        break;
+      }
+      normIdx++;
+    }
+    // Теперь ищем длину выделения в оригинале
+    let origEnd = origStart, count = 0;
+    for (let i = origStart; i < state.dreamText.length && count < normSelected.length; i++) {
+      if (!state.dreamText[i].match(/\s/)) count++;
+      origEnd = i + 1;
+    }
+    return { start: origStart, end: origEnd };
   }
 
   // Не удалось определить выделение
