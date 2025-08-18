@@ -211,6 +211,13 @@ function sendAnswer(ans) {
   startOrContinue();
 }
 
+function getOtherBlocksFinals(currentBlockId) {
+  return state.blocks
+    .filter(b => b.id !== currentBlockId && b.finalInterpretation)
+    .map((b, i) => `Блок #${b.id}: ${b.finalInterpretation}`)
+    .join('\n\n');
+}
+
 // Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
@@ -276,11 +283,40 @@ async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return;
 
-  // Если итог уже есть — просто показываем в чате
   if (b.finalInterpretation) {
-    appendFinalInterpretation(b.finalInterpretation);
+    showBlockFinalInterpretation(b.finalInterpretation);
     return;
   }
+
+  // Итоги других блоков
+  const otherFinals = getOtherBlocksFinals(b.id);
+  let systemPrompt = '';
+  if (otherFinals) {
+    systemPrompt = 'Вот итоговые толкования других фрагментов сна:\n' + otherFinals +
+      '\n\nПожалуйста, учитывай их при анализе этого блока.';
+  }
+
+  // История чата + специальный запрос пользователя
+  const history = [
+    ...b.chat.map(m => ({ role: m.role, text: m.text })),
+    { role: 'user', text: 'Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.' }
+  ];
+
+  // Если есть итоги других блоков — добавляем их как system prompt
+  let result;
+  if (systemPrompt) {
+    // Можно добавить как отдельное сообщение с ролью "system"
+    result = await llmNextStep(b.text, [
+      { role: 'system', text: systemPrompt },
+      ...history
+    ]);
+  } else {
+    result = await llmNextStep(b.text, history);
+  }
+
+  b.finalInterpretation = result.question;
+  showBlockFinalInterpretation(b.finalInterpretation);
+}
 
   // Добавляем специальный запрос пользователя в историю
   const history = [
