@@ -52,6 +52,11 @@ function renderBlocksChips() {
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  // Проверяем, что выделение внутри dream-view
+  const dreamView = byId('dreamView');
+  if (!dreamView.contains(range.commonAncestorContainer)) return null;
+
   const selected = sel.toString();
   if (!selected) return null;
 
