@@ -444,7 +444,7 @@ byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDr
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
 byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
-byId('export').onclick = exportJSON;
+byId('exportTxt').onclick = exportTXT;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
 byId('blockInterpret').onclick = blockInterpretation;
