@@ -113,6 +113,18 @@ function addWholeBlock() {
   renderBlocksChips();
 }
 
+function getSelectionOffsets() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const selected = sel.toString();
+  if (!selected) return null;
+
+  // Находим позицию выбранного текста в исходном state.dreamText
+  const start = state.dreamText.indexOf(selected);
+  if (start === -1) return null;
+  return { start, end: start + selected.length };
+}
+
 function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
   const off = getSelectionOffsets();
