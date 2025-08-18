@@ -52,55 +52,31 @@ function renderBlocksChips() {
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
-  const range = sel.getRangeAt(0);
-  const dreamView = byId('dreamView');
-  if (!dreamView.contains(range.commonAncestorContainer)) return null;
-
   const selected = sel.toString();
   if (!selected) return null;
 
-  const t = state.dreamText;
-
-  // 1. Получаем весь текст до начала выделения в dream-view (без разметки)
-  function getTextBeforeSelection() {
-    let text = '';
-    function walk(node) {
-      if (node === range.startContainer) {
-        text += node.textContent.slice(0, range.startOffset);
-        return true;
-      }
-      if (node.nodeType === 3) { // text node
-        text += node.textContent;
-      }
-      for (let child = node.firstChild; child; child = child.nextSibling) {
-        if (walk(child)) return true;
-      }
-      return false;
-    }
-    walk(dreamView);
-    return text;
-  }
-
-  const before = getTextBeforeSelection();
-  // 2. Ищем в исходном тексте ближайшее вхождение selected после before.length
-  let start = -1;
-  let searchFrom = before.length;
-  // Иногда из-за пробелов/разметки может быть несовпадение, ищем ближайшее вхождение
-  for (let i = Math.max(0, searchFrom - 10); i <= searchFrom + 10; i++) {
-    if (t.slice(i, i + selected.length) === selected) {
-      start = i;
-      break;
-    }
-  }
-  if (start === -1) start = t.indexOf(selected, searchFrom);
-  if (start === -1) start = t.indexOf(selected);
+  // Находим позицию выбранного текста в исходном state.dreamText
+  const start = state.dreamText.indexOf(selected);
   if (start === -1) return null;
-  const end = start + selected.length;
-  if (start === end || end > t.length) return null;
-
-  return { start, end };
+  return { start, end: start + selected.length };
 }
 
+function addBlockFromSelection() {
+  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  const off = getSelectionOffsets();
+  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
+  // Проверяем пересечения с существующими блоками
+  for (const b of state.blocks) {
+    if (!(off.end <= b.start || off.start >= b.end)) {
+      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
+    }
+  }
+  const id = state.nextBlockId++;
+  const text = state.dreamText.slice(off.start, off.end);
+  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
 function addWholeBlock() {
   if (!state.dreamText) return;
   // Проверяем, что такого блока ещё нет
@@ -121,23 +97,6 @@ function addWholeBlock() {
     chat: [],
     finalInterpretation: null // новое поле
   });
-  state.currentBlockId = id;
-  renderBlocksChips();
-}
-
-function addBlockFromSelection() {
-  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
-  const off = getSelectionOffsets();
-  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
-  // Проверяем пересечения с существующими блоками
-  for (const b of state.blocks) {
-    if (!(off.end <= b.start || off.start >= b.end)) {
-      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
-    }
-  }
-  const id = state.nextBlockId++;
-  const text = state.dreamText.slice(off.start, off.end);
-  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
   state.currentBlockId = id;
   renderBlocksChips();
 }
