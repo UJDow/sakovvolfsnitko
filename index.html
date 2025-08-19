@@ -5,94 +5,106 @@
   <title>Snova Web MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }
-    h1 { font-size: 20px; margin: 0 0 12px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-    .card { position: relative; }
-    textarea, input, button { font: inherit; }
+  body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    /* Базовый стиль для всех textarea */
-    textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.4;
-      box-sizing: border-box;
-      resize: none;
-    }
+  .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card { position: relative; } /* важно: контекст для z-index детей */
 
-    /* Поле "Введите сон" */
-    #dream {
-      min-height: 140px;
-      max-height: 140px;
-    }
+  textarea, input, button { font: inherit; }
 
-    /* Поле для ответов пользователя */
-    #userInput {
-      width: 100%;
-      min-height: 80px;
-      max-height: 80px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-size: 14px;
-      line-height: 1.4;
-      resize: none;
-      box-sizing: border-box;
-      margin-bottom: 12px;
-    }
+  /* Базовый стиль для всех textarea */
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    resize: none;
+  }
 
-    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-    button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
+  /* Поле "Введите сон" */
+  #dream {
+    min-height: 140px;
+    max-height: 140px;
+  }
 
-    .dream-view {
-      line-height: 1.6;
-      background: #fafafa;
-      padding: 12px 10px !important;
-      border-radius: 8px;
-      border: 1px dashed #ddd;
-      min-height: 100px;
-      white-space: pre-wrap;
-    }
+  /* Поле для ответов пользователя */
+  #userInput {
+    width: 100%;
+    min-height: 80px;
+    max-height: 80px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: none;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+  }
 
-    mark[data-block] { background: #ffe9a8; padding: 0 2px; border-radius: 3px; cursor: pointer; }
-    .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }
-    .chip.active { background: #2f6fff; color: #fff; }
-    .chat { display: flex; flex-direction: column; gap: 8px; height: 240px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
-    .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
-    .bot { background: #eef2ff; align-self: flex-start; }
-    .user { background: #eafbea; align-self: flex-end; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+  button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
 
-    .msg.final {
-      background: #d6d6ff;
-      color: #2f1a7f;
-      font-weight: bold;
-      border: 1px solid #a6a6ff;
-    }
+  .dream-view {
+    line-height: 1.6;
+    background: #fafafa;
+    padding: 12px 10px !important;
+    border-radius: 8px;
+    border: 1px dashed #ddd;
+    min-height: 100px;
+    white-space: pre-wrap;
+    position: relative; /* на всякий случай против перекрытий */
+  }
 
-    .quick { display: flex; gap: 8px; margin-top: 6px; }
-    .muted { color: #666; font-size: 12px; }
-    .footer { margin-top: 12px; display: flex; gap: 8px; }
-    .controls, .footer { position: relative; z-index: 1; }
+  mark[data-block] { background: #ffe9a8; padding: 0 2px; border-radius: 3px; cursor: pointer; }
+  .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }
+  .chip.active { background: #2f6fff; color: #fff; }
 
-    #sendAnswerBtn {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #2f6fff;
-      background: #2f6fff;
-      color: #fff;
-    }
+  .chat { display: flex; flex-direction: column; gap: 8px; height: 240px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
+  .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
+  .bot { background: #eef2ff; align-self: flex-start; }
+  .user { background: #eafbea; align-self: flex-end; }
 
-    /* Включаем выделение только в зоне текста сна,
-       и отключаем выделение на соседних элементах, чтобы не путать Range */
-    .dream-view { user-select: text; }
-    .controls button, .blocks, .footer, .chat { user-select: none; }
-  </style>
+  .msg.final {
+    background: #d6d6ff;
+    color: #2f1a7f;
+    font-weight: bold;
+    border: 1px solid #a6a6ff;
+  }
+
+  .quick { display: flex; gap: 8px; margin-top: 6px; }
+  .muted { color: #666; font-size: 12px; }
+
+  .footer { margin-top: 12px; display: flex; gap: 8px; }
+
+  /* Важно: панели и кнопки поверх */
+  .controls, .footer { position: relative; z-index: 1; }
+
+  #sendAnswerBtn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #2f6fff;
+    background: #2f6fff;
+    color: #fff;
+  }
+
+  /* Включаем выделение только в зоне текста сна,
+     и отключаем выделение на соседних элементах, чтобы не путать Range */
+  .dream-view { user-select: text; }
+  .controls button, .blocks, .footer, .chat { user-select: none; }
+
+  /* Явно разрешаем клики по интерактивным элементам */
+  .controls, .footer, .blocks, .chat, button, input, textarea {
+    pointer-events: auto;
+  }
+</style>
 </head>
 <body>
   <h1>Snova — веб‑MVP (без хранения)</h1>
