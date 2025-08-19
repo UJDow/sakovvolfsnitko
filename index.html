@@ -1,240 +1,138 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Анализатор сновидений</title>
-
+  <meta charset="utf-8" />
+  <title>Snova Web MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    textarea, input, button { font: inherit; }
 
-    h1 {
-      color: #2f1a7f;
-      text-align: center;
-      margin-bottom: 30px;
-    }
+    /* Базовый стиль для всех textarea */
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  box-sizing: border-box;
+  resize: none;
+}
 
-    .container {
-      background-color: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
+/* Поле "Введите сон" */
+#dream {
+  min-height: 140px;
+  max-height: 140px;
+}
+    /* Поле для ответов пользователя */
+#userInput {
+  width: 100%;
+  min-height: 80px;
+  max-height: 80px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: none;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
 
-    textarea {
-      width: 100%;
-      min-height: 150px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      resize: vertical;
-      font-family: inherit;
-    }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
 
-    .controls {
-      margin: 15px 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+.dream-view {
+  line-height: 1.6;
+  background: #fafafa;
+  padding: 12px 10px !important;
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+  min-height: 100px;
+  white-space: pre-wrap;
+}
 
-    button {
-      padding: 8px 15px;
-      background-color: #2f1a7f;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
+mark[data-block] { background: #ffe9a8; padding: 0 2px; border-radius: 3px; cursor: pointer; }
+.blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.chip { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #2f3a8f; cursor: pointer; border: 1px solid transparent; }
+.chip.active { background: #2f6fff; color: #fff; }
+.chat { display: flex; flex-direction: column; gap: 8px; height: 240px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
+.msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
+.bot { background: #eef2ff; align-self: flex-start; }
+.user { background: #eafbea; align-self: flex-end; }
 
-    button:hover {
-      background-color: #4a2dac;
-    }
+.msg.final {
+  background: #d6d6ff;
+  color: #2f1a7f;
+  font-weight: bold;
+  border: 1px solid #a6a6ff;
+}
+    .quick { display: flex; gap: 8px; margin-top: 6px; }
+.muted { color: #666; font-size: 12px; }
+.footer { margin-top: 12px; display: flex; gap: 8px; }
 
-    button:disabled {
-      background-color: #9f90cc;
-      cursor: not-allowed;
-    }
-
-    #dreamView {
-      border: 1px solid #ddd;
-      padding: 15px;
-      min-height: 100px;
-      border-radius: 5px;
-      background-color: #f9f9f9;
-      margin-bottom: 20px;
-      white-space: pre-wrap;
-    }
-
-    #dreamView mark {
-      background-color: #ffeb3b;
-      padding: 2px 0;
-      cursor: pointer;
-      border-radius: 3px;
-    }
-
-    #dreamView mark:hover {
-      background-color: #ffd700;
-    }
-
-    .blocks-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 15px 0;
-    }
-
-    .chip {
-      padding: 8px 15px;
-      background-color: #e0d6ff;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .chip.active {
-      background-color: #2f1a7f;
-      color: white;
-    }
-
-    .chat-container {
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      padding: 15px;
-      background-color: #f9f9f9;
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 15px;
-    }
-
-    .msg {
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 10px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-
-    .msg.user {
-      background-color: #d1ecf1;
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .msg.bot {
-      background-color: #f8d7da;
-      margin-right: auto;
-    }
-
-    .msg.final {
-      background-color: #d4edda;
-      margin: 0 auto;
-      text-align: center;
-      font-weight: bold;
-    }
-
-    .quick {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .quick button {
-      background-color: #6f42c1;
-      font-size: 13px;
-      padding: 5px 10px;
-    }
-
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .input-group input {
-      flex-grow: 1;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-
-    .footer {
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    #overallInterpretation {
-      margin-top: 16px;
-      background: #e0d6ff;
-      color: #2f1a7f;
-      padding: 12px;
-      border-radius: 10px;
-      font-weight: bold;
-    }
+#sendAnswerBtn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #2f6fff;
+  background: #2f6fff;
+  color: #fff;
+}
+    /* Включаем выделение только в зоне текста сна,
+   и отключаем выделение на соседних элементах, чтобы не путать Range */
+.dream-view { user-select: text; }
+.controls button, .blocks, .footer, .chat { user-select: none; }
+    
   </style>
 </head>
 <body>
-  <h1>Анализатор сновидений</h1>
+  <h1>Snova — веб‑MVP (без хранения)</h1>
 
-  <div class="container">
-    <h2>Введите ваш сон</h2>
-    <textarea id="dream" placeholder="Опишите ваш сон здесь..."></textarea>
-
-    <div class="controls">
-      <button id="render">Показать для выделения</button>
-      <button id="addBlock">Добавить выделенный блок</button>
-      <button id="addWholeBlock">Добавить весь текст</button>
-      <button id="auto">Авто-разделение</button>
-      <button id="clear">Очистить всё</button>
+  <div class="row">
+    <div class="card">
+      <h3>1) Введите сон</h3>
+      <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
+      <div class="controls">
+        <button id="render">Показать для выделения</button>
+        <button id="auto">Автоблоки (через предложения)</button>
+        <button id="clear">Очистить всё</button>
+        <button id="exportTxt">Экспорт TXT</button>
+        <input type="file" id="import" accept="application/json" />
+      </div>
+      <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
+      <div class="dream-view" id="dreamView"></div>
+      <div class="controls">
+        <button id="addBlock">Добавить блок по выделению</button>
+        <button id="addWholeBlock">Добавить весь текст как блок</button>
+      </div>
+      <div class="blocks" id="blocks"></div>
     </div>
 
-    <div id="dreamView"></div>
+    <div class="card">
+  <h3>2) Диалог по блоку</h3>
+  <div id="currentBlock" class="muted">Блок не выбран</div>
+  <div class="chat" id="chat"></div>
 
-    <h3>Блоки текста:</h3>
-    <div class="blocks-container" id="blocks"></div>
-    <div id="currentBlock">Блок не выбран</div>
-  </div>
-
-  <div class="container">
-    <h2>Анализ блока</h2>
-    <div class="chat-container" id="chat"></div>
-
-    <div class="input-group">
-      <input type="text" id="userInput" placeholder="Введите ваш ответ...">
-      <button id="sendAnswerBtn">Отправить</button>
-    </div>
-
-    <div class="controls">
-      <button id="start">Начать/продолжить</button>
-      <button id="blockInterpret">Итог по блоку</button>
-      <button id="finalInterpret">Общий итог</button>
-    </div>
-
-    <div id="overallInterpretation"></div>
-  </div>
-
+  <!-- Поле ввода -->
   <div class="footer">
-    <div>
-      <input type="file" id="import" accept=".json" style="display: none;">
-      <button onclick="document.getElementById('import').click()">Импорт JSON</button>
-      <button id="exportJson">Экспорт JSON</button>
-    </div>
+    <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
   </div>
 
-  <script src="src/main.js"></script>
+  <!-- Кнопки -->
+  <div class="footer">
+    <button class="primary" id="sendAnswerBtn">Ответить</button>
+    <button class="primary" id="start">Начать/продолжить</button>
+    <button id="finalInterpret">Итоговое толкование</button>
+    <button id="blockInterpret">Толкование блока</button>
+  </div>
+</div>
+
+  <!-- Подключаем JS-файл -->
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
