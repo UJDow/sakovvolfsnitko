@@ -1,6 +1,6 @@
 const state = {
   dreamText: '',
-  blocks: [], // {id, start, end, text, done:false, chat: []}
+  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: string|null, userAnswersCount: number}
   currentBlockId: null,
   nextBlockId: 1
 };
@@ -64,9 +64,7 @@ function renderBlocksChips() {
 
 // Утилиты для преобразования DOM-Range в абсолютные индексы исходного текста
 function findTextNodeAndLocalOffset(node, offset) {
-  // Если node текстовый — отлично
   if (node.nodeType === Node.TEXT_NODE) return { node, offset };
-  // Иначе попытаться найти текстовый дочерний узел вокруг offset
   const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
   let curr = walker.nextNode();
   let seen = 0;
@@ -94,7 +92,6 @@ function getSelectionOffsets() {
   const range = sel.getRangeAt(0);
   if (!range || range.collapsed) return null;
 
-  // Проверяем, что выделение внутри #dreamView
   const dv = byId('dreamView');
   if (!dv.contains(range.startContainer) || !dv.contains(range.endContainer)) return null;
 
@@ -108,13 +105,15 @@ function getSelectionOffsets() {
 // Добавить весь текст как блок
 function addWholeBlock() {
   if (!state.dreamText) return;
-  // Проверяем, что такого блока ещё нет
   if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
     alert('Весь текст уже добавлен как блок.');
     return;
   }
   const id = state.nextBlockId++;
-  state.blocks.push({ id, start: 0, end: state.dreamText.length, text: state.dreamText, done: false, chat: [] });
+  const start = 0;
+  const end = state.dreamText.length;
+  const text = state.dreamText;
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
   renderBlocksChips();
 }
@@ -125,12 +124,10 @@ function addBlockFromSelection() {
   const off = getSelectionOffsets();
   if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
 
-  // Нормализация границ
   let start = Math.max(0, Math.min(off.start, state.dreamText.length));
   let end = Math.max(0, Math.min(off.end, state.dreamText.length));
   if (start === end) return alert('Пустое выделение.');
 
-  // Проверяем пересечения с существующими блоками
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
@@ -138,7 +135,7 @@ function addBlockFromSelection() {
   }
   const id = state.nextBlockId++;
   const text = state.dreamText.slice(start, end);
-  state.blocks.push({ id, start, end, text, done: false, chat: [] });
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
   renderBlocksChips();
 }
@@ -155,7 +152,7 @@ function autoSplitSentences() {
     const start = state.dreamText.indexOf(s, cursor);
     const end = start + s.length;
     const id = state.nextBlockId++;
-    state.blocks.push({ id, start, end, text: s, done: false, chat: [] });
+    state.blocks.push({ id, start, end, text: s, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
     cursor = end;
   }
   state.currentBlockId = state.blocks[0]?.id || null;
@@ -178,7 +175,8 @@ function renderChat() {
   if (!b) return;
   for (const m of b.chat) {
     const div = document.createElement('div');
-    div.className = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
+    const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
+    div.className = baseClass + (m.isFinal ? ' final' : '');
     div.textContent = m.text;
     chat.appendChild(div);
     if (m.quickReplies?.length) {
@@ -196,34 +194,31 @@ function renderChat() {
   chat.scrollTop = chat.scrollHeight;
 }
 
-function appendBot(text, quickReplies = []) {
+function appendBot(text, quickReplies = [], isFinal = false) {
   const b = getCurrentBlock(); if (!b) return;
-  b.chat.push({ role: 'bot', text, quickReplies });
+  b.chat.push({ role: 'bot', text, quickReplies, isFinal });
   renderChat();
 }
 
 function appendUser(text) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'user', text });
+  b.userAnswersCount = (b.userAnswersCount || 0) + 1;
   renderChat();
 }
 
 // Функция для парсинга ответов ИИ
 function parseAIResponse(text) {
-  // Ищем быстрые ответы в формате [Вариант1|Вариант2|Вариант3]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
   let cleanText = text;
   let isFinal = false;
 
   if (quickMatch) {
-    // Извлекаем варианты ответов
     quickReplies = quickMatch[1].split(/\s*\|\s*/).slice(0, 3);
-    // Убираем блок с вариантами из основного текста
     cleanText = text.substring(0, quickMatch.index).trim();
   }
 
-  // Проверяем, является ли ответ итоговым
   const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
   isFinal = finalKeywords.some(keyword =>
     cleanText.toLowerCase().includes(keyword.toLowerCase())
@@ -247,65 +242,154 @@ async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
 
-  // Показать индикатор
   const startBtn = byId('start');
   startBtn.disabled = true;
   startBtn.textContent = "Генерируем...";
 
   try {
-    // Собираем историю для запроса
     const history = b.chat.map(m => ({
       role: m.role,
       text: m.text
     }));
 
     const next = await llmNextStep(b.text, history);
-
-    appendBot(next.question, next.quickReplies);
-
-    // Если это финальный ответ
-    if (next.isFinal) {
-      b.done = true;
-      appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
-    }
+    appendBot(next.question, next.quickReplies); // без автозавершения
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
-    // Восстановить кнопку
     startBtn.disabled = false;
     startBtn.textContent = "Начать/продолжить";
   }
 }
 
-// Функция завершения анализа
-function finishAnalysis() {
+// Толкование блока (финал для текущего блока)
+async function blockInterpretation() {
   const b = getCurrentBlock();
-  if (!b) return;
+  if (!b) return alert('Выберите блок.');
 
-  // Добавляем специальный триггер для AI
-  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
+  if ((b.userAnswersCount || 0) < 5) {
+    return alert('Недостаточно ответов. Нужно минимум 5 ответов пользователя по этому блоку.');
+  }
 
-  // Показать индикатор
-  const finishBtn = byId('finish');
-  finishBtn.disabled = true;
-  finishBtn.textContent = "Формируем итог...";
+  const btn = byId('blockInterpretBtn');
+  btn.disabled = true;
+  const prevText = btn.textContent;
+  btn.textContent = 'Формируем толкование...';
 
-  // Запускаем процесс
-  startOrContinue().finally(() => {
-    finishBtn.disabled = false;
-    finishBtn.textContent = "Завершить анализ";
-  });
+  try {
+    const extraSystemPrompt = `
+Сформулируй итоговое фрейдистское толкование ТОЛЬКО для текущего блока сна кратко (3–6 предложений), ясным человеческим языком, без жаргона.
+Обязательно свяжи детали тела и числа/цифры (если были) с вытесненными желаниями или детскими переживаниями.
+Не задавай вопросов. Это финальная интерпретация по блоку. Начни сразу с сути.`;
+
+    const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
+
+    const history = b.chat.map(m => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.text
+    }));
+
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        blockText: b.text,
+        history,
+        extraSystemPrompt
+      })
+    });
+
+    if (!response.ok) {
+      let errJson = null;
+      try { errJson = await response.json(); } catch {}
+      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
+        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
+      }
+      const msg = errJson?.message || response.statusText;
+      throw new Error(msg);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim() || 'Не удалось получить толкование.';
+    b.finalInterpretation = content;
+    b.done = true;
+
+    appendBot('Толкование блока:\n' + content, [], true);
+  } catch (e) {
+    console.error(e);
+    appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevText;
+  }
 }
 
-function resetChat() {
-  const b = getCurrentBlock();
-  if (!b) return;
-  b.chat = [];
-  b.done = false;
-  renderChat();
+// Итоговое толкование по всем блокам с финалами
+async function finalInterpretation() {
+  const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
+
+  if (interpreted.length === 0) {
+    return alert('Нет ни одного толкования блока. Сначала выполните "Толкование блока" хотя бы для одного блока.');
+  }
+
+  const btn = byId('finalInterpretBtn');
+  btn.disabled = true;
+  const prevText = btn.textContent;
+  btn.textContent = 'Формируем итог...';
+
+  try {
+    const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
+    const summaryInput = interpreted.map(b => `Блок #${b.id}: ${b.finalInterpretation}`).join('\n\n');
+
+    const extraSystemPrompt = `
+На основе итоговых толкований отдельных блоков составь единое фрейдистское итоговое толкование сна (5–9 предложений).
+Синтезируй общие мотивы (части тела, числа/цифры, запретные импульсы, детские переживания), покажи связность образов.
+Не задавай вопросов. Начни сразу с объединяющего вывода.`;
+
+    const blockText = (state.dreamText || '').slice(0, 4000);
+
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        blockText,
+        history: [
+          { role: 'user', content: 'Итоговые толкования блоков:\n' + summaryInput }
+        ],
+        extraSystemPrompt
+      })
+    });
+
+    if (!response.ok) {
+      let errJson = null;
+      try { errJson = await response.json(); } catch {}
+      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
+        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
+      }
+      const msg = errJson?.message || response.statusText;
+      throw new Error(msg);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim() || 'Не удалось получить итоговое толкование.';
+
+    const b = getCurrentBlock();
+    if (b) {
+      appendBot('Итоговое толкование сна:\n' + content, [], true);
+    } else {
+      alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
+    }
+  } catch (e) {
+    console.error(e);
+    appendBot("Ошибка при формировании итогового толкования: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevText;
+  }
 }
 
+// Следующий шаг диалога с ИИ
 async function llmNextStep(blockText, history) {
   const b = getCurrentBlock();
   if (!b) return {
@@ -314,7 +398,6 @@ async function llmNextStep(blockText, history) {
     isFinal: false
   };
 
-  // Теперь отправляем только blockText и history!
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
@@ -335,7 +418,7 @@ async function llmNextStep(blockText, history) {
       try { errJson = await response.json(); } catch {}
       if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
         throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
-        }
+      }
       const msg = errJson?.message || response.statusText;
       throw new Error(msg);
     }
@@ -369,7 +452,12 @@ function importJSON(file) {
     try {
       const data = JSON.parse(reader.result);
       state.dreamText = data.dreamText || '';
-      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[]}));
+      state.blocks = (data.blocks || []).map(b => ({
+        ...b,
+        chat: b.chat || [],
+        finalInterpretation: b.finalInterpretation ?? null,
+        userAnswersCount: b.userAnswersCount ?? 0
+      }));
       state.nextBlockId = Math.max(1, ...state.blocks.map(b=>b.id+1));
       state.currentBlockId = state.blocks[0]?.id || null;
       byId('dream').value = state.dreamText;
@@ -387,8 +475,8 @@ byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.c
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
-byId('finish').onclick = finishAnalysis;
-byId('blockInterpret').onclick = resetChat;
+byId('blockInterpretBtn').onclick = blockInterpretation;
+byId('finalInterpretBtn').onclick = finalInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
 
 // --- Ручной ввод ответа ---
