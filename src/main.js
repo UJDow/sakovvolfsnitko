@@ -277,17 +277,18 @@ async function blockInterpretation() {
   const prevText = btn.textContent;
   btn.textContent = 'Формируем толкование...';
 
-  // Локальная санитизация (на всякий)
   function stripNoise(s) {
     if (!s) return s;
     s = s.replace(/```[\s\S]*?```/g, ' ');
+    s = s.replace(/!$$[^$$]*\]$$[^)]+$$/g, ' ');
+    s = s.replace(/$$[^$$]*\]$$[^)]+$$/g, ' ');
     s = s.replace(/<[^>]+>/g, ' ');
     s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
     s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
     s = s.replace(/<\u2758?[^>]*\u2758?>/g, ' ');
     s = s.replace(/<\uFFE8?[^>]*\uFFE8?>/g, ' ');
     s = s.replace(/$$source code.*?$$/gi, ' ');
-    const badLine = /^(package |import |public class |class |@extends|@section|namespace |<\?php|use |Route::|function\s+\w+\(|model:|Controller\b)/i;
+    const badLine = /^(package |import |public class |class |@extends|@section|namespace |<\?php|use |Route::|function\s+\w+\(|model:|Controller\b|#\s|\d+\.\s|>\s|https?:\/\/)/i;
     s = s.split('\n').filter(line => !badLine.test(line.trim())).join('\n');
     return s.replace(/\s+/g, ' ').trim();
   }
@@ -299,7 +300,7 @@ async function blockInterpretation() {
 Не задавай вопросов. Это финальная интерпретация по блоку. Начни сразу с сути.
 Строгий формат:
 - ТОЛЬКО чистый текст интерпретации.
-- Без заголовков, без префиксов (не начинай с "Толкование блока:" или "Итоговое толкование сна:"), без списков, без кода, без тегов, без служебных маркеров.
+- Без заголовков, без префиксов (не начинай с "Толкование блока:" или "Итоговое толкование сна:"), без списков, без кода, без тегов, без служебных маркеров, без ссылок/картинок/цитат.
 `;
 
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
@@ -338,8 +339,7 @@ async function blockInterpretation() {
     b.finalInterpretation = content;
     b.done = true;
 
-    // Без префиксов
-    appendBot(content, [], true);
+    appendBot(content, [], true); // без префикса
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
@@ -362,17 +362,18 @@ async function finalInterpretation() {
   const prevText = btn.textContent;
   btn.textContent = 'Формируем итог...';
 
-  // Локальная санитизация
   function stripNoise(s) {
     if (!s) return s;
     s = s.replace(/```[\s\S]*?```/g, ' ');
+    s = s.replace(/!$$[^$$]*\]$$[^)]+$$/g, ' ');
+    s = s.replace(/$$[^$$]*\]$$[^)]+$$/g, ' ');
     s = s.replace(/<[^>]+>/g, ' ');
     s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
     s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
     s = s.replace(/<\u2758?[^>]*\u2758?>/g, ' ');
     s = s.replace(/<\uFFE8?[^>]*\uFFE8?>/g, ' ');
     s = s.replace(/$$source code.*?$$/gi, ' ');
-    const badLine = /^(package |import |public class |class |@extends|@section|namespace |<\?php|use |Route::|function\s+\w+\(|model:|Controller\b)/i;
+    const badLine = /^(package |import |public class |class |@extends|@section|namespace |<\?php|use |Route::|function\s+\w+\(|model:|Controller\b|#\s|\d+\.\s|>\s|https?:\/\/)/i;
     s = s.split('\n').filter(line => !badLine.test(line.trim())).join('\n');
     return s.replace(/\s+/g, ' ').trim();
   }
@@ -387,7 +388,7 @@ async function finalInterpretation() {
 Не задавай вопросов. Начни сразу с объединяющего вывода.
 Строгий формат:
 - ТОЛЬКО чистый текст интерпретации.
-- Без заголовков, без префиксов, без списков, без кода, без тегов, без служебных маркеров.
+- Без заголовков, без префиксов, без списков, без кода, без тегов, без служебных маркеров, без ссылок/картинок/цитат.
 `;
 
     const blockText = (state.dreamText || '').slice(0, 4000);
@@ -421,8 +422,7 @@ async function finalInterpretation() {
 
     const b = getCurrentBlock();
     if (b) {
-      // Без префикса
-      appendBot(content, [], true);
+      appendBot(content, [], true); // без префикса
     } else {
       alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
     }
