@@ -273,7 +273,20 @@ async function startOrContinue() {
     }));
 
     const next = await llmNextStep(b.text, history);
-    appendBot(next.question, next.quickReplies); // без автозавершения
+
+// Если модель выдала финал естественно — фиксируем это как итог блока
+if (next.isFinal) {
+  // Сохраняем финал блока и помечаем завершение
+  b.finalInterpretation = next.question.trim();
+  b.finalAt = Date.now();
+  b.done = true;
+
+  // Показываем финал как финальное сообщение блока
+  appendBot(next.question, [], true);
+} else {
+  // Обычный шаг диалога
+  appendBot(next.question, next.quickReplies);
+}
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
