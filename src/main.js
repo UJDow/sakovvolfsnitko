@@ -263,13 +263,14 @@ async function startOrContinue() {
   }
 }
 
-// Толкование блока (финал для текущего блока)
+// Толкование блока (финал для текущего блока) — упрощённая версия
 async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
 
-  if ((b.userAnswersCount || 0) < 5) {
-    return alert('Недостаточно ответов. Нужно минимум 5 ответов пользователя по этому блоку.');
+  // Оставим базовую валидацию, чтобы модель не выдавала финал без контекста диалога
+  if ((b.userAnswersCount || 0) < 3) {
+    return alert('Нужно минимум 3 ответа пользователя по этому блоку перед финальной интерпретацией.');
   }
 
   const btn = byId('blockInterpretBtn');
@@ -277,40 +278,18 @@ async function blockInterpretation() {
   const prevText = btn.textContent;
   btn.textContent = 'Формируем толкование...';
 
-  function stripNoise(s) {
-    if (!s) return s;
-    s = s.replace(/```[\s\S]*?```/g, ' ');
-    s = s.replace(/!$$[^$$]*\]$$[^)]+$$/g, ' ');
-    s = s.replace(/$$[^$$]*\]$$[^)]+$$/g, ' ');
-    s = s.replace(/<[^>]+>/g, ' ');
-    s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-    s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-    s = s.replace(/<\u2758?[^>]*\u2758?>/g, ' ');
-    s = s.replace(/<\uFFE8?[^>]*\uFFE8?>/g, ' ');
-    s = s.replace(/$$source code.*?$$/gi, ' ');
-    const badLine = /^(package |import |public class |class |@extends|@section|namespace |<\?php|use |Route::|function\s+\w+\(|model:|Controller\b|#\s|\d+\.\s|>\s|https?:\/\/)/i;
-    s = s.split('\n').filter(line => !badLine.test(line.trim())).join('\n');
-    return s.replace(/\s+/g, ' ').trim();
-  }
-
   try {
-    const extraSystemPrompt = `
-Сформулируй итоговое фрейдистское толкование ТОЛЬКО для текущего блока сна кратко (3–6 предложений), ясным человеческим языком.
-Обязательно свяжи детали тела и числа/цифры (если были) с вытесненными желаниями или детскими переживаниями.
-Не задавай вопросов. Это финальная интерпретация по блоку. Начни сразу с сути.
-Строгий формат:
-- ТОЛЬКО чистый текст интерпретации.
-- Без заголовков, без префиксов (не начинай с "Толкование блока:" или "Итоговое толкование сна:"), без списков, без кода, без тегов, без служебных маркеров, без ссылок/картинок/цитат.
-`;
-
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
+    // История: берём весь диалог по текущему блоку (аск/анс), плюс якорим контекст блока
     const history = [
       { role: 'user', content: 'Контекст блока сна:\n' + b.text },
       ...b.chat.map(m => ({
         role: m.role === "bot" ? "assistant" : "user",
         content: m.text
-      }))
+      })),
+      // Финальная инструкция — ровно один абзац интерпретации, без префиксов/кода
+      { role: 'user', content: 'Пожалуйста, дай краткую финальную фрейдистскую интерпретацию этого блока сна (3–6 предложений). Свяжи детали тела и числа (если были) с вытесненными желаниями/детским опытом. Не задавай вопросов. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
 
     const response = await fetch(PROXY_URL, {
@@ -318,8 +297,7 @@ async function blockInterpretation() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         blockText: b.text,
-        history,
-        extraSystemPrompt
+        history
       })
     });
 
@@ -329,17 +307,29 @@ async function blockInterpretation() {
       if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
         throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
       }
-      const msg = errJson?.message || response.statusText;
-      throw new Error(msg);
+      throw new Error(errJson?.message || response.statusText);
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() || 'Не удалось получить толкование.';
-    const content = stripNoise(raw) || 'Не удалось получить толкование.';
+    let content = (data.choices?.[0]?.message?.content || '').trim();
+
+    // Лёгкая инлайн-очистка без отдельных функций
+    content = content
+      .replace(/```[\s\S]*?```/g, ' ')        // вырезаем блоки кода
+      .replace(/<[^>]+>/g, ' ')               // HTML/теги
+      .replace(/<\u2502?[^>]*\u2502?>/g, ' ') // служебные маркеры <｜…｜>
+      .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
+      .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '') // убираем возможный префикс
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!content) content = 'Не удалось получить толкование.';
+
     b.finalInterpretation = content;
     b.done = true;
 
-    appendBot(content, [], true); // без префикса
+    // Показываем ровно интерпретацию, без заголовков, чтобы не «зеркалилось» дальше
+    appendBot(content, [], true);
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
