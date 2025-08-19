@@ -122,7 +122,7 @@ function addWholeBlock() {
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null });
   state.currentBlockId = id;
   renderBlocksChips();
-  renderDreamView(); // добавлено
+  renderDreamView();
 }
 
 function autoSplitSentences() {
@@ -141,7 +141,7 @@ function autoSplitSentences() {
   }
   state.currentBlockId = state.blocks[0]?.id || null;
   renderBlocksChips();
-  renderDreamView(); // чтобы подсветка сразу появилась
+  renderDreamView();
 }
 
 function selectBlock(id) {
@@ -234,7 +234,7 @@ async function startOrContinue() {
     appendBot(next.question, next.quickReplies);
     if (next.isFinal) {
       b.done = true;
-      // По желанию можно автоматически сохранить финал в блок:
+      // Можно автоматически сохранять финал:
       // if (!b.finalInterpretation) b.finalInterpretation = next.question;
       appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
     }
