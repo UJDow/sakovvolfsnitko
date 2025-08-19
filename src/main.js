@@ -8,11 +8,11 @@ const state = {
 
 function byId(id) { return document.getElementById(id); }
 
-// Новый renderDreamView — только createTextNode и mark
+// Рендер текста без innerHTML — только textNode + <mark>
 function renderDreamView() {
   const dv = byId('dreamView');
   const t = state.dreamText || '';
-  dv.innerHTML = ''; // очистили
+  dv.innerHTML = '';
 
   if (!t) return;
 
@@ -39,12 +39,14 @@ function renderDreamView() {
   }
 }
 
-// Новый getSelectionOffsets — через Range
+// Смещения выделения через Range относительно dreamView
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
 
   const range = sel.getRangeAt(0);
+  if (!byId('dreamView').contains(range.commonAncestorContainer)) return null;
+
   const preRange = range.cloneRange();
   preRange.selectNodeContents(byId("dreamView"));
   preRange.setEnd(range.startContainer, range.startOffset);
@@ -59,23 +61,51 @@ function getSelectionOffsets() {
 
 function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+
   const off = getSelectionOffsets();
   if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
-  // Проверяем пересечения с существующими блоками
+
+  // 1) Трим пробелы/переводы в начале/конце
+  let { start, end } = off;
+  const plain = byId("dreamView").textContent;
+
+  while (start < end && /\s/.test(plain[start])) start++;
+  while (end > start && /\s/.test(plain[end - 1])) end--;
+
+  if (end <= start) {
+    return alert('Похоже, вы выделили только пробелы/переводы строки. Выделите фрагмент текста.');
+  }
+
+  // 2) Проверка соответствия кусочка DOM ↔ state.dreamText
+  const selected = plain.slice(start, end);
+  const expected = state.dreamText.slice(start, end);
+  if (selected !== expected) {
+    console.warn("Несовпадение выделения с исходным текстом", { selected, expected });
+    return alert('Ошибка: выделение не совпадает с исходным текстом. Попробуйте выделить без захвата лишних символов.');
+  }
+
+  // 3) Проверка пересечений; подсветить конфликт, если есть
   for (const b of state.blocks) {
-    if (!(off.end <= b.start || off.start >= b.end)) {
+    if (!(end <= b.start || start >= b.end)) {
+      const mark = byId('dreamView').querySelector(`mark[data-block="${b.id}"]`);
+      if (mark) {
+        mark.style.outline = '2px solid #ff4d4f';
+        setTimeout(() => { mark.style.outline = '' }, 1200);
+      }
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
     }
   }
+
+  // 4) Добавление блока
   const id = state.nextBlockId++;
-  const text = state.dreamText.slice(off.start, off.end);
-  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
+  const text = state.dreamText.slice(start, end);
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null });
   state.currentBlockId = id;
   renderBlocksChips();
 }
+
 function addWholeBlock() {
   if (!state.dreamText) return;
-  // Проверяем, что такого блока ещё нет
   if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
     alert('Весь текст уже добавлен как блок.');
     return;
@@ -91,7 +121,7 @@ function addWholeBlock() {
     text,
     done: false,
     chat: [],
-    finalInterpretation: null // новое поле
+    finalInterpretation: null
   });
   state.currentBlockId = id;
   renderBlocksChips();
@@ -122,6 +152,23 @@ function selectBlock(id) {
 
 function getCurrentBlock() {
   return state.blocks.find(b => b.id === state.currentBlockId) || null;
+}
+
+function renderBlocksChips() {
+  const wrap = byId('blocks');
+  wrap.innerHTML = '';
+  state.blocks.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+    el.addEventListener('click', ()=>selectBlock(b.id));
+    wrap.appendChild(el);
+  });
+  const cb = byId('currentBlock');
+  const b = getCurrentBlock();
+  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  renderDreamView();
+  renderChat();
 }
 
 function renderChat() {
@@ -160,35 +207,26 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   renderChat();
 }
-// Функция для парсинга ответов ИИ
+
 function parseAIResponse(text) {
-  // Ищем быстрые ответы в формате [Вариант1|Вариант2|Вариант3]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
   let cleanText = text;
   let isFinal = false;
-  
+
   if (quickMatch) {
-    // Извлекаем варианты ответов
     quickReplies = quickMatch[1].split(/\s*\|\s*/).slice(0, 3);
-    // Убираем блок с вариантами из основного текста
     cleanText = text.substring(0, quickMatch.index).trim();
   }
-  
-  // Проверяем, является ли ответ итоговым
+
   const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
-  isFinal = finalKeywords.some(keyword => 
+  isFinal = finalKeywords.some(keyword =>
     cleanText.toLowerCase().includes(keyword.toLowerCase())
   );
-  
-  return {
-    question: cleanText,
-    quickReplies,
-    isFinal
-  };
+
+  return { question: cleanText, quickReplies, isFinal };
 }
 
-// Отправка ответа пользователя
 function sendAnswer(ans) {
   appendUser(ans);
   startOrContinue();
@@ -197,32 +235,23 @@ function sendAnswer(ans) {
 function getOtherBlocksFinals(currentBlockId) {
   return state.blocks
     .filter(b => b.id !== currentBlockId && b.finalInterpretation)
-    .map((b, i) => `Блок #${b.id}: ${b.finalInterpretation}`)
+    .map((b) => `Блок #${b.id}: ${b.finalInterpretation}`)
     .join('\n\n');
 }
 
-// Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
-  
-  // Показать индикатор
+
   const startBtn = byId('start');
   startBtn.disabled = true;
   startBtn.textContent = "Генерируем...";
-  
+
   try {
-    // Собираем историю для запроса
-    const history = b.chat.map(m => ({ 
-      role: m.role, 
-      text: m.text 
-    }));
-    
+    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
     const next = await llmNextStep(b.text, history);
-    
     appendBot(next.question, next.quickReplies);
-    
-    // Если это финальный ответ
+
     if (next.isFinal) {
       b.done = true;
       appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
@@ -231,7 +260,6 @@ async function startOrContinue() {
     console.error(e);
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
-    // Восстановить кнопку
     startBtn.disabled = false;
     startBtn.textContent = "Начать/продолжить";
   }
@@ -240,7 +268,6 @@ async function startOrContinue() {
 function appendFinalInterpretation(text) {
   const b = getCurrentBlock();
   if (!b) return;
-  // Проверяем, есть ли уже финальное сообщение в чате
   if (b.chat.some(m => m.role === 'final')) return;
   b.chat.push({ role: 'final', text });
   renderChat();
@@ -302,24 +329,17 @@ function showBlockFinalInterpretation(text) {
 }
 
 async function overallInterpretation() {
-  // Собираем все итоговые толкования блоков
   const finals = state.blocks.map(b => b.finalInterpretation);
-
-  // Проверяем, что у всех блоков есть итог
   if (finals.some(f => !f)) {
     appendOverallInterpretation('Не для всех блоков получено итоговое толкование!');
     return;
   }
 
-  // Формируем текст для LLM
   const prompt = 'Вот итоговые толкования по каждому фрагменту сна:\n\n' +
     finals.map((f, i) => `Блок ${i + 1}: ${f}`).join('\n\n') +
     '\n\nПожалуйста, сделай общий вывод и интерпретацию по всему сновидению, учитывая все эти итоги.';
 
-  // Отправляем в LLM (используем тот же llmNextStep, но без истории чата)
   const result = await llmNextStep(prompt, []);
-
-  // Сохраняем и показываем общий итог
   state.overallInterpretation = result.question;
   appendOverallInterpretation(state.overallInterpretation);
 }
@@ -334,8 +354,8 @@ async function llmNextStep(blockText, history) {
       body: JSON.stringify({
         blockText,
         history: history.map(m => ({
-          role: m.role === "bot" ? "assistant" 
-               : m.role === "system" ? "system" 
+          role: m.role === "bot" ? "assistant"
+               : m.role === "system" ? "system"
                : "user",
           content: m.text || m.content
         }))
@@ -402,14 +422,13 @@ byId('blockInterpret').onclick = blockInterpretation;
 byId('finalInterpret').onclick = overallInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
 
-// --- Новое: обработка ручного ввода ответа ---
+// Ручной ввод ответа
 byId('sendAnswerBtn').onclick = () => {
   const val = byId('userInput').value.trim();
   if (!val) return;
   sendAnswer(val);
   byId('userInput').value = '';
 };
-
 byId('userInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -417,12 +436,11 @@ byId('userInput').addEventListener('keydown', e => {
   }
 });
 
-// --- Глушим сторонние overlay, тултипы и popover ---
+// Глушим оверлеи
 const blockOverlayPopups = () => {
   const observer = new MutationObserver(() => {
     document.querySelectorAll('body > *').forEach(el => {
       const style = window.getComputedStyle(el);
-      // Удаляем все элементы, которые не твои основные контейнеры и выглядят как overlay
       if (
         (style.position === 'fixed' || style.position === 'absolute') &&
         parseInt(style.zIndex) > 1000 &&
@@ -434,15 +452,10 @@ const blockOverlayPopups = () => {
   });
   observer.observe(document.body, { childList: true, subtree: true });
 };
-
 blockOverlayPopups();
 
-// Отключаем стандартное и кастомное контекстное меню
 window.addEventListener('contextmenu', e => e.preventDefault(), true);
-
-// Отключаем всплывающие тултипы по mouseup/selection
-window.addEventListener('mouseup', e => {
-  // Убираем любые всплывающие div поверх
+window.addEventListener('mouseup', () => {
   setTimeout(() => {
     document.querySelectorAll('body > div, body > span').forEach(el => {
       const style = window.getComputedStyle(el);
