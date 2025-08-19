@@ -188,7 +188,9 @@ function renderChat() {
   for (const m of b.chat) {
     const div = document.createElement('div');
     const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
-    div.className = baseClass + (m.isFinal ? ' final' : '');
+    div.className = baseClass
+  + (m.isFinal ? ' final' : '')
+  + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
     chat.appendChild(div);
     if (m.quickReplies?.length) {
@@ -216,6 +218,12 @@ function appendUser(text) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
+  renderChat();
+}
+
+function appendFinalGlobal(text) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'bot', text, quickReplies: [], isFinal: true, isGlobalFinal: true });
   renderChat();
 }
 
@@ -418,11 +426,11 @@ async function finalInterpretation() {
 
     // Показываем чистый финальный текст без префиксов
     const b = getCurrentBlock();
-    if (b) {
-      appendBot(content, [], true);
-    } else {
-      alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
-    }
+if (b) {
+  appendFinalGlobal(content);
+} else {
+  alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
+}
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании итогового толкования: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
