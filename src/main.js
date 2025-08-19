@@ -305,6 +305,12 @@ function sendAnswer(ans) {
   startOrContinue();
 }
 
+function appendBot(text, quickReplies = [], isFinal = false) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'bot', text, quickReplies, isFinal });
+  renderChat();
+}
+
 // Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
@@ -322,25 +328,22 @@ async function startOrContinue() {
 
     const next = await llmNextStep(b.text, history);
 
-// Если модель выдала финал естественно — фиксируем это как итог блока
-if (next.isFinal) {
-  b.finalInterpretation = next.question.trim();
-  b.finalAt = Date.now();
-  b.done = true;
-  appendBot(next.question, [], true);
-  updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
-} else {
-  appendBot(next.question, next.quickReplies);
-}
-  // Обычный шаг диалога
-  appendBot(next.question, next.quickReplies);
-}
+    // Если модель выдала финал естественно — фиксируем это как итог блока
+    if (next.isFinal) {
+      b.finalInterpretation = next.question.trim();
+      b.finalAt = Date.now();
+      b.done = true;
+      appendBot(next.question, [], true);
+      updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
+    } else {
+      appendBot(next.question, next.quickReplies);
+    }
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
     startBtn.disabled = false;
-    startBtn.textContent = "Начать/продолжить";
+    updateButtonsState(); // вернуть корректный текст и обработчик
   }
 }
 
@@ -414,9 +417,7 @@ async function blockInterpretation() {
     b.done = true;
     appendBot(content, [], true);
     updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
-
-    // Показываем ровно интерпретацию, без заголовков, чтобы не «зеркалилось» дальше
-    appendBot(content, [], true);
+    
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
@@ -608,6 +609,8 @@ byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]
 byId('blockInterpretBtn').onclick = blockInterpretation;
 byId('finalInterpretBtn').onclick = finalInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
+// В самом конце файла, после всех обработчиков:
+updateButtonsState();
 
 // --- Ручной ввод ответа ---
 byId('sendAnswerBtn').onclick = () => {
