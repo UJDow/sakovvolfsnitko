@@ -47,11 +47,11 @@ function getSelectionOffsets() {
   const dreamView = byId("dreamView");
   const range = sel.getRangeAt(0);
 
-  // Проверяем, что выделение полностью внутри dreamView
+  // Выделение должно быть целиком внутри dreamView
   const isInside = dreamView.contains(range.startContainer) && dreamView.contains(range.endContainer);
   if (!isInside) return null;
 
-  // Нормализуем: считаем смещение в символах относительно начала dreamView
+  // Смещение начала выделения от начала dreamView (в символах)
   const preRange = document.createRange();
   preRange.selectNodeContents(dreamView);
   preRange.setEnd(range.startContainer, range.startOffset);
@@ -65,9 +65,11 @@ function getSelectionOffsets() {
 }
 
 function addBlockFromSelection() {
-  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  if (!state.dreamText) {
+    return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  }
 
-  // Новая проверка: убеждаемся, что область для выделения реально отрендерена
+  // Проверяем, что область визуализации реально отрендерена
   const dv = byId('dreamView');
   if (!dv || !dv.textContent || !dv.textContent.trim()) {
     return alert('Сначала нажмите “Показать для выделения”, затем выделите текст в серой области.');
@@ -78,11 +80,11 @@ function addBlockFromSelection() {
     return alert('Не удалось определить выделение. Выделите текст именно в области ниже.');
   }
 
-  // Нормализуем переносы
-  const plain = byId("dreamView").textContent.replace(/\r\n?/g, '\n');
+  // Нормализуем переносы строк
+  const plain = dv.textContent.replace(/\r\n?/g, '\n');
   const source = (state.dreamText || '').replace(/\r\n?/g, '\n');
 
-  // 1) Подрезаем по пробелам на основе plain
+  // Тримим края выделения по пробельным символам
   let { start, end } = off;
   while (start < end && /\s/.test(plain[start])) start++;
   while (end > start && /\s/.test(plain[end - 1])) end--;
@@ -94,25 +96,27 @@ function addBlockFromSelection() {
   const selected = plain.slice(start, end);
   const expected = source.slice(start, end);
 
-  // 2) Если не совпадает — пробуем “сдвиг” из‑за CR/LF или сигнатуры
   if (selected !== expected) {
     console.warn("Несовпадение выделения с исходным текстом", { selected, expected });
     return alert('Ошибка: выделение не совпадает с исходным текстом. Попробуйте выделить без лишних символов и внутри серой области.');
   }
 
-  // 3) Проверка пересечений
+  // Проверка пересечений
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
     }
   }
 
-  // 4) Добавляем
+  // Добавляем блок
   const id = state.nextBlockId++;
   const text = source.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null });
   state.currentBlockId = id;
+
+  // Перерисовываем UI
   renderBlocksChips();
+  renderDreamView(); // если renderBlocksChips не вызывает сам
 }
 function addWholeBlock() {
   if (!state.dreamText) return;
@@ -432,7 +436,10 @@ function importJSON(file) {
 }
 
 // Handlers
-byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDreamView(); };
+byId('render').onclick = () => {
+  state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
+  renderDreamView();
+};
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
 byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
@@ -486,7 +493,8 @@ document.addEventListener('mouseup', () => {
   const sel = window.getSelection();
   if (sel && sel.rangeCount) {
     const r = sel.getRangeAt(0);
-    if (!byId('dreamView').contains(r.startContainer) || !byId('dreamView').contains(r.endContainer)) {
+    const dv = byId('dreamView');
+    if (!dv.contains(r.startContainer) || !dv.contains(r.endContainer)) {
       sel.removeAllRanges();
     }
   }
