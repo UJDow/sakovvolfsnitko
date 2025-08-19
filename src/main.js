@@ -210,31 +210,56 @@ function renderChat() {
   updateButtonsState();
 }
 
+function nextUndoneBlockId() {
+  const sorted = [...state.blocks].sort((a, b) => a.id - b.id);
+  for (const x of sorted) {
+    if (!x.done) return x.id;
+  }
+  return null;
+}
+
+function goToNextUndoneAndStart() {
+  const nextId = nextUndoneBlockId();
+  if (!nextId) {
+    alert('Все блоки завершены.');
+    return;
+  }
+  selectBlock(nextId);
+  startOrContinue();
+}
+
 function updateButtonsState() {
   const b = getCurrentBlock();
   const blockBtn = byId('blockInterpretBtn');
   const finalBtn = byId('finalInterpretBtn');
+  const startBtn = byId('start');
 
   // Сбросим классы перед проставлением новых
   if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
   if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
 
   // Логика для "Толкование блока"
-  // Условие готовности: минимум 5 ответов пользователя по текущему блоку
   const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
   if (blockBtn) blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
 
   // Логика для "Итоговое толкование"
-  // Условие готовности: минимум 2 блока с финальными интерпретациями
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
   const enoughForFinal = finalsCount >= 2;
   if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
-}
 
-function appendBot(text, quickReplies = [], isFinal = false) {
-  const b = getCurrentBlock(); if (!b) return;
-  b.chat.push({ role: 'bot', text, quickReplies, isFinal });
-  renderChat();
+  // Динамика для кнопки "Начать"
+  if (startBtn) {
+    startBtn.onclick = null; // чтобы не накапливались обработчики
+    if (b && b.done) {
+      startBtn.textContent = 'Перейти к следующему блоку';
+      startBtn.disabled = false;
+      startBtn.onclick = goToNextUndoneAndStart;
+    } else {
+      startBtn.textContent = 'Начать';
+      startBtn.disabled = false;
+      startBtn.onclick = startOrContinue;
+    }
+  }
 }
 
 function appendUser(text) {
@@ -299,14 +324,14 @@ async function startOrContinue() {
 
 // Если модель выдала финал естественно — фиксируем это как итог блока
 if (next.isFinal) {
-  // Сохраняем финал блока и помечаем завершение
   b.finalInterpretation = next.question.trim();
   b.finalAt = Date.now();
   b.done = true;
-
-  // Показываем финал как финальное сообщение блока
   appendBot(next.question, [], true);
+  updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
 } else {
+  appendBot(next.question, next.quickReplies);
+}
   // Обычный шаг диалога
   appendBot(next.question, next.quickReplies);
 }
@@ -385,8 +410,10 @@ async function blockInterpretation() {
     if (!content) content = 'Не удалось получить толкование.';
 
     b.finalInterpretation = content;
-    b.finalAt = Date.now(); // когда финал был сделан
+    b.finalAt = Date.now();
     b.done = true;
+    appendBot(content, [], true);
+    updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
 
     // Показываем ровно интерпретацию, без заголовков, чтобы не «зеркалилось» дальше
     appendBot(content, [], true);
@@ -578,7 +605,6 @@ byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitS
 byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
-byId('start').onclick = startOrContinue;
 byId('blockInterpretBtn').onclick = blockInterpretation;
 byId('finalInterpretBtn').onclick = finalInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
