@@ -1,123 +1,80 @@
 const state = {
   dreamText: '',
-  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: null}
+  blocks: [], // {id, start, end, text, done:false, chat: []}
   currentBlockId: null,
-  nextBlockId: 1,
-  overallInterpretation: null
+  nextBlockId: 1
 };
 
 function byId(id) { return document.getElementById(id); }
-
-// Новый renderDreamView — только createTextNode и mark
+  
 function renderDreamView() {
   const dv = byId('dreamView');
   const t = state.dreamText || '';
-  dv.innerHTML = ''; // очистили
+  if (!t) { dv.textContent = ''; return; }
 
-  if (!t) return;
-
-  const sorted = [...state.blocks].sort((a, b) => a.start - b.start);
+  // Оборачиваем диапазоны блоков в <mark data-block>
+  let parts = [];
+  const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
   let idx = 0;
-
   for (const b of sorted) {
-    if (b.start > idx) {
-      dv.appendChild(document.createTextNode(t.slice(idx, b.start)));
-    }
-
-    const mark = document.createElement('mark');
-    mark.dataset.block = b.id;
-    mark.title = `Блок #${b.id}`;
-    mark.textContent = t.slice(b.start, b.end);
-    mark.addEventListener('click', () => selectBlock(b.id));
-    dv.appendChild(mark);
-
+    if (b.start > idx) parts.push(escapeHtml(t.slice(idx, b.start)));
+    parts.push(`<mark data-block="${b.id}" title="Блок #${b.id}">${escapeHtml(t.slice(b.start, b.end))}</mark>`);
     idx = b.end;
   }
-
-  if (idx < t.length) {
-    dv.appendChild(document.createTextNode(t.slice(idx)));
-  }
+  if (idx < t.length) parts.push(escapeHtml(t.slice(idx)));
+  dv.innerHTML = parts.join('');
+  // Клик по подсветке → выбрать блок
+  dv.querySelectorAll('mark[data-block]').forEach(m => {
+    m.addEventListener('click', () => selectBlock(Number(m.getAttribute('data-block'))));
+  });
 }
 
-// Новый getSelectionOffsets — через Range
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+function renderBlocksChips() {
+  const wrap = byId('blocks');
+  wrap.innerHTML = '';
+  state.blocks.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+    el.addEventListener('click', ()=>selectBlock(b.id));
+    wrap.appendChild(el);
+  });
+  const cb = byId('currentBlock');
+  const b = getCurrentBlock();
+  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  renderDreamView();
+  renderChat();
+}
+
 function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
-
-  const dreamView = byId("dreamView");
-  const range = sel.getRangeAt(0);
-
-  // Выделение должно быть целиком внутри dreamView
-  const isInside = dreamView.contains(range.startContainer) && dreamView.contains(range.endContainer);
-  if (!isInside) return null;
-
-  // Смещение начала выделения от начала dreamView (в символах)
-  const preRange = document.createRange();
-  preRange.selectNodeContents(dreamView);
-  preRange.setEnd(range.startContainer, range.startOffset);
-  const start = preRange.toString().length;
-
-  const selected = range.toString();
+  const selected = sel.toString();
   if (!selected) return null;
 
-  const end = start + selected.length;
-  return { start, end };
+  // Получаем текст из dreamView (как он отображается)
+  const dreamViewText = document.getElementById('dreamView').textContent || '';
+  // Нормализуем оба текста
+  const normSelected = selected.replace(/\s+/g, ' ').trim();
+  const normDreamView = dreamViewText.replace(/\s+/g, ' ').trim();
+
+  // Если длины совпадают (или отличаются не больше чем на 2 символа), считаем что выделено всё
+  if (Math.abs(normSelected.length - normDreamView.length) < 3) {
+    return { start: 0, end: state.dreamText.length };
+  }
+
+  // Обычный поиск (на случай, если выделен не весь текст)
+  const start = state.dreamText.indexOf(selected);
+  if (start !== -1) {
+    return { start, end: start + selected.length };
+  }
+
+  // Не удалось определить выделение
+  return null;
 }
 
-function addBlockFromSelection() {
-  if (!state.dreamText) {
-    return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
-  }
-
-  // Проверяем, что область визуализации реально отрендерена
-  const dv = byId('dreamView');
-  if (!dv || !dv.textContent || !dv.textContent.trim()) {
-    return alert('Сначала нажмите “Показать для выделения”, затем выделите текст в серой области.');
-  }
-
-  const off = getSelectionOffsets();
-  if (!off) {
-    return alert('Не удалось определить выделение. Выделите текст именно в области ниже.');
-  }
-
-  // Нормализуем переносы строк
-  const plain = dv.textContent.replace(/\r\n?/g, '\n');
-  const source = (state.dreamText || '').replace(/\r\n?/g, '\n');
-
-  // Тримим края выделения по пробельным символам
-  let { start, end } = off;
-  while (start < end && /\s/.test(plain[start])) start++;
-  while (end > start && /\s/.test(plain[end - 1])) end--;
-
-  if (end <= start) {
-    return alert('Похоже, вы выделили только пробелы/переводы строки. Выделите фрагмент текста.');
-  }
-
-  const selected = plain.slice(start, end);
-  const expected = source.slice(start, end);
-
-  if (selected !== expected) {
-    console.warn("Несовпадение выделения с исходным текстом", { selected, expected });
-    return alert('Ошибка: выделение не совпадает с исходным текстом. Попробуйте выделить без лишних символов и внутри серой области.');
-  }
-
-  // Проверка пересечений
-  for (const b of state.blocks) {
-    if (!(end <= b.start || start >= b.end)) {
-      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
-    }
-  }
-
-  // Добавляем блок
-  const id = state.nextBlockId++;
-  const text = source.slice(start, end);
-  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null });
-  state.currentBlockId = id;
-
-  // Перерисовываем UI
-  renderBlocksChips();
-  renderDreamView(); // если renderBlocksChips не вызывает сам
-}
 function addWholeBlock() {
   if (!state.dreamText) return;
   // Проверяем, что такого блока ещё нет
@@ -126,18 +83,24 @@ function addWholeBlock() {
     return;
   }
   const id = state.nextBlockId++;
-  const start = 0;
-  const end = state.dreamText.length;
-  const text = state.dreamText;
-  state.blocks.push({
-    id,
-    start,
-    end,
-    text,
-    done: false,
-    chat: [],
-    finalInterpretation: null // новое поле
-  });
+  state.blocks.push({ id, start: 0, end: state.dreamText.length, text: state.dreamText, done: false, chat: [] });
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
+function addBlockFromSelection() {
+  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  const off = getSelectionOffsets();
+  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
+  // Проверяем пересечения с существующими блоками
+  for (const b of state.blocks) {
+    if (!(off.end <= b.start || off.start >= b.end)) {
+      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
+    }
+  }
+  const id = state.nextBlockId++;
+  const text = state.dreamText.slice(off.start, off.end);
+  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
   state.currentBlockId = id;
   renderBlocksChips();
 }
@@ -239,13 +202,6 @@ function sendAnswer(ans) {
   startOrContinue();
 }
 
-function getOtherBlocksFinals(currentBlockId) {
-  return state.blocks
-    .filter(b => b.id !== currentBlockId && b.finalInterpretation)
-    .map((b, i) => `Блок #${b.id}: ${b.finalInterpretation}`)
-    .join('\n\n');
-}
-
 // Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
@@ -282,94 +238,43 @@ async function startOrContinue() {
   }
 }
 
-function appendFinalInterpretation(text) {
-  const b = getCurrentBlock();
+// Функция завершения анализа - ИСПРАВЛЕННАЯ ВЕРСИЯ
+function finishAnalysis() {
+  const b = getCurrentBlock(); 
   if (!b) return;
-  // Проверяем, есть ли уже финальное сообщение в чате
-  if (b.chat.some(m => m.role === 'final')) return;
-  b.chat.push({ role: 'final', text });
+  
+  // Добавляем специальный триггер для AI
+  appendUser("Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.");
+  
+  // Показать индикатор
+  const finishBtn = byId('finish');
+  finishBtn.disabled = true;
+  finishBtn.textContent = "Формируем итог...";
+  
+  // Запускаем процесс
+  startOrContinue().finally(() => {
+    finishBtn.disabled = false;
+    finishBtn.textContent = "Завершить анализ";
+  });
+}
+
+function resetChat() {
+  const b = getCurrentBlock(); 
+  if (!b) return;
+  b.chat = [];
+  b.done = false;
   renderChat();
 }
 
-function appendOverallInterpretation(text) {
-  let el = byId('overallInterpretation');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'overallInterpretation';
-    el.style.marginTop = '16px';
-    el.style.background = '#e0d6ff';
-    el.style.color = '#2f1a7f';
-    el.style.padding = '12px';
-    el.style.borderRadius = '10px';
-    el.style.fontWeight = 'bold';
-    byId('chat').parentNode.appendChild(el);
-  }
-  el.textContent = text;
-}
-
-async function blockInterpretation() {
-  const b = getCurrentBlock();
-  if (!b) return;
-
-  if (b.finalInterpretation) {
-    showBlockFinalInterpretation(b.finalInterpretation);
-    return;
-  }
-
-  const otherFinals = getOtherBlocksFinals(b.id);
-  let systemPrompt = '';
-  if (otherFinals) {
-    systemPrompt = 'Вот итоговые толкования других фрагментов сна:\n' + otherFinals +
-      '\n\nПожалуйста, учитывай их при анализе этого блока.';
-  }
-
-  const history = [
-    ...b.chat.map(m => ({ role: m.role, text: m.text })),
-    { role: 'user', text: 'Пожалуйста, заверши анализ и предоставь итоговую интерпретацию этого фрагмента сна.' }
-  ];
-
-  let result;
-  if (systemPrompt) {
-    result = await llmNextStep(b.text, [
-      { role: 'system', text: systemPrompt },
-      ...history
-    ]);
-  } else {
-    result = await llmNextStep(b.text, history);
-  }
-
-  b.finalInterpretation = result.question;
-  appendFinalInterpretation(b.finalInterpretation);
-}
-
-function showBlockFinalInterpretation(text) {
-  appendFinalInterpretation(text);
-}
-
-async function overallInterpretation() {
-  // Собираем все итоговые толкования блоков
-  const finals = state.blocks.map(b => b.finalInterpretation);
-
-  // Проверяем, что у всех блоков есть итог
-  if (finals.some(f => !f)) {
-    appendOverallInterpretation('Не для всех блоков получено итоговое толкование!');
-    return;
-  }
-
-  // Формируем текст для LLM
-  const prompt = 'Вот итоговые толкования по каждому фрагменту сна:\n\n' +
-    finals.map((f, i) => `Блок ${i + 1}: ${f}`).join('\n\n') +
-    '\n\nПожалуйста, сделай общий вывод и интерпретацию по всему сновидению, учитывая все эти итоги.';
-
-  // Отправляем в LLM (используем тот же llmNextStep, но без истории чата)
-  const result = await llmNextStep(prompt, []);
-
-  // Сохраняем и показываем общий итог
-  state.overallInterpretation = result.question;
-  appendOverallInterpretation(state.overallInterpretation);
-}
-
 async function llmNextStep(blockText, history) {
+  const b = getCurrentBlock();
+  if (!b) return {
+    question: "Ошибка: блок не выбран",
+    quickReplies: ["Повторить"],
+    isFinal: false
+  };
+
+  // Теперь отправляем только blockText и history!
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
@@ -377,12 +282,10 @@ async function llmNextStep(blockText, history) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        blockText,
-        history: history.map(m => ({
-          role: m.role === "bot" ? "assistant" 
-               : m.role === "system" ? "system" 
-               : "user",
-          content: m.text || m.content
+        blockText: b.text,
+        history: b.chat.map(m => ({
+          role: m.role === "bot" ? "assistant" : "user",
+          content: m.text
         }))
       })
     });
@@ -393,7 +296,8 @@ async function llmNextStep(blockText, history) {
       if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
         throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
       }
-      throw new Error(errJson?.message || response.statusText);
+      const msg = errJson?.message || response.statusText;
+      throw new Error(msg);
     }
 
     const data = await response.json();
@@ -436,18 +340,15 @@ function importJSON(file) {
 }
 
 // Handlers
-byId('render').onclick = () => {
-  state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
-  renderDreamView();
-};
+byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDreamView(); };
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
 byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
-byId('exportTxt').onclick = exportJSON;
+byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
-byId('blockInterpret').onclick = blockInterpretation;
-byId('finalInterpret').onclick = overallInterpretation;
+byId('finish').onclick = finishAnalysis;
+byId('blockInterpret').onclick = resetChat;
 byId('addWholeBlock').onclick = addWholeBlock;
 
 // --- Новое: обработка ручного ввода ответа ---
@@ -464,38 +365,3 @@ byId('userInput').addEventListener('keydown', e => {
     byId('sendAnswerBtn').click();
   }
 });
-
-// --- Глушим сторонние overlay, тултипы и popover ---
-const blockOverlayPopups = () => {
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll('body > *').forEach(el => {
-      const style = window.getComputedStyle(el);
-      // Удаляем все элементы, которые не твои основные контейнеры и выглядят как overlay
-      if (
-        (style.position === 'fixed' || style.position === 'absolute') &&
-        parseInt(style.zIndex) > 1000 &&
-        !el.matches('#app, #root, main, .card, .row, .footer, .chat, .dream-view, .blocks')
-      ) {
-        el.remove();
-      }
-    });
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-};
-
-blockOverlayPopups();
-
-// Отключаем стандартное и кастомное контекстное меню
-window.addEventListener('contextmenu', e => e.preventDefault(), true);
-
-// Отключаем всплывающие тултипы по mouseup/selection
-document.addEventListener('mouseup', () => {
-  const sel = window.getSelection();
-  if (sel && sel.rangeCount) {
-    const r = sel.getRangeAt(0);
-    const dv = byId('dreamView');
-    if (!dv.contains(r.startContainer) || !dv.contains(r.endContainer)) {
-      sel.removeAllRanges();
-    }
-  }
-}, true);
