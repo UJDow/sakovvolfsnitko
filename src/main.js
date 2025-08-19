@@ -283,14 +283,17 @@ async function blockInterpretation() {
 
     // История: берём весь диалог по текущему блоку (аск/анс), плюс якорим контекст блока
     const history = [
-      { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-      ...b.chat.map(m => ({
-        role: m.role === "bot" ? "assistant" : "user",
-        content: m.text
-      })),
-      // Финальная инструкция — ровно один абзац интерпретации, без префиксов/кода
-      { role: 'user', content: 'Пожалуйста, дай краткую финальную фрейдистскую интерпретацию этого блока сна (3–6 предложений). Свяжи детали тела и числа (если были) с вытесненными желаниями/детским опытом. Не задавай вопросов. Выведи только чистый текст без заголовков, без кода и без тегов.' }
-    ];
+  { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+  ...(() => {
+    const prev = getPrevBlocksSummary(b.id, 3);
+    return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+  })(),
+  ...b.chat.map(m => ({
+    role: m.role === "bot" ? "assistant" : "user",
+    content: m.text
+  })),
+  { role: 'user', content: 'Пожалуйста, дай краткую финальную фрейдистскую интерпретацию этого блока сна (3–6 предложений). Свяжи детали тела и числа (если были) с вытесненными желаниями/детским опытом. Не задавай вопросов. Выведи только чистый текст без заголовков, без кода и без тегов.' }
+];
 
     const response = await fetch(PROXY_URL, {
       method: "POST",
@@ -416,6 +419,18 @@ async function finalInterpretation() {
   }
 }
 
+// Собрать краткие итоги предыдущих блоков (1–3 последних финала перед текущим)
+function getPrevBlocksSummary(currentBlockId, limit = 3) {
+  const current = state.blocks.find(b => b.id === currentBlockId);
+  if (!current) return '';
+  const prevFinals = state.blocks
+    .filter(b => b.id < currentBlockId && !!b.finalInterpretation)
+    .sort((a, b) => b.id - a.id) // от более свежих к старым
+    .slice(0, limit)
+    .map(b => `#${b.id}: ${b.finalInterpretation}`);
+  return prevFinals.length ? prevFinals.join('\n') : '';
+}
+
 // Следующий шаг диалога с ИИ
 async function llmNextStep(blockText, history) {
   const b = getCurrentBlock();
@@ -434,13 +449,16 @@ async function llmNextStep(blockText, history) {
       body: JSON.stringify({
         blockText: b.text,
         history: [
-          // Якорим контекст текущего блока явным user-сообщением
-          { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-          ...b.chat.map(m => ({
-            role: m.role === "bot" ? "assistant" : "user",
-            content: m.text
-          }))
-        ]
+  { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+  ...(() => {
+    const prev = getPrevBlocksSummary(b.id, 3);
+    return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+  })(),
+  ...b.chat.map(m => ({
+    role: m.role === "bot" ? "assistant" : "user",
+    content: m.text
+  }))
+]
       })
     });
 
