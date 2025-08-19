@@ -78,9 +78,6 @@ function addBlockFromSelection() {
     return alert('Не удалось определить выделение. Выделите текст именно в области ниже.');
   }
 
-  const off = getSelectionOffsets();
-  if (!off) return alert('Не удалось определить выделение. Выделите текст именно в области ниже.');
-
   // Нормализуем переносы
   const plain = byId("dreamView").textContent.replace(/\r\n?/g, '\n');
   const source = (state.dreamText || '').replace(/\r\n?/g, '\n');
