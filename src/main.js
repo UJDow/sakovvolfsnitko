@@ -339,8 +339,9 @@ async function blockInterpretation() {
   }
 }
 
-// Итоговое толкование по всем блокам с финалами
+// Итоговое толкование по всем блокам — упрощённая версия
 async function finalInterpretation() {
+  // Берём только блоки, где уже есть финальные интерпретации
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
 
   if (interpreted.length === 0) {
@@ -352,47 +353,26 @@ async function finalInterpretation() {
   const prevText = btn.textContent;
   btn.textContent = 'Формируем итог...';
 
-  function stripNoise(s) {
-    if (!s) return s;
-    s = s.replace(/```[\s\S]*?```/g, ' ');
-    s = s.replace(/!$$[^$$]*\]$$[^)]+$$/g, ' ');
-    s = s.replace(/$$[^$$]*\]$$[^)]+$$/g, ' ');
-    s = s.replace(/<[^>]+>/g, ' ');
-    s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-    s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-    s = s.replace(/<\u2758?[^>]*\u2758?>/g, ' ');
-    s = s.replace(/<\uFFE8?[^>]*\uFFE8?>/g, ' ');
-    s = s.replace(/$$source code.*?$$/gi, ' ');
-    const badLine = /^(package |import |public class |class |@extends|@section|namespace |<\?php|use |Route::|function\s+\w+\(|model:|Controller\b|#\s|\d+\.\s|>\s|https?:\/\/)/i;
-    s = s.split('\n').filter(line => !badLine.test(line.trim())).join('\n');
-    return s.replace(/\s+/g, ' ').trim();
-  }
-
   try {
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
-    const summaryInput = interpreted.map(b => `Блок #${b.id}: ${b.finalInterpretation}`).join('\n\n');
 
-    const extraSystemPrompt = `
-На основе итоговых толкований отдельных блоков составь единое фрейдистское итоговое толкование сна (5–9 предложений).
-Синтезируй общие мотивы (части тела, числа/цифры, запретные импульсы, детские переживания), покажи связность образов.
-Не задавай вопросов. Начни сразу с объединяющего вывода.
-Строгий формат:
-- ТОЛЬКО чистый текст интерпретации.
-- Без заголовков, без префиксов, без списков, без кода, без тегов, без служебных маркеров, без ссылок/картинок/цитат.
-`;
-
+    // Краткий контекст общего сна (ограничим длину)
     const blockText = (state.dreamText || '').slice(0, 4000);
+
+    // История: даём краткий контекст сна и все готовые интерпретации блоков
+    const history = [
+      { role: 'user', content: 'Краткий контекст сна:\n' + blockText },
+      { role: 'user', content: 'Итоговые толкования блоков:\n' + interpreted.map(b => `#${b.id}: ${b.finalInterpretation}`).join('\n') },
+      // Финальная инструкция — один абзац, без префиксов/кода/тегов
+      { role: 'user', content: 'Составь единое фрейдистское итоговое толкование сна (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Выведи только чистый текст без заголовков, без кода и без тегов.' }
+    ];
 
     const response = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        blockText,
-        history: [
-          { role: 'user', content: 'Краткий контекст сна:\n' + blockText },
-          { role: 'user', content: 'Итоговые толкования блоков:\n' + summaryInput }
-        ],
-        extraSystemPrompt
+        blockText, // прокинем для симметрии API, хотя смысл в history
+        history
       })
     });
 
@@ -402,17 +382,28 @@ async function finalInterpretation() {
       if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
         throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
       }
-      const msg = errJson?.message || response.statusText;
-      throw new Error(msg);
+      throw new Error(errJson?.message || response.statusText);
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() || 'Не удалось получить итоговое толкование.';
-    const content = stripNoise(raw) || 'Не удалось получить итоговое толкование.';
+    let content = (data.choices?.[0]?.message?.content || '').trim();
 
+    // Лёгкая инлайн-очистка (как в blockInterpretation)
+    content = content
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/<\u2502?[^>]*\u2502?>/g, ' ')
+      .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
+      .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!content) content = 'Не удалось получить итоговое толкование.';
+
+    // Показываем чистый финальный текст без префиксов
     const b = getCurrentBlock();
     if (b) {
-      appendBot(content, [], true); // без префикса
+      appendBot(content, [], true);
     } else {
       alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
     }
