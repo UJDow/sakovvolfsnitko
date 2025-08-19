@@ -60,6 +60,7 @@ function renderBlocksChips() {
   cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
   renderDreamView();
   renderChat();
+  updateButtonsState();
 }
 
 // Утилиты для преобразования DOM-Range в абсолютные индексы исходного текста
@@ -206,6 +207,28 @@ function renderChat() {
     }
   }
   chat.scrollTop = chat.scrollHeight;
+  updateButtonsState();
+}
+
+function updateButtonsState() {
+  const b = getCurrentBlock();
+  const blockBtn = byId('blockInterpretBtn');
+  const finalBtn = byId('finalInterpretBtn');
+
+  // Сбросим классы перед проставлением новых
+  if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
+  if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
+
+  // Логика для "Толкование блока"
+  // Условие готовности: минимум 5 ответов пользователя по текущему блоку
+  const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
+  if (blockBtn) blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
+
+  // Логика для "Итоговое толкование"
+  // Условие готовности: минимум 2 блока с финальными интерпретациями
+  const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
+  const enoughForFinal = finalsCount >= 2;
+  if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
 }
 
 function appendBot(text, quickReplies = [], isFinal = false) {
@@ -302,8 +325,8 @@ async function blockInterpretation() {
   if (!b) return alert('Выберите блок.');
 
   // Оставим базовую валидацию, чтобы модель не выдавала финал без контекста диалога
-  if ((b.userAnswersCount || 0) < 3) {
-    return alert('Нужно минимум 3 ответа пользователя по этому блоку перед финальной интерпретацией.');
+  if ((b.userAnswersCount || 0) < 5) {
+    return alert('Нужно минимум 5 ответов по этому блоку перед финальной интерпретацией.');
   }
 
   const btn = byId('blockInterpretBtn');
