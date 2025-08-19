@@ -173,10 +173,10 @@ function getPrevBlocksSummary(currentBlockId, limit = 3) {
   const current = state.blocks.find(b => b.id === currentBlockId);
   if (!current) return '';
   const prevFinals = state.blocks
-    .filter(b => b.id < currentBlockId && !!b.finalInterpretation)
-    .sort((a, b) => b.id - a.id) // от более свежих к старым
+    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation) // любые уже интерпретированные, кроме текущего
+    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0)) // последние по времени анализа
     .slice(0, limit)
-    .map(b => `#${b.id}: ${b.finalInterpretation}`);
+    .map(x => `#${x.id}: ${x.finalInterpretation}`);
   return prevFinals.length ? prevFinals.join('\n') : '';
 }
 
@@ -341,6 +341,7 @@ async function blockInterpretation() {
     if (!content) content = 'Не удалось получить толкование.';
 
     b.finalInterpretation = content;
+    b.finalAt = Date.now(); // когда финал был сделан
     b.done = true;
 
     // Показываем ровно интерпретацию, без заголовков, чтобы не «зеркалилось» дальше
