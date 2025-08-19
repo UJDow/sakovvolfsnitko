@@ -9,6 +9,7 @@
     h1 { font-size: 20px; margin: 0 0 12px; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .card { position: relative; }
     textarea, input, button { font: inherit; }
 
     /* Базовый стиль для всех textarea */
@@ -77,6 +78,7 @@
     .quick { display: flex; gap: 8px; margin-top: 6px; }
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
+    .controls, .footer { position: relative; z-index: 1; }
 
     #sendAnswerBtn {
       padding: 8px 12px;
