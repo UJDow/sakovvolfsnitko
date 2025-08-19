@@ -211,7 +211,16 @@ function renderChat() {
 }
 
 function nextUndoneBlockId() {
+  if (!state.blocks.length) return null;
   const sorted = [...state.blocks].sort((a, b) => a.id - b.id);
+  const curr = getCurrentBlock();
+  const currId = curr?.id ?? -Infinity;
+
+  // 1) сначала ищем следующий по id > текущего
+  for (const x of sorted) {
+    if (x.id > currId && !x.done) return x.id;
+  }
+  // 2) если не нашли — ищем с начала
   for (const x of sorted) {
     if (!x.done) return x.id;
   }
