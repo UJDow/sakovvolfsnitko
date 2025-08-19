@@ -281,14 +281,19 @@ async function blockInterpretation() {
     const extraSystemPrompt = `
 Сформулируй итоговое фрейдистское толкование ТОЛЬКО для текущего блока сна кратко (3–6 предложений), ясным человеческим языком, без жаргона.
 Обязательно свяжи детали тела и числа/цифры (если были) с вытесненными желаниями или детскими переживаниями.
-Не задавай вопросов. Это финальная интерпретация по блоку. Начни сразу с сути.`;
+Не задавай вопросов. Это финальная интерпретация по блоку. Начни сразу с сути.
+Строгий запрет: не выводи ничего, кроме интерпретации сна. Не пиши код, технические объяснения, примеры на других языках, не вставляй нерелевантные темы (JWT, Java и т.п.), не используй служебные теги или маркеры.
+`;
 
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
-    const history = b.chat.map(m => ({
-      role: m.role === "bot" ? "assistant" : "user",
-      content: m.text
-    }));
+    const history = [
+      { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+      ...b.chat.map(m => ({
+        role: m.role === "bot" ? "assistant" : "user",
+        content: m.text
+      }))
+    ];
 
     const response = await fetch(PROXY_URL, {
       method: "POST",
@@ -345,7 +350,9 @@ async function finalInterpretation() {
     const extraSystemPrompt = `
 На основе итоговых толкований отдельных блоков составь единое фрейдистское итоговое толкование сна (5–9 предложений).
 Синтезируй общие мотивы (части тела, числа/цифры, запретные импульсы, детские переживания), покажи связность образов.
-Не задавай вопросов. Начни сразу с объединяющего вывода.`;
+Не задавай вопросов. Начни сразу с объединяющего вывода.
+Строгий запрет: не выводи ничего, кроме интерпретации сна. Не пиши код, технические объяснения, не вставляй нерелевантные списки, теги или маркеры.
+`;
 
     const blockText = (state.dreamText || '').slice(0, 4000);
 
@@ -355,6 +362,7 @@ async function finalInterpretation() {
       body: JSON.stringify({
         blockText,
         history: [
+          { role: 'user', content: 'Краткий контекст сна:\n' + blockText },
           { role: 'user', content: 'Итоговые толкования блоков:\n' + summaryInput }
         ],
         extraSystemPrompt
@@ -406,10 +414,14 @@ async function llmNextStep(blockText, history) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         blockText: b.text,
-        history: b.chat.map(m => ({
-          role: m.role === "bot" ? "assistant" : "user",
-          content: m.text
-        }))
+        history: [
+          // Якорим контекст текущего блока явным user-сообщением
+          { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+          ...b.chat.map(m => ({
+            role: m.role === "bot" ? "assistant" : "user",
+            content: m.text
+          }))
+        ]
       })
     });
 
