@@ -168,6 +168,18 @@ function getCurrentBlock() {
   return state.blocks.find(b => b.id === state.currentBlockId) || null;
 }
 
+// Собрать краткие итоги предыдущих блоков (1–3 последних финала перед текущим)
+function getPrevBlocksSummary(currentBlockId, limit = 3) {
+  const current = state.blocks.find(b => b.id === currentBlockId);
+  if (!current) return '';
+  const prevFinals = state.blocks
+    .filter(b => b.id < currentBlockId && !!b.finalInterpretation)
+    .sort((a, b) => b.id - a.id) // от более свежих к старым
+    .slice(0, limit)
+    .map(b => `#${b.id}: ${b.finalInterpretation}`);
+  return prevFinals.length ? prevFinals.join('\n') : '';
+}
+
 function renderChat() {
   const chat = byId('chat');
   const b = getCurrentBlock();
@@ -417,18 +429,6 @@ async function finalInterpretation() {
     btn.disabled = false;
     btn.textContent = prevText;
   }
-}
-
-// Собрать краткие итоги предыдущих блоков (1–3 последних финала перед текущим)
-function getPrevBlocksSummary(currentBlockId, limit = 3) {
-  const current = state.blocks.find(b => b.id === currentBlockId);
-  if (!current) return '';
-  const prevFinals = state.blocks
-    .filter(b => b.id < currentBlockId && !!b.finalInterpretation)
-    .sort((a, b) => b.id - a.id) // от более свежих к старым
-    .slice(0, limit)
-    .map(b => `#${b.id}: ${b.finalInterpretation}`);
-  return prevFinals.length ? prevFinals.join('\n') : '';
 }
 
 // Следующий шаг диалога с ИИ
