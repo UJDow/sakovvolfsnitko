@@ -443,63 +443,72 @@ function renderBlocksChips() {
 }
 
 // Handlers
-byId('render').onclick = () => {
-  state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
-  renderDreamView();
-};
-byId('addBlock').onclick = addBlockFromSelection;
-byId('auto').onclick = () => {
-  state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
-  autoSplitSentences();
-};
-byId('clear').onclick = () => {
-  state.dreamText = '';
-  state.blocks = [];
-  state.currentBlockId = null;
-  state.nextBlockId = 1;
-  byId('dream').value = '';
-  renderBlocksChips();
-  renderDreamView();
-};
-byId('exportJson').onclick = exportJSON;
-byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
-byId('start').onclick = startOrContinue;
-byId('blockInterpret').onclick = blockInterpretation;
-byId('finalInterpret').onclick = overallInterpretation;
-byId('addWholeBlock').onclick = addWholeBlock;
+document.addEventListener('DOMContentLoaded', () => {
+  byId('render').onclick = () => {
+    state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
+    renderDreamView();
+  };
+  byId('addBlock').onclick = addBlockFromSelection;
+  byId('auto').onclick = () => {
+    state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
+    autoSplitSentences();
+  };
+  byId('clear').onclick = () => {
+    state.dreamText = '';
+    state.blocks = [];
+    state.currentBlockId = null;
+    state.nextBlockId = 1;
+    byId('dream').value = '';
+    renderBlocksChips();
+    renderDreamView();
+  };
+  byId('exportJson').onclick = exportJSON;
+  byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
+  byId('start').onclick = startOrContinue;
+  byId('blockInterpret').onclick = blockInterpretation;
+  byId('finalInterpret').onclick = overallInterpretation;
+  byId('addWholeBlock').onclick = addWholeBlock;
 
-// Ручной ответ
-byId('sendAnswerBtn').onclick = () => {
-  const val = byId('userInput').value.trim();
-  if (!val) return;
-  sendAnswer(val);
-  byId('userInput').value = '';
-};
+  // Ручной ответ
+  byId('sendAnswerBtn').onclick = () => {
+    const val = byId('userInput').value.trim();
+    if (!val) return;
+    sendAnswer(val);
+    byId('userInput').value = '';
+  };
 
-byId('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    byId('sendAnswerBtn').click();
-  }
-});
+  byId('userInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      byId('sendAnswerBtn').click();
+    }
+  });
 
-// Сброс внешних выделений (без capture, с безопасной проверкой цели)
-document.addEventListener('mouseup', (e) => {
-  const dv = byId('dreamView');
-  if (!dv) return;
+  // Сброс внешних выделений только при клике по "фону", не по управлению
+  document.addEventListener('mouseup', (e) => {
+    const dv = byId('dreamView');
+    if (!dv) return;
 
-  // Если клик был внутри dreamView — ничего не делаем
-  if (dv.contains(e.target)) return;
+    // Никаких действий, если кликнули по dreamView или по интерактивным зонам
+    if (
+      dv.contains(e.target) ||
+      e.target.closest('.controls, .footer, .blocks, .chat, button, input, textarea, label')
+    ) {
+      return;
+    }
 
-  const sel = window.getSelection();
-  if (sel && sel.rangeCount) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
     const r = sel.getRangeAt(0);
-    // Сбрасываем выделение только если оно действительно вне dreamView
-    if (!dv.contains(r.commonAncestorContainer)) {
+    const anc = r?.commonAncestorContainer;
+    if (!anc) return;
+
+    if (!dv.contains(anc)) {
       sel.removeAllRanges();
     }
-  }
-}); // без третьего аргумента (capture=false по умолчанию)
+  });
 
-// Стартовый рендер
-renderBlocksChips();
+  // Стартовый рендер
+  renderBlocksChips();
+});
