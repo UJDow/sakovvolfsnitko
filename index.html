@@ -103,7 +103,7 @@
         <button id="render">Показать для выделения</button>
         <button id="auto">Автоблоки (через предложения)</button>
         <button id="clear">Очистить всё</button>
-        <button id="exportTxt">Экспорт JSON</button>
+        <button id="exportJson">Экспорт JSON</button>
         <input type="file" id="import" accept="application/json" />
       </div>
       <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
@@ -120,12 +120,10 @@
       <div id="currentBlock" class="muted">Блок не выбран</div>
       <div class="chat" id="chat"></div>
 
-      <!-- Поле ввода -->
       <div class="footer">
         <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
       </div>
 
-      <!-- Кнопки -->
       <div class="footer">
         <button class="primary" id="sendAnswerBtn">Ответить</button>
         <button class="primary" id="start">Начать/продолжить</button>
@@ -135,7 +133,6 @@
     </div>
   </div>
 
-  <!-- Подключаем JS-файл -->
   <script type="module" src="./main.js"></script>
 </body>
 </html>
