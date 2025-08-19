@@ -11,6 +11,8 @@ function byId(id) { return document.getElementById(id); }
 // Рендер текста сна с подсветкой добавленных блоков
 function renderDreamView() {
   const dv = byId('dreamView');
+  if (!dv) return;
+  
   const t = state.dreamText || '';
   dv.innerHTML = '';
   if (!t) return;
@@ -44,9 +46,10 @@ function getSelectionOffsets() {
   if (!sel || sel.rangeCount === 0) return null;
 
   const dreamView = byId("dreamView");
+  if (!dreamView) return null;
+  
   const range = sel.getRangeAt(0);
-
-  const isInside = dreamView.contains(range.startContainer) && dreamView.contains(range.endContainer);
+  const isInside = dreamView.contains(range.commonAncestorContainer);
   if (!isInside) return null;
 
   const preRange = document.createRange();
@@ -63,12 +66,12 @@ function getSelectionOffsets() {
 
 function addBlockFromSelection() {
   if (!state.dreamText) {
-    return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+    return alert('Сначала вставьте сон и нажмите "Показать для выделения".');
   }
 
   const dv = byId('dreamView');
   if (!dv || !dv.textContent || !dv.textContent.trim()) {
-    return alert('Сначала нажмите “Показать для выделения”, затем выделите текст в серой области.');
+    return alert('Сначала нажмите "Показать для выделения", затем выделите текст в серой области.');
   }
 
   const off = getSelectionOffsets();
@@ -128,14 +131,13 @@ function addWholeBlock() {
 function autoSplitSentences() {
   const t = (state.dreamText||'').trim();
   if (!t) return;
-  const sentences = t.split(/(?<=[\.\!\?])\s+/).filter(s => s.length > 10).slice(0, 5);
+  const sentences = t.split(/(?<=[.!?])\s+/).filter(s => s && s.length > 10).slice(0, 5);
   state.blocks = [];
   state.nextBlockId = 1;
   let cursor = 0;
   for (const s of sentences) {
     const start = state.dreamText.indexOf(s, cursor);
     if (start === -1) {
-      // пропускаем, если по какой-то причине не нашли подстроку
       continue;
     }
     const end = start + s.length;
@@ -159,6 +161,8 @@ function getCurrentBlock() {
 
 function renderChat() {
   const chat = byId('chat');
+  if (!chat) return;
+  
   const b = getCurrentBlock();
   chat.innerHTML = '';
   if (!b) return;
@@ -167,13 +171,13 @@ function renderChat() {
     div.className = 'msg ' + (m.role === 'bot' ? 'bot' : m.role === 'final' ? 'final' : 'user');
     div.textContent = m.text;
     chat.appendChild(div);
-    if (m.quickReplies?.length) {
+    if (m.quickReplies && m.quickReplies.length) {
       const q = document.createElement('div');
       q.className = 'quick';
       m.quickReplies.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
-        btn.addEventListener('click', ()=>sendAnswer(opt));
+        btn.addEventListener('click', () => sendAnswer(opt));
         q.appendChild(btn);
       });
       chat.appendChild(q);
@@ -196,7 +200,6 @@ function appendUser(text) {
 
 // Возвращает { question, quickReplies, isFinal } — question = чистый текст без квик-реплаев
 function parseAIResponse(text) {
-  // Эвристика: отделяем быстрые ответы в конце в формате [a | b | c]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
   let cleanText = text;
@@ -230,6 +233,8 @@ async function startOrContinue() {
   if (!b) return alert('Выберите блок.');
 
   const startBtn = byId('start');
+  if (!startBtn) return;
+  
   startBtn.disabled = true;
   startBtn.textContent = "Генерируем...";
 
@@ -239,8 +244,6 @@ async function startOrContinue() {
     appendBot(next.question, next.quickReplies);
     if (next.isFinal) {
       b.done = true;
-      // По желанию можно автоматически сохранять финал:
-      // if (!b.finalInterpretation) b.finalInterpretation = next.question;
       appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
     }
   } catch (e) {
@@ -271,7 +274,12 @@ function appendOverallInterpretation(text) {
     el.style.padding = '12px';
     el.style.borderRadius = '10px';
     el.style.fontWeight = 'bold';
-    byId('chat').parentNode.appendChild(el);
+    const chatParent = byId('chat')?.parentNode;
+    if (chatParent) {
+      chatParent.appendChild(el);
+    } else {
+      return;
+    }
   }
   el.textContent = text;
 }
@@ -328,9 +336,16 @@ async function overallInterpretation() {
 }
 
 async function llmNextStep(blockText, history) {
+  if (!blockText) {
+    return {
+      question: "Ошибка: текст блока отсутствует",
+      quickReplies: [],
+      isFinal: false
+    };
+  }
+
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
-  // Безопасная маппа истории: исключаем 'final', корректно маппим роли
   const mappedHistory = (history || [])
     .filter(m => m && m.role !== 'final')
     .map(m => ({
@@ -388,7 +403,7 @@ function importJSON(file) {
   reader.onload = () => {
     try {
       const data = JSON.parse(reader.result);
-      state.dreamText = (data.dreamText || '').replace(/\r\n?/g, '\n'); // нормализация переноса
+      state.dreamText = (data.dreamText || '').replace(/\r\n?/g, '\n');
       state.blocks = (data.blocks || []).map(b => ({
         ...b,
         chat: b.chat || [],
@@ -408,6 +423,8 @@ function importJSON(file) {
 // Рендер чипов блоков
 function renderBlocksChips() {
   const container = byId('blocks');
+  if (!container) return;
+  
   container.innerHTML = '';
   for (const b of state.blocks) {
     const chip = document.createElement('div');
@@ -418,8 +435,10 @@ function renderBlocksChips() {
     container.appendChild(chip);
   }
   const cur = byId('currentBlock');
-  const current = getCurrentBlock();
-  cur.textContent = current ? `Текущий блок #${current.id}` : 'Блок не выбран';
+  if (cur) {
+    const current = getCurrentBlock();
+    cur.textContent = current ? `Текущий блок #${current.id}` : 'Блок не выбран';
+  }
   renderChat();
 }
 
@@ -430,7 +449,7 @@ byId('render').onclick = () => {
 };
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => {
-  state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n'); // нормализация
+  state.dreamText = (byId('dream').value || '').replace(/\r\n?/g, '\n');
   autoSplitSentences();
 };
 byId('clear').onclick = () => {
@@ -470,7 +489,7 @@ document.addEventListener('mouseup', () => {
   if (sel && sel.rangeCount) {
     const r = sel.getRangeAt(0);
     const dv = byId('dreamView');
-    if (!dv.contains(r.startContainer) || !dv.contains(r.endContainer)) {
+    if (dv && (!dv.contains(r.commonAncestorContainer))) {
       sel.removeAllRanges();
     }
   }
