@@ -44,12 +44,19 @@ function getSelectionOffsets() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
 
+  const dreamView = byId("dreamView");
   const range = sel.getRangeAt(0);
-  const preRange = range.cloneRange();
-  preRange.selectNodeContents(byId("dreamView"));
-  preRange.setEnd(range.startContainer, range.startOffset);
 
+  // Проверяем, что выделение полностью внутри dreamView
+  const isInside = dreamView.contains(range.startContainer) && dreamView.contains(range.endContainer);
+  if (!isInside) return null;
+
+  // Нормализуем: считаем смещение в символах относительно начала dreamView
+  const preRange = document.createRange();
+  preRange.selectNodeContents(dreamView);
+  preRange.setEnd(range.startContainer, range.startOffset);
   const start = preRange.toString().length;
+
   const selected = range.toString();
   if (!selected) return null;
 
@@ -59,12 +66,27 @@ function getSelectionOffsets() {
 
 function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
-  const off = getSelectionOffsets();
-  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
-  // 1) Трим границ: убираем пробелы и \n в начале/конце
-  let { start, end } = off;
-  const plain = byId("dreamView").textContent;
 
+  // Новая проверка: убеждаемся, что область для выделения реально отрендерена
+  const dv = byId('dreamView');
+  if (!dv || !dv.textContent || !dv.textContent.trim()) {
+    return alert('Сначала нажмите “Показать для выделения”, затем выделите текст в серой области.');
+  }
+
+  const off = getSelectionOffsets();
+  if (!off) {
+    return alert('Не удалось определить выделение. Выделите текст именно в области ниже.');
+  }
+
+  const off = getSelectionOffsets();
+  if (!off) return alert('Не удалось определить выделение. Выделите текст именно в области ниже.');
+
+  // Нормализуем переносы
+  const plain = byId("dreamView").textContent.replace(/\r\n?/g, '\n');
+  const source = (state.dreamText || '').replace(/\r\n?/g, '\n');
+
+  // 1) Подрезаем по пробелам на основе plain
+  let { start, end } = off;
   while (start < end && /\s/.test(plain[start])) start++;
   while (end > start && /\s/.test(plain[end - 1])) end--;
 
@@ -72,24 +94,25 @@ function addBlockFromSelection() {
     return alert('Похоже, вы выделили только пробелы/переводы строки. Выделите фрагмент текста.');
   }
 
-  // 2) Сверка с исходным текстом
   const selected = plain.slice(start, end);
-  const expected = state.dreamText.slice(start, end);
+  const expected = source.slice(start, end);
+
+  // 2) Если не совпадает — пробуем “сдвиг” из‑за CR/LF или сигнатуры
   if (selected !== expected) {
     console.warn("Несовпадение выделения с исходным текстом", { selected, expected });
-    return alert('Ошибка: выделение не совпадает с исходным текстом. Попробуйте выделить без захвата лишних символов.');
+    return alert('Ошибка: выделение не совпадает с исходным текстом. Попробуйте выделить без лишних символов и внутри серой области.');
   }
 
-  // 3) Проверка пересечений с учётом «подрезанных» границ
+  // 3) Проверка пересечений
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
     }
   }
 
-  // 4) Добавление блока
+  // 4) Добавляем
   const id = state.nextBlockId++;
-  const text = state.dreamText.slice(start, end);
+  const text = source.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null });
   state.currentBlockId = id;
   renderBlocksChips();
@@ -462,17 +485,12 @@ blockOverlayPopups();
 window.addEventListener('contextmenu', e => e.preventDefault(), true);
 
 // Отключаем всплывающие тултипы по mouseup/selection
-window.addEventListener('mouseup', e => {
-  // Убираем любые всплывающие div поверх
-  setTimeout(() => {
-    document.querySelectorAll('body > div, body > span').forEach(el => {
-      const style = window.getComputedStyle(el);
-      if (
-        (style.position === 'fixed' || style.position === 'absolute') &&
-        parseInt(style.zIndex) > 1000
-      ) {
-        el.remove();
-      }
-    });
-  }, 100);
+document.addEventListener('mouseup', () => {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount) {
+    const r = sel.getRangeAt(0);
+    if (!byId('dreamView').contains(r.startContainer) || !byId('dreamView').contains(r.endContainer)) {
+      sel.removeAllRanges();
+    }
+  }
 }, true);
