@@ -20,7 +20,7 @@ function renderDreamView() {
 
   for (const b of sorted) {
     if (b.start > idx) {
-      dv.appendChild(document.createTextNode(t.slice(idx, b.start));
+      dv.appendChild(document.createTextNode(t.slice(idx, b.start)));
     }
 
     const mark = document.createElement('mark');
@@ -136,7 +136,7 @@ function autoSplitSentences() {
     const start = state.dreamText.indexOf(s, cursor);
     const end = start + s.length;
     const id = state.nextBlockId++;
-    state.blocks.push({ id, start, end, text: s, done: false, chat: [] });
+    state.blocks.push({ id, start, end, text: s, done: false, chat: [], finalInterpretation: null });
     cursor = end;
   }
   state.currentBlockId = state.blocks[0]?.id || null;
@@ -191,6 +191,7 @@ function appendUser(text) {
 }
 
 function parseAIResponse(text) {
+  // Эвристика: отделяем быстрые ответы в конце в формате [a | b | c]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
   let cleanText = text;
@@ -233,6 +234,8 @@ async function startOrContinue() {
     appendBot(next.question, next.quickReplies);
     if (next.isFinal) {
       b.done = true;
+      // По желанию можно автоматически сохранить финал в блок:
+      // if (!b.finalInterpretation) b.finalInterpretation = next.question;
       appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
     }
   } catch (e) {
@@ -307,6 +310,7 @@ function showBlockFinalInterpretation(text) {
 async function overallInterpretation() {
   const finals = state.blocks.map(b => b.finalInterpretation);
   if (finals.some(f => !f)) {
+    state.overallInterpretation = null;
     appendOverallInterpretation('Не для всех блоков получено итоговое толкование!');
     return;
   }
@@ -321,16 +325,21 @@ async function overallInterpretation() {
 async function llmNextStep(blockText, history) {
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
+  // Безопасная маппа истории: исключаем 'final', корректно маппим роли
+  const mappedHistory = (history || [])
+    .filter(m => m && m.role !== 'final')
+    .map(m => ({
+      role: m.role === "bot" ? "assistant" : m.role === "system" ? "system" : "user",
+      content: m.text || m.content || ''
+    }));
+
   try {
     const response = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         blockText,
-        history: history.map(m => ({
-          role: m.role === "bot" ? "assistant" : m.role === "system" ? "system" : "user",
-          content: m.text || m.content
-        }))
+        history: mappedHistory
       })
     });
 
@@ -344,7 +353,10 @@ async function llmNextStep(blockText, history) {
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiResponse = data?.choices?.[0]?.message?.content ?? '';
+    if (!aiResponse) {
+      throw new Error('Пустой ответ от модели');
+    }
     return parseAIResponse(aiResponse);
 
   } catch (error) {
@@ -372,8 +384,9 @@ function importJSON(file) {
     try {
       const data = JSON.parse(reader.result);
       state.dreamText = (data.dreamText || '').replace(/\r\n?/g, '\n'); // нормализация переноса
-      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[]}));
-      state.nextBlockId = Math.max(1, ...state.blocks.map(b=>b.id+1));
+      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[], finalInterpretation: b.finalInterpretation ?? null}));
+      const maxId = state.blocks.reduce((m, b) => Math.max(m, Number(b.id) || 0), 0);
+      state.nextBlockId = maxId + 1;
       state.currentBlockId = state.blocks[0]?.id || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
