@@ -483,17 +483,23 @@ byId('userInput').addEventListener('keydown', e => {
   }
 });
 
-// Сброс внешних выделений
-document.addEventListener('mouseup', () => {
+// Сброс внешних выделений (без capture, с безопасной проверкой цели)
+document.addEventListener('mouseup', (e) => {
+  const dv = byId('dreamView');
+  if (!dv) return;
+
+  // Если клик был внутри dreamView — ничего не делаем
+  if (dv.contains(e.target)) return;
+
   const sel = window.getSelection();
   if (sel && sel.rangeCount) {
     const r = sel.getRangeAt(0);
-    const dv = byId('dreamView');
-    if (dv && (!dv.contains(r.commonAncestorContainer))) {
+    // Сбрасываем выделение только если оно действительно вне dreamView
+    if (!dv.contains(r.commonAncestorContainer)) {
       sel.removeAllRanges();
     }
   }
-}, true);
+}); // без третьего аргумента (capture=false по умолчанию)
 
 // Стартовый рендер
 renderBlocksChips();
