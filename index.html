@@ -8,6 +8,9 @@
     body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 16px; background: #f7f7fb; color: #111; }
     h1 { font-size: 20px; margin: 0 0 12px; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) {
+  .row { grid-template-columns: 1fr; }
+}
     .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
     textarea, input, button { font: inherit; }
 
@@ -54,6 +57,7 @@
     .chip.active { background: #2f6fff; color: #fff; }
     .chat { display: flex; flex-direction: column; gap: 8px; height: 240px; overflow: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fcfcff; }
     .msg { max-width: 80%; padding: 8px 10px; border-radius: 10px; }
+    .msg.bot.final { background: #efe9ff; color: #2f2172; border: 1px solid #d8ccff; }
     .bot { background: #eef2ff; align-self: flex-start; }
     .user { background: #eafbea; align-self: flex-end; }
     .quick { display: flex; gap: 8px; margin-top: 6px; }
@@ -100,8 +104,8 @@
   <div class="footer">
     <button class="primary" id="sendAnswerBtn">Ответить</button>
     <button class="primary" id="start">Начать/продолжить</button>
-    <button id="finish">Завершить анализ</button>
-    <button id="blockInterpret">Сбросить чат</button>
+    <button id="blockInterpretBtn">Толкование блока</button>
+    <button id="finalInterpretBtn">Итоговое толкование</button>
   </div>
 </div>
 
