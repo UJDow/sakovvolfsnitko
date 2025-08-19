@@ -134,6 +134,10 @@ function autoSplitSentences() {
   let cursor = 0;
   for (const s of sentences) {
     const start = state.dreamText.indexOf(s, cursor);
+    if (start === -1) {
+      // пропускаем, если по какой-то причине не нашли подстроку
+      continue;
+    }
     const end = start + s.length;
     const id = state.nextBlockId++;
     state.blocks.push({ id, start, end, text: s, done: false, chat: [], finalInterpretation: null });
@@ -190,6 +194,7 @@ function appendUser(text) {
   renderChat();
 }
 
+// Возвращает { question, quickReplies, isFinal } — question = чистый текст без квик-реплаев
 function parseAIResponse(text) {
   // Эвристика: отделяем быстрые ответы в конце в формате [a | b | c]
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
@@ -234,7 +239,7 @@ async function startOrContinue() {
     appendBot(next.question, next.quickReplies);
     if (next.isFinal) {
       b.done = true;
-      // Можно автоматически сохранять финал:
+      // По желанию можно автоматически сохранять финал:
       // if (!b.finalInterpretation) b.finalInterpretation = next.question;
       appendBot("Анализ завершен! Что дальше?", ["Сохранить", "Новый анализ"]);
     }
@@ -384,7 +389,11 @@ function importJSON(file) {
     try {
       const data = JSON.parse(reader.result);
       state.dreamText = (data.dreamText || '').replace(/\r\n?/g, '\n'); // нормализация переноса
-      state.blocks = (data.blocks || []).map(b => ({...b, chat: b.chat||[], finalInterpretation: b.finalInterpretation ?? null}));
+      state.blocks = (data.blocks || []).map(b => ({
+        ...b,
+        chat: b.chat || [],
+        finalInterpretation: b.finalInterpretation ?? null
+      }));
       const maxId = state.blocks.reduce((m, b) => Math.max(m, Number(b.id) || 0), 0);
       state.nextBlockId = maxId + 1;
       state.currentBlockId = state.blocks[0]?.id || null;
@@ -433,7 +442,7 @@ byId('clear').onclick = () => {
   renderBlocksChips();
   renderDreamView();
 };
-byId('exportTxt').onclick = exportJSON;
+byId('exportJson').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('start').onclick = startOrContinue;
 byId('blockInterpret').onclick = blockInterpretation;
