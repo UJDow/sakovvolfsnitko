@@ -153,6 +153,7 @@ function autoSplitSentences() {
 function selectBlock(id) {
   state.currentBlockId = id;
   renderBlocksChips();
+  renderChat();
 }
 
 function getCurrentBlock() {
@@ -344,48 +345,20 @@ async function llmNextStep(blockText, history) {
     };
   }
 
-  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
-
-  const mappedHistory = (history || [])
-    .filter(m => m && m.role !== 'final')
-    .map(m => ({
-      role: m.role === "bot" ? "assistant" : m.role === "system" ? "system" : "user",
-      content: m.text || m.content || ''
-    }));
-
-  try {
-    const response = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        blockText,
-        history: mappedHistory
-      })
-    });
-
-    if (!response.ok) {
-      let errJson = null;
-      try { errJson = await response.json(); } catch {}
-      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
-        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
-      }
-      throw new Error(errJson?.message || response.statusText);
-    }
-
-    const data = await response.json();
-    const aiResponse = data?.choices?.[0]?.message?.content ?? '';
-    if (!aiResponse) {
-      throw new Error('Пустой ответ от модели');
-    }
-    return parseAIResponse(aiResponse);
-
-  } catch (error) {
-    return {
-      question: `Ошибка API: ${error.message || "Проверьте подключение"}`,
-      quickReplies: ["Повторить запрос"],
-      isFinal: false
-    };
-  }
+  // Эмуляция API для демонстрации
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Генерация демо-ответов
+  const demoResponses = [
+    "Этот фрагмент сна может символизировать новые начинания и радостные события. Что вы чувствовали во сне? [Радость | Удивление | Спокойствие]",
+    "Молодой человек в белой майке может представлять какую-то новую возможность в вашей жизни. Как бы вы описали его характер? [Дружелюбный | Загадочный | Привлекательный]",
+    "Смена кадров может указывать на переходный период в вашей жизни. Что происходило между сменами сцен? [Ничего | Постепенные изменения | Резкие перемены]",
+    "Итог: этот фрагмент, вероятно, отражает ваши ожидания от новых отношений или проектов, где вы испытываете радость открытия.",
+    "Общая интерпретация: сон показывает вашу готовность к новым впечатлениям и отношениям, где возраст не имеет значения, а важны искренние эмоции."
+  ];
+  
+  const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
+  return parseAIResponse(randomResponse);
 }
 
 // Экспорт/импорт
@@ -439,7 +412,6 @@ function renderBlocksChips() {
     const current = getCurrentBlock();
     cur.textContent = current ? `Текущий блок #${current.id}` : 'Блок не выбран';
   }
-  renderChat();
 }
 
 // Handlers
@@ -461,6 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     byId('dream').value = '';
     renderBlocksChips();
     renderDreamView();
+    byId('chat').innerHTML = '';
   };
   byId('exportJson').onclick = exportJSON;
   byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
