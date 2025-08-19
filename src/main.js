@@ -61,15 +61,36 @@ function addBlockFromSelection() {
   if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
   const off = getSelectionOffsets();
   if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
-  // Проверяем пересечения с существующими блоками
+  // 1) Трим границ: убираем пробелы и \n в начале/конце
+  let { start, end } = off;
+  const plain = byId("dreamView").textContent;
+
+  while (start < end && /\s/.test(plain[start])) start++;
+  while (end > start && /\s/.test(plain[end - 1])) end--;
+
+  if (end <= start) {
+    return alert('Похоже, вы выделили только пробелы/переводы строки. Выделите фрагмент текста.');
+  }
+
+  // 2) Сверка с исходным текстом
+  const selected = plain.slice(start, end);
+  const expected = state.dreamText.slice(start, end);
+  if (selected !== expected) {
+    console.warn("Несовпадение выделения с исходным текстом", { selected, expected });
+    return alert('Ошибка: выделение не совпадает с исходным текстом. Попробуйте выделить без захвата лишних символов.');
+  }
+
+  // 3) Проверка пересечений с учётом «подрезанных» границ
   for (const b of state.blocks) {
-    if (!(off.end <= b.start || off.start >= b.end)) {
+    if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
     }
   }
+
+  // 4) Добавление блока
   const id = state.nextBlockId++;
-  const text = state.dreamText.slice(off.start, off.end);
-  state.blocks.push({ id, start: off.start, end: off.end, text, done: false, chat: [] });
+  const text = state.dreamText.slice(start, end);
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null });
   state.currentBlockId = id;
   renderBlocksChips();
 }
