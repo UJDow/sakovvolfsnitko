@@ -1,5 +1,5 @@
 const AUTH_PASS = 'volfisthebest'; // твой пароль
-const AUTH_TOKEN = 'muksud-secret'; // этот же токен будет использоваться для запросов к воркеру
+const AUTH_TOKEN = 'volfisthebest-secret'; // этот же токен будет использоваться для запросов к воркеру
 
 function showAuth() {
   const authDiv = document.getElementById('auth');
