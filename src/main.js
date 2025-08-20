@@ -1,3 +1,50 @@
+const AUTH_PASS = 'muksud'; // твой пароль
+const AUTH_TOKEN = 'muksud-secret'; // этот же токен будет использоваться для запросов к воркеру
+
+function showAuth() {
+  const authDiv = document.getElementById('auth');
+  authDiv.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function hideAuth() {
+  const authDiv = document.getElementById('auth');
+  authDiv.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function getToken() {
+  return localStorage.getItem('snova_token');
+}
+
+function setToken(token) {
+  localStorage.setItem('snova_token', token);
+}
+
+function checkAuth() {
+  if (getToken() === AUTH_TOKEN) {
+    hideAuth();
+    return true;
+  }
+  showAuth();
+  return false;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (!checkAuth()) {
+    document.getElementById('authBtn').onclick = () => {
+      const val = document.getElementById('authPass').value;
+      if (val === AUTH_PASS) {
+        setToken(AUTH_TOKEN);
+        hideAuth();
+        location.reload();
+      } else {
+        document.getElementById('authError').style.display = 'block';
+      }
+    };
+  }
+});
+
 const state = {
   dreamText: '',
   blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: string|null, userAnswersCount: number}
@@ -320,6 +367,24 @@ function appendBot(text, quickReplies = [], isFinal = false) {
   renderChat();
 }
 
+async function apiRequest(url, data) {
+  const token = getToken();
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+  if (res.status === 401) {
+    setToken('');
+    showAuth();
+    throw new Error('Unauthorized');
+  }
+  return res.json();
+}
+
 // Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
@@ -361,7 +426,6 @@ async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
 
-  // Оставим базовую валидацию, чтобы модель не выдавала финал без контекста диалога
   if ((b.userAnswersCount || 0) < 5) {
     return alert('Нужно минимум 5 ответов по этому блоку перед финальной интерпретацией.');
   }
@@ -374,48 +438,33 @@ async function blockInterpretation() {
   try {
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
-    // История: берём весь диалог по текущему блоку (аск/анс), плюс якорим контекст блока
     const history = [
-  { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-  ...(() => {
-    const prev = getPrevBlocksSummary(b.id, 3);
-    return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
-  })(),
-  ...b.chat.map(m => ({
-    role: m.role === "bot" ? "assistant" : "user",
-    content: m.text
-  })),
-  { role: 'user', content: 'Составь единое итоговое толкование сна (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
-];
+      { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+      ...(() => {
+        const prev = getPrevBlocksSummary(b.id, 3);
+        return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+      })(),
+      ...b.chat.map(m => ({
+        role: m.role === "bot" ? "assistant" : "user",
+        content: m.text
+      })),
+      { role: 'user', content: 'Составь единое итоговое толкование сна (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
+    ];
 
-    const response = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        blockText: b.text,
-        history
-      })
+    // Только этот вызов!
+    const data = await apiRequest(PROXY_URL, {
+      blockText: b.text,
+      history
     });
 
-    if (!response.ok) {
-      let errJson = null;
-      try { errJson = await response.json(); } catch {}
-      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
-        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
-      }
-      throw new Error(errJson?.message || response.statusText);
-    }
-
-    const data = await response.json();
     let content = (data.choices?.[0]?.message?.content || '').trim();
 
-    // Лёгкая инлайн-очистка без отдельных функций
     content = content
-      .replace(/```[\s\S]*?```/g, ' ')        // вырезаем блоки кода
-      .replace(/<[^>]+>/g, ' ')               // HTML/теги
-      .replace(/<\u2502?[^>]*\u2502?>/g, ' ') // служебные маркеры <｜…｜>
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/<\u2502?[^>]*\u2502?>/g, ' ')
       .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
-      .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '') // убираем возможный префикс
+      .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -425,8 +474,8 @@ async function blockInterpretation() {
     b.finalAt = Date.now();
     b.done = true;
     appendBot(content, [], true);
-    updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
-    
+    updateButtonsState();
+
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
@@ -464,25 +513,10 @@ async function finalInterpretation() {
       { role: 'user', content: 'Составь единое итоговое толкование сна (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
 
-    const response = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        blockText, // прокинем для симметрии API, хотя смысл в history
-        history
-      })
-    });
-
-    if (!response.ok) {
-      let errJson = null;
-      try { errJson = await response.json(); } catch {}
-      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
-        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
-      }
-      throw new Error(errJson?.message || response.statusText);
-    }
-
-    const data = await response.json();
+    const data = await apiRequest(PROXY_URL, {
+  blockText,
+  history
+});
     let content = (data.choices?.[0]?.message?.content || '').trim();
 
     // Лёгкая инлайн-очистка (как в blockInterpretation)
@@ -525,36 +559,21 @@ async function llmNextStep(blockText, history) {
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
   try {
-    const response = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        blockText: b.text,
-        history: [
-  { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-  ...(() => {
-    const prev = getPrevBlocksSummary(b.id, 3);
-    return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
-  })(),
-  ...b.chat.map(m => ({
-    role: m.role === "bot" ? "assistant" : "user",
-    content: m.text
-  }))
-]
-      })
-    });
-
-    if (!response.ok) {
-      let errJson = null;
-      try { errJson = await response.json(); } catch {}
-      if (response.status === 402 || errJson?.error === 'billing_insufficient_funds') {
-        throw new Error('Баланс DeepSeek исчерпан. Пополните баланс и повторите.');
-      }
-      const msg = errJson?.message || response.statusText;
-      throw new Error(msg);
-    }
-
-    const data = await response.json();
+    const data = await apiRequest(PROXY_URL, {
+  blockText: b.text,
+  history: [
+    { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+    ...(() => {
+      const prev = getPrevBlocksSummary(b.id, 3);
+      return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+    })(),
+    ...b.chat.map(m => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.text
+    }))
+  ]
+});
+    
 const aiRaw = data.choices[0].message.content || '';
 
 function stripNoiseLite(s) {
