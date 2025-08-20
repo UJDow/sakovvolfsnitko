@@ -129,16 +129,20 @@ function renderDreamView() {
   e.preventDefault();
   span.classList.toggle('selected');
   if (span.classList.contains('selected')) {
-    span.style.background = hexToRgba(currentSelectionColor, 0.35);
-    span.style.color = '#222';
-    span.style.borderRadius = '8px';
-    span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-  } else {
-    span.style.background = '#f0f0f0';
-    span.style.color = '#888';
-    span.style.borderRadius = '';
-    span.style.boxShadow = '';
-  }
+  span.style.background = hexToRgba(currentSelectionColor, 0.32);
+  span.style.color = '#222';
+  span.style.borderRadius = '12px';
+  span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
+  span.style.margin = '0 1px'; // уменьшить зазор
+  span.style.padding = '0 4px'; // чуть больше воздуха
+} else {
+  span.style.background = '#f0f0f0';
+  span.style.color = '#888';
+  span.style.borderRadius = '';
+  span.style.boxShadow = '';
+  span.style.margin = '';
+  span.style.padding = '';
+}
 });
     }
 
