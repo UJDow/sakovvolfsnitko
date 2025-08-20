@@ -1,4 +1,4 @@
-const AUTH_PASS = 'muksud'; // твой пароль
+const AUTH_PASS = 'volfisthebest'; // твой пароль
 const AUTH_TOKEN = 'muksud-secret'; // этот же токен будет использоваться для запросов к воркеру
 
 function showAuth() {
