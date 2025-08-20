@@ -87,8 +87,8 @@
 .auth-card {
   position: relative;
   z-index: 2;
-  background: rgba(255,255,255,0.88);
-  box-shadow: 0 8px 40px 0 rgba(60,60,100,0.18), 0 2px 12px 0 rgba(60,60,100,0.10);
+  background: rgba(255,255,255,0.72); /* чуть больше прозрачности */
+  box-shadow: 0 8px 40px 0 rgba(60,60,100,0.22), 0 2px 12px 0 rgba(60,60,100,0.12);
   border-radius: 20px;
   padding: 36px 32px 28px 32px;
   min-width: 320px;
@@ -96,8 +96,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  backdrop-filter: blur(8px);
-  border: 1.5px solid #e3e6f0;
+  backdrop-filter: blur(12px) saturate(1.1); /* чуть больше blur */
+  border: 2px solid rgba(47,111,255,0.18); /* синяя рамка */
 }
 
 .auth-card h2 {
@@ -139,6 +139,10 @@
 
 .auth-card button:hover {
   background: #1d4ed8;
+}
+
+    body.auth-mode > *:not(#auth) {
+  display: none !important;
 }
     /* Сигнальные состояния кнопок */
     .btn-warn { background-color: #ffe7e7 !important; border-color: #ffb3b3 !important; color: #7a1c1c !important; }
