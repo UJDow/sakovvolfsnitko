@@ -116,7 +116,7 @@ function renderDreamView() {
         const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
         span.style.background = color;
         span.style.color = '#222';
-        span.style.borderRadius = '8px';
+        span.style.borderRadius = '10px';
         span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
         span.setAttribute('data-block', block.id);
         span.title = `Блок #${block.id}`;
