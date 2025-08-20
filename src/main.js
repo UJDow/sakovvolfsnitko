@@ -1,5 +1,15 @@
-const AUTH_PASS = 'volfisthebest';
-const AUTH_TOKEN = 'volfisthebest-secret';
+const AUTH_PASS = 'volfisthebest'; // твой пароль
+const AUTH_TOKEN = 'volfisthebest-secret'; // этот же токен будет использоваться для запросов к воркеру
+
+function showAuth() {
+  const authDiv = document.getElementById('auth');
+  authDiv.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('auth-mode');
+  setTimeout(() => {
+    document.getElementById('authPass').focus();
+  }, 100);
+}
 
 const BLOCK_COLORS = [
   '#ffd966', // жёлтый
@@ -9,15 +19,64 @@ const BLOCK_COLORS = [
   '#d9d2e9'  // сиреневый
 ];
 
-// --- Цвет для выделения будущего блока ---
+// PATCH: выделение цветом будущего блока
 let currentSelectionColor = null;
 function resetSelectionColor() {
   currentSelectionColor = BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
 }
 
+function hideAuth() {
+  const authDiv = document.getElementById('auth');
+  authDiv.style.display = 'none';
+  document.body.style.overflow = '';
+  document.body.classList.remove('auth-mode');
+}
+
+function getToken() {
+  return localStorage.getItem('snova_token');
+}
+
+function setToken(token) {
+  localStorage.setItem('snova_token', token);
+}
+
+function checkAuth() {
+  if (getToken() === AUTH_TOKEN) {
+    hideAuth();
+    return true;
+  }
+  showAuth();
+  return false;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (!checkAuth()) {
+    document.getElementById('authBtn').onclick = () => {
+      const val = document.getElementById('authPass').value;
+      if (val === AUTH_PASS) {
+        setToken(AUTH_TOKEN);
+        hideAuth();
+        location.reload();
+      } else {
+        document.getElementById('authError').style.display = 'block';
+      }
+    };
+
+    // Скрывать ошибку при новом вводе
+    document.getElementById('authPass').addEventListener('input', () => {
+      document.getElementById('authError').style.display = 'none';
+    });
+
+    // Enter для отправки пароля
+    document.getElementById('authPass').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('authBtn').click();
+    });
+  }
+});
+
 const state = {
   dreamText: '',
-  blocks: [],
+  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: string|null, userAnswersCount: number}
   currentBlockId: null,
   nextBlockId: 1
 };
@@ -28,6 +87,8 @@ function getNextBlockColor() {
   return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
 }
 
+// Рендер сна с точным соответствием текстовых узлов кускам исходного текста.
+// Каждый Text-узел получает __rawStart/__rawEnd для обратного мэппинга выделения.
 function renderDreamView() {
   const dv = byId('dreamView');
   dv.innerHTML = '';
@@ -53,7 +114,9 @@ function renderDreamView() {
     } else {
       span.style.background = '#f0f0f0';
       span.style.color = '#888';
+      // Кликабельность для выделения
       span.classList.add('tile');
+      // PATCH: выделение цветом будущего блока
       span.addEventListener('click', function(e) {
         e.preventDefault();
         span.classList.toggle('selected');
@@ -70,6 +133,55 @@ function renderDreamView() {
     dv.appendChild(span);
     pos += token.length;
   });
+}
+
+function appendTextSlice(t, start, end, wrapMark) {
+  if (start >= end) return;
+  const text = t.slice(start, end);
+  const textNode = document.createTextNode(text);
+  textNode.__rawStart = start;
+  textNode.__rawEnd = end;
+
+  if (wrapMark) {
+    const mark = document.createElement('mark');
+    mark.setAttribute('data-block', wrapMark.id);
+    mark.title = `Блок #${wrapMark.id}`;
+    mark.appendChild(textNode);
+
+    // Цвет блока
+    const color = BLOCK_COLORS[(wrapMark.id - 1) % BLOCK_COLORS.length];
+    mark.style.background = color;
+    mark.style.color = '#222';
+    mark.style.borderRadius = '3px';
+    mark.style.padding = '0 2px';
+
+    dv.appendChild(mark);
+    mark.addEventListener('click', () => selectBlock(wrapMark.id));
+  } else {
+    // Серый фон для неразмеченного текста
+    const span = document.createElement('span');
+    span.style.background = '#f0f0f0';
+    span.style.color = '#888';
+    span.appendChild(textNode);
+    dv.appendChild(span);
+  }
+}
+
+// Утилиты для преобразования DOM-Range в абсолютные индексы исходного текста
+function findTextNodeAndLocalOffset(node, offset) {
+  if (node.nodeType === Node.TEXT_NODE) return { node, offset };
+  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
+  let curr = walker.nextNode();
+  let seen = 0;
+  while (curr) {
+    const len = curr.nodeValue.length;
+    if (offset <= seen + len) {
+      return { node: curr, offset: Math.max(0, offset - seen) };
+    }
+    seen += len;
+    curr = walker.nextNode();
+  }
+  return null;
 }
 
 function renderBlocksChips() {
@@ -92,15 +204,43 @@ function renderBlocksChips() {
   updateButtonsState();
 }
 
-function selectBlock(id) {
-  state.currentBlockId = id;
-  renderBlocksChips();
+function toAbsolute(node, off) {
+  const res = findTextNodeAndLocalOffset(node, off);
+  if (!res || res.node.__rawStart == null) return null;
+  const local = Math.max(0, Math.min(off, res.node.nodeValue.length));
+  return res.node.__rawStart + local;
 }
 
-function getCurrentBlock() {
-  return state.blocks.find(b => b.id === state.currentBlockId) || null;
+function getSelectionOffsets() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  if (!range || range.collapsed) return null;
+
+  const dv = byId('dreamView');
+  if (!dv.contains(range.startContainer) || !dv.contains(range.endContainer)) return null;
+
+  // Находим ближайший span с data-start
+  function findSpan(node) {
+    while (node && node !== dv) {
+      if (node.nodeType === 1 && node.hasAttribute('data-start')) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  const startSpan = findSpan(range.startContainer);
+  const endSpan = findSpan(range.endContainer);
+
+  if (!startSpan || !endSpan) return null;
+
+  const start = parseInt(startSpan.dataset.start, 10);
+  const end = parseInt(endSpan.dataset.end, 10);
+
+  return start <= end ? { start, end } : { start: end, end: start };
 }
 
+// Добавить весь текст как блок
 function addWholeBlock() {
   if (!state.dreamText) return;
   if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
@@ -114,17 +254,21 @@ function addWholeBlock() {
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
   renderBlocksChips();
+  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
 }
 
+// Добавить блок по выделению
 function addBlockFromSelection() {
   const dv = byId('dreamView');
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
   if (!selected.length) return alert('Выделите плиточки для блока.');
 
+  // Определяем диапазон выделения
   const start = Math.min(...selected.map(s => parseInt(s.dataset.start, 10)));
   const end = Math.max(...selected.map(s => parseInt(s.dataset.end, 10)));
 
+  // Проверка на пересечение с существующими блоками
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
@@ -135,6 +279,7 @@ function addBlockFromSelection() {
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
 
+  // Снимаем выделение
   selected.forEach(s => {
     s.classList.remove('selected');
     s.style.background = '#f0f0f0';
@@ -142,9 +287,11 @@ function addBlockFromSelection() {
   });
 
   renderBlocksChips();
+  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
 }
 
+// Авторазбиение на предложения
 function autoSplitSentences() {
   const t = (state.dreamText||'').trim();
   if (!t) return;
@@ -161,15 +308,26 @@ function autoSplitSentences() {
   }
   state.currentBlockId = state.blocks[0]?.id || null;
   renderBlocksChips();
+  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
 }
 
+function selectBlock(id) {
+  state.currentBlockId = id;
+  renderBlocksChips();
+}
+
+function getCurrentBlock() {
+  return state.blocks.find(b => b.id === state.currentBlockId) || null;
+}
+
+// Собрать краткие итоги предыдущих блоков (1–3 последних финала перед текущим)
 function getPrevBlocksSummary(currentBlockId, limit = 3) {
   const current = state.blocks.find(b => b.id === currentBlockId);
   if (!current) return '';
   const prevFinals = state.blocks
-    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation)
-    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0))
+    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation) // любые уже интерпретированные, кроме текущего
+    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0)) // последние по времени анализа
     .slice(0, limit)
     .map(x => `#${x.id}: ${x.finalInterpretation}`);
   return prevFinals.length ? prevFinals.join('\n') : '';
@@ -210,9 +368,11 @@ function nextUndoneBlockId() {
   const curr = getCurrentBlock();
   const currId = curr?.id ?? -Infinity;
 
+  // 1) сначала ищем следующий по id > текущего
   for (const x of sorted) {
     if (x.id > currId && !x.done) return x.id;
   }
+  // 2) если не нашли — ищем с начала
   for (const x of sorted) {
     if (!x.done) return x.id;
   }
@@ -235,18 +395,22 @@ function updateButtonsState() {
   const finalBtn = byId('finalInterpretBtn');
   const startBtn = byId('start');
 
+  // Сбросим классы перед проставлением новых
   if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
   if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
 
+  // Логика для "Толкование блока"
   const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
   if (blockBtn) blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
 
+  // Логика для "Итоговое толкование"
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
   const enoughForFinal = finalsCount >= 2;
   if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
 
+  // Динамика для кнопки "Начать"
   if (startBtn) {
-    startBtn.onclick = null;
+    startBtn.onclick = null; // чтобы не накапливались обработчики
     if (b && b.done) {
       startBtn.textContent = 'Перейти к следующему блоку';
       startBtn.disabled = false;
@@ -272,6 +436,7 @@ function appendFinalGlobal(text) {
   renderChat();
 }
 
+// Функция для парсинга ответов ИИ
 function parseAIResponse(text) {
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
@@ -295,6 +460,7 @@ function parseAIResponse(text) {
   };
 }
 
+// Отправка ответа пользователя
 function sendAnswer(ans) {
   appendUser(ans);
   startOrContinue();
@@ -324,6 +490,7 @@ async function apiRequest(url, data) {
   return res.json();
 }
 
+// Основная функция для работы с ИИ
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
@@ -340,12 +507,13 @@ async function startOrContinue() {
 
     const next = await llmNextStep(b.text, history);
 
+    // Если модель выдала финал естественно — фиксируем это как итог блока
     if (next.isFinal) {
       b.finalInterpretation = next.question.trim();
       b.finalAt = Date.now();
       b.done = true;
       appendBot(next.question, [], true);
-      updateButtonsState();
+      updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
     } else {
       appendBot(next.question, next.quickReplies);
     }
@@ -354,10 +522,11 @@ async function startOrContinue() {
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
     startBtn.disabled = false;
-    updateButtonsState();
+    updateButtonsState(); // вернуть корректный текст и обработчик
   }
 }
 
+// Толкование блока (финал для текущего блока) — упрощённая версия
 async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
@@ -387,6 +556,7 @@ async function blockInterpretation() {
       { role: 'user', content: 'Составь единое итоговое толкование сна (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
 
+    // Только этот вызов!
     const data = await apiRequest(PROXY_URL, {
       blockText: b.text,
       history
@@ -420,7 +590,9 @@ async function blockInterpretation() {
   }
 }
 
+// Итоговое толкование по всем блокам — упрощённая версия
 async function finalInterpretation() {
+  // Берём только блоки, где уже есть финальные интерпретации
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
 
   if (interpreted.length === 0) {
@@ -435,11 +607,14 @@ async function finalInterpretation() {
   try {
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
+    // Краткий контекст общего сна (ограничим длину)
     const blockText = (state.dreamText || '').slice(0, 4000);
 
+    // История: даём краткий контекст сна и все готовые интерпретации блоков
     const history = [
       { role: 'user', content: 'Краткий контекст сна:\n' + blockText },
       { role: 'user', content: 'Итоговые толкования блоков:\n' + interpreted.map(b => `#${b.id}: ${b.finalInterpretation}`).join('\n') },
+      // Финальная инструкция — один абзац, без префиксов/кода/тегов
       { role: 'user', content: 'Составь единое итоговое толкование сна (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
 
@@ -449,6 +624,7 @@ async function finalInterpretation() {
     });
     let content = (data.choices?.[0]?.message?.content || '').trim();
 
+    // Лёгкая инлайн-очистка (как в blockInterpretation)
     content = content
       .replace(/```[\s\S]*?```/g, ' ')
       .replace(/<[^>]+>/g, ' ')
@@ -460,6 +636,7 @@ async function finalInterpretation() {
 
     if (!content) content = 'Не удалось получить итоговое толкование.';
 
+    // Показываем чистый финальный текст без префиксов
     const b = getCurrentBlock();
     if (b) {
       appendFinalGlobal(content);
@@ -475,6 +652,7 @@ async function finalInterpretation() {
   }
 }
 
+// Следующий шаг диалога с ИИ
 async function llmNextStep(blockText, history) {
   const b = getCurrentBlock();
   if (!b) return {
@@ -523,6 +701,7 @@ async function llmNextStep(blockText, history) {
   }
 }
 
+// Экспорт/импорт
 function exportJSON() {
   const data = { dreamText: state.dreamText, blocks: state.blocks };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
@@ -548,21 +727,25 @@ function importJSON(file) {
       state.currentBlockId = state.blocks[0]?.id || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
+      // PATCH: выделение цветом будущего блока
       resetSelectionColor();
     } catch(e) { alert('Не удалось импортировать JSON'); }
   };
   reader.readAsText(file);
 }
 
+// Handlers
 byId('render').onclick = () => {
   state.dreamText = byId('dream').value;
   renderDreamView();
+  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
 };
 byId('addBlock').onclick = addBlockFromSelection;
 byId('auto').onclick = () => {
   state.dreamText = byId('dream').value;
   autoSplitSentences();
+  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
 };
 byId('clear').onclick = () => {
@@ -571,6 +754,7 @@ byId('clear').onclick = () => {
   state.currentBlockId=null;
   state.nextBlockId=1;
   byId('dream').value='';
+  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
   renderBlocksChips();
 };
@@ -579,9 +763,13 @@ byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]
 byId('blockInterpretBtn').onclick = blockInterpretation;
 byId('finalInterpretBtn').onclick = finalInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
+// В самом конце файла, после всех обработчиков:
 updateButtonsState();
+
+// PATCH: выделение цветом будущего блока — при первом запуске
 resetSelectionColor();
 
+// --- Ручной ввод ответа ---
 byId('sendAnswerBtn').onclick = () => {
   const val = byId('userInput').value.trim();
   if (!val) return;
