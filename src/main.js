@@ -126,7 +126,6 @@ function renderDreamView() {
         span.style.color = '#888';
         span.style.borderRadius = '4px';
         span.classList.add('tile');
-        // --- основной обработчик ---
         span.addEventListener('click', function(e) {
           e.preventDefault();
           span.classList.toggle('selected');
@@ -146,26 +145,6 @@ function renderDreamView() {
             span.style.padding = '';
           }
         });
-        // --- моментальная реакция на телефоне ---
-        span.addEventListener('touchstart', function(e) {
-          e.preventDefault();
-          span.classList.toggle('selected');
-          if (span.classList.contains('selected')) {
-            span.style.background = hexToRgba(currentSelectionColor, 0.32);
-            span.style.color = '#222';
-            span.style.borderRadius = '4px';
-            span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-            span.style.margin = '0px';
-            span.style.padding = '0 4px';
-          } else {
-            span.style.background = '#f0f0f0';
-            span.style.color = '#888';
-            span.style.borderRadius = '';
-            span.style.boxShadow = '';
-            span.style.margin = '';
-            span.style.padding = '';
-          }
-        }, {passive: false});
       }
       dv.appendChild(span);
     } else {
