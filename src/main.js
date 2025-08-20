@@ -89,14 +89,14 @@ function renderDreamView() {
   let idx = 0;
 
   for (const b of sorted) {
-    if (b.start > idx) appendTextSlice(idx, b.start, null);
-    appendTextSlice(b.start, b.end, b);
+    if (b.start > idx) appendTextSlice(t, idx, b.start, null);
+    appendTextSlice(t, b.start, b.end, b);
     idx = b.end;
   }
-  if (idx < t.length) appendTextSlice(idx, t.length, null);
+  if (idx < t.length) appendTextSlice(t, idx, t.length, null);
 }
 
-  function appendTextSlice(start, end, wrapMark) {
+function appendTextSlice(t, start, end, wrapMark) {
   if (start >= end) return;
   const text = t.slice(start, end);
   const textNode = document.createTextNode(text);
