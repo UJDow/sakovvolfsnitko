@@ -87,15 +87,6 @@ function getNextBlockColor() {
   return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
 }
 
-function updateSelectedTileCorners() {
-  const selected = Array.from(document.querySelectorAll('.tile.selected'));
-  selected.forEach((el, i) => {
-    el.style.borderRadius = '0';
-    if (i === 0) el.style.borderTopLeftRadius = el.style.borderBottomLeftRadius = '12px';
-    if (i === selected.length - 1) el.style.borderTopRightRadius = el.style.borderBottomRightRadius = '12px';
-  });
-}
-
 function hexToRgba(hex, alpha) {
   const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
   if (!m) return hex;
