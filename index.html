@@ -9,8 +9,8 @@
     h1 { font-size: 20px; margin: 0 0 12px; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 900px) {
-      .row { grid-template-columns: 1fr; }
-    }
+  .row { grid-template-columns: 1fr; }
+}
     .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
     textarea, input, button { font: inherit; }
 
@@ -23,21 +23,29 @@
       font-size: 14px;
       line-height: 1.4;
       box-sizing: border-box;
-      resize: none;
+      resize: none; /* 🚫 запрет растягивания */
     }
 
     /* Поле "Введите сон" */
     #dream {
       min-height: 140px;
-      max-height: 140px;
+      max-height: 140px; /* фиксированная высота */
     }
 
     /* Поле для ответов пользователя */
     #userInput {
-      min-height: 80px;
-      max-height: 80px;
-      margin-bottom: 12px;
-    }
+  width: 100%;
+  min-height: 80px;           /* просторное поле */
+  max-height: 80px;           /* фиксированная высота */
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: none;               /* запрет растягивания */
+  box-sizing: border-box;
+  margin-bottom: 12px;        /* отделить от кнопок */
+}
 
     .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
@@ -56,111 +64,103 @@
     .quick { display: flex; gap: 8px; margin-top: 6px; }
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
-    
     #auth {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: inherit;
-    }
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
 
-    .auth-bg {
-      position: absolute;
-      inset: 0;
-      background: url('/src/download (3).png') center/cover no-repeat;
-      filter: blur(18px) brightness(0.7);
-      opacity: 0.92;
-      z-index: 1;
-      transition: opacity 0.3s;
-    }
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/src/download (3).png') center/cover no-repeat;
+  filter: blur(18px) brightness(0.7);
+  opacity: 0.92;
+  z-index: 1;
+  transition: opacity 0.3s;
+}
 
-    .auth-card {
-      position: relative;
-      z-index: 2;
-      background: rgba(255,255,255,0.72);
-      box-shadow: 0 8px 40px 0 rgba(60,60,100,0.22), 0 2px 12px 0 rgba(60,60,100,0.12);
-      border-radius: 20px;
-      padding: 36px 32px 28px 32px;
-      min-width: 320px;
-      max-width: 90vw;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      backdrop-filter: blur(12px) saturate(1.1);
-      border: 2px solid rgba(47,111,255,0.18);
-    }
+.auth-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(255,255,255,0.72); /* чуть больше прозрачности */
+  box-shadow: 0 8px 40px 0 rgba(60,60,100,0.22), 0 2px 12px 0 rgba(60,60,100,0.12);
+  border-radius: 20px;
+  padding: 36px 32px 28px 32px;
+  min-width: 320px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(12px) saturate(1.1); /* чуть больше blur */
+  border: 2px solid rgba(47,111,255,0.18); /* синяя рамка */
+}
 
-    .auth-card h2 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 18px;
-      color: #2f2172;
-      letter-spacing: 0.01em;
-    }
+.auth-card h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: #2f2172;
+  letter-spacing: 0.01em;
+}
 
-    .auth-card input[type="password"] {
-      font-size: 16px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1.5px solid #d1d5db;
-      margin-bottom: 16px;
-      width: 220px;
-      background: #f7f7fb;
-      transition: border 0.2s;
-    }
+.auth-card input[type="password"] {
+  font-size: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #d1d5db;
+  margin-bottom: 16px;
+  width: 220px;
+  background: #f7f7fb;
+  transition: border 0.2s;
+}
 
-    .auth-card input[type="password"]:focus {
-      border-color: #2f6fff;
-      outline: none;
-    }
+.auth-card input[type="password"]:focus {
+  border-color: #2f6fff;
+  outline: none;
+}
 
-    .auth-card button {
-      font-size: 16px;
-      padding: 10px 24px;
-      border-radius: 8px;
-      border: none;
-      background: #2f6fff;
-      color: #fff;
-      font-weight: 500;
-      cursor: pointer;
-      box-shadow: 0 1px 4px rgba(47,111,255,0.08);
-      transition: background 0.2s;
-    }
+.auth-card button {
+  font-size: 16px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: #2f6fff;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(47,111,255,0.08);
+  transition: background 0.2s;
+}
 
-    .auth-card button:hover {
-      background: #1d4ed8;
-    }
+.auth-card button:hover {
+  background: #1d4ed8;
+}
 
     body.auth-mode > *:not(#auth) {
-      display: none !important;
-    }
-    
+  display: none !important;
+}
     /* Сигнальные состояния кнопок */
     .btn-warn { background-color: #ffe7e7 !important; border-color: #ffb3b3 !important; color: #7a1c1c !important; }
     .btn-ok { background-color: #e7ffe7 !important; border-color: #b3ffb3 !important; color: #145a14 !important; }
 
     #sendAnswerBtn { padding:8px 12px; border-radius:8px; border:1px solid #2f6fff; background:#2f6fff; color:#fff; }
-    .dream-view, .dream-view mark[data-block] {
-      user-select: text !important;
-      -webkit-user-select: text !important;
-      -ms-user-select: text !important;
-    }
   </style>
 </head>
 <body class="auth-mode">
-  <div id="auth" style="display:none;">
-    <div class="auth-bg"></div>
-    <div class="auth-card">
-      <h2>Доступ ограничен</h2>
-      <label for="authPass" style="display:none;">Пароль</label>
-      <input type="password" id="authPass" placeholder="Пароль">
-      <button id="authBtn">Войти</button>
-      <div id="authError" style="color:#c00; margin-top:8px; display:none;">Неверный пароль</div>
-    </div>
+ <div id="auth" style="display:none;">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <h2>Доступ ограничен</h2>
+    <input type="password" id="authPass" placeholder="Пароль">
+    <button id="authBtn">Войти</button>
+    <div id="authError" style="color:#c00; margin-top:8px; display:none;">Неверный пароль</div>
   </div>
+</div>
   
   <h1>Snova — веб‑MVP (без хранения)</h1>
 
@@ -185,24 +185,23 @@
     </div>
 
     <div class="card">
-      <h3>2) Диалог по блоку</h3>
-      <div id="currentBlock" class="muted">Блок не выбран</div>
-      <div class="chat" id="chat"></div>
+  <h3>2) Диалог по блоку</h3>
+  <div id="currentBlock" class="muted">Блок не выбран</div>
+  <div class="chat" id="chat"></div>
 
-      <!-- Поле ввода -->
-      <div class="footer">
-        <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
-      </div>
-
-      <!-- Кнопки -->
-      <div class="footer">
-        <button class="primary" id="sendAnswerBtn">Ответить</button>
-        <button class="primary" id="start">Начать</button>
-        <button id="blockInterpretBtn">Толкование блока</button>
-        <button id="finalInterpretBtn">Итоговое толкование</button>
-      </div>
-    </div>
+  <!-- Поле ввода -->
+  <div class="footer">
+    <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
   </div>
+
+  <!-- Кнопки -->
+  <div class="footer">
+    <button class="primary" id="sendAnswerBtn">Ответить</button>
+    <button class="primary" id="start">Начать</button>
+    <button id="blockInterpretBtn">Толкование блока</button>
+    <button id="finalInterpretBtn">Итоговое толкование</button>
+  </div>
+</div>
 
   <!-- Подключаем JS-файл -->
   <script type="module" src="/src/main.js"></script>
