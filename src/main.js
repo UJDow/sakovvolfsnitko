@@ -87,6 +87,12 @@ function getNextBlockColor() {
   return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
 }
 
+function hexToRgba(hex, alpha) {
+  const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return hex;
+  return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${alpha})`;
+}
+
 // Рендер сна с точным соответствием текстовых узлов кускам исходного текста.
 // Каждый Text-узел получает __rawStart/__rawEnd для обратного мэппинга выделения.
 function renderDreamView() {
@@ -108,6 +114,8 @@ function renderDreamView() {
       const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
       span.style.background = color;
       span.style.color = '#222';
+      span.style.borderRadius = '8px'; // или 12px, если хочешь сильнее
+      span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
       span.setAttribute('data-block', block.id);
       span.title = `Блок #${block.id}`;
       span.addEventListener('click', () => selectBlock(block.id));
@@ -118,16 +126,20 @@ function renderDreamView() {
       span.classList.add('tile');
       // PATCH: выделение цветом будущего блока
       span.addEventListener('click', function(e) {
-        e.preventDefault();
-        span.classList.toggle('selected');
-        if (span.classList.contains('selected')) {
-          span.style.background = currentSelectionColor;
-          span.style.color = '#222';
-        } else {
-          span.style.background = '#f0f0f0';
-          span.style.color = '#888';
-        }
-      });
+  e.preventDefault();
+  span.classList.toggle('selected');
+  if (span.classList.contains('selected')) {
+    span.style.background = hexToRgba(currentSelectionColor, 0.35);
+    span.style.color = '#222';
+    span.style.borderRadius = '8px';
+    span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
+  } else {
+    span.style.background = '#f0f0f0';
+    span.style.color = '#888';
+    span.style.borderRadius = '';
+    span.style.boxShadow = '';
+  }
+});
     }
 
     dv.appendChild(span);
