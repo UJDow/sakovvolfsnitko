@@ -104,54 +104,52 @@ function renderDreamView() {
   const tokens = t.match(/\S+|\s+/g) || [];
   let pos = 0;
   tokens.forEach(token => {
-    const isWord = /\S/.test(token); // true если это не пробел
-    const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
-    const span = document.createElement('span');
-    span.textContent = token;
-    span.dataset.start = pos;
-    span.dataset.end = pos + token.length;
+    const isWord = /\S/.test(token);
+    if (isWord) {
+      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
+      const span = document.createElement('span');
+      span.textContent = token;
+      span.dataset.start = pos;
+      span.dataset.end = pos + token.length;
 
-    if (block) {
-      const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
-      span.style.background = color;
-      span.style.color = '#222';
-      span.style.borderRadius = '8px';
-      span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-      span.setAttribute('data-block', block.id);
-      span.title = `Блок #${block.id}`;
-      span.addEventListener('click', () => selectBlock(block.id));
-    } else if (isWord) {
-      // Только слова делаем кликабельными и выделяемыми
-      span.style.background = '#f0f0f0';
-      span.style.color = '#888';
-      span.classList.add('tile');
-      span.addEventListener('click', function(e) {
-        e.preventDefault();
-        span.classList.toggle('selected');
-        if (span.classList.contains('selected')) {
-          span.style.background = hexToRgba(currentSelectionColor, 0.32);
-          span.style.color = '#222';
-          span.style.borderRadius = '12px';
-          span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-          span.style.margin = '0px';
-          span.style.padding = '0 4px';
-        } else {
-          span.style.background = '#f0f0f0';
-          span.style.color = '#888';
-          span.style.borderRadius = '';
-          span.style.boxShadow = '';
-          span.style.margin = '';
-          span.style.padding = '';
-        }
-      });
+      if (block) {
+        const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
+        span.style.background = color;
+        span.style.color = '#222';
+        span.style.borderRadius = '8px';
+        span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
+        span.setAttribute('data-block', block.id);
+        span.title = `Блок #${block.id}`;
+        span.addEventListener('click', () => selectBlock(block.id));
+      } else {
+        span.style.background = '#f0f0f0';
+        span.style.color = '#888';
+        span.classList.add('tile');
+        span.addEventListener('click', function(e) {
+          e.preventDefault();
+          span.classList.toggle('selected');
+          if (span.classList.contains('selected')) {
+            span.style.background = hexToRgba(currentSelectionColor, 0.32);
+            span.style.color = '#222';
+            span.style.borderRadius = '12px';
+            span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
+            span.style.margin = '0px';
+            span.style.padding = '0 4px';
+          } else {
+            span.style.background = '#f0f0f0';
+            span.style.color = '#888';
+            span.style.borderRadius = '';
+            span.style.boxShadow = '';
+            span.style.margin = '';
+            span.style.padding = '';
+          }
+        });
+      }
+      dv.appendChild(span);
     } else {
-      // Пробелы и переносы строк — просто как есть, без выделения и клика
-      span.style.background = '';
-      span.style.color = '';
-      // никаких классов и обработчиков!
+      // Просто текстовый узел для пробела
+      dv.appendChild(document.createTextNode(token));
     }
-
-    dv.appendChild(span);
     pos += token.length;
   });
 }
