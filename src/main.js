@@ -11,6 +11,14 @@ function showAuth() {
   }, 100);
 }
 
+const BLOCK_COLORS = [
+  '#ffd966', // жёлтый
+  '#a4c2f4', // голубой
+  '#b6d7a8', // зелёный
+  '#f4cccc', // розовый
+  '#d9d2e9'  // сиреневый
+];
+
 function hideAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'none';
@@ -80,25 +88,6 @@ function renderDreamView() {
   const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
   let idx = 0;
 
-  function appendTextSlice(start, end, wrapMark) {
-    if (start >= end) return;
-    const text = t.slice(start, end);
-    const textNode = document.createTextNode(text);
-    textNode.__rawStart = start;
-    textNode.__rawEnd = end;
-
-    if (wrapMark) {
-      const mark = document.createElement('mark');
-      mark.setAttribute('data-block', wrapMark.id);
-      mark.title = `Блок #${wrapMark.id}`;
-      mark.appendChild(textNode);
-      dv.appendChild(mark);
-      mark.addEventListener('click', () => selectBlock(wrapMark.id));
-    } else {
-      dv.appendChild(textNode);
-    }
-  }
-
   for (const b of sorted) {
     if (b.start > idx) appendTextSlice(idx, b.start, null);
     appendTextSlice(b.start, b.end, b);
@@ -107,22 +96,36 @@ function renderDreamView() {
   if (idx < t.length) appendTextSlice(idx, t.length, null);
 }
 
-function renderBlocksChips() {
-  const wrap = byId('blocks');
-  wrap.innerHTML = '';
-  state.blocks.forEach(b => {
-    const el = document.createElement('div');
-    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
-    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
-    el.addEventListener('click', ()=>selectBlock(b.id));
-    wrap.appendChild(el);
-  });
-  const cb = byId('currentBlock');
-  const b = getCurrentBlock();
-  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
-  renderDreamView();
-  renderChat();
-  updateButtonsState();
+  function appendTextSlice(start, end, wrapMark) {
+  if (start >= end) return;
+  const text = t.slice(start, end);
+  const textNode = document.createTextNode(text);
+  textNode.__rawStart = start;
+  textNode.__rawEnd = end;
+
+  if (wrapMark) {
+    const mark = document.createElement('mark');
+    mark.setAttribute('data-block', wrapMark.id);
+    mark.title = `Блок #${wrapMark.id}`;
+    mark.appendChild(textNode);
+
+    // Цвет блока
+    const color = BLOCK_COLORS[(wrapMark.id - 1) % BLOCK_COLORS.length];
+    mark.style.background = color;
+    mark.style.color = '#222';
+    mark.style.borderRadius = '3px';
+    mark.style.padding = '0 2px';
+
+    dv.appendChild(mark);
+    mark.addEventListener('click', () => selectBlock(wrapMark.id));
+  } else {
+    // Серый фон для неразмеченного текста
+    const span = document.createElement('span');
+    span.style.background = '#f0f0f0';
+    span.style.color = '#888';
+    span.appendChild(textNode);
+    dv.appendChild(span);
+  }
 }
 
 // Утилиты для преобразования DOM-Range в абсолютные индексы исходного текста
@@ -140,6 +143,26 @@ function findTextNodeAndLocalOffset(node, offset) {
     curr = walker.nextNode();
   }
   return null;
+}
+
+function renderBlocksChips() {
+  const wrap = byId('blocks');
+  wrap.innerHTML = '';
+  state.blocks.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+    el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
+    el.style.color = '#222';
+    el.addEventListener('click', ()=>selectBlock(b.id));
+    wrap.appendChild(el);
+  });
+  const cb = byId('currentBlock');
+  const b = getCurrentBlock();
+  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  renderDreamView();
+  renderChat();
+  updateButtonsState();
 }
 
 function toAbsolute(node, off) {
