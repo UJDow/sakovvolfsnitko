@@ -133,8 +133,8 @@ function renderDreamView() {
   span.style.color = '#222';
   span.style.borderRadius = '12px';
   span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-  span.style.margin = '0 1px'; // уменьшить зазор
-  span.style.padding = '0 4px'; // чуть больше воздуха
+  span.style.margin = '0 -2px'; // убираем зазор, чтобы скругления слипались
+  span.style.padding = '0 4px';
 } else {
   span.style.background = '#f0f0f0';
   span.style.color = '#888';
