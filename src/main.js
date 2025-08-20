@@ -124,6 +124,7 @@ function renderDreamView() {
       } else {
         span.style.background = '#f0f0f0';
         span.style.color = '#888';
+        span.style.borderRadius = '4px';
         span.classList.add('tile');
         span.addEventListener('click', function(e) {
           e.preventDefault();
