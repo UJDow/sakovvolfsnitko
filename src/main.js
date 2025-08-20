@@ -85,12 +85,9 @@ function renderDreamView() {
   const t = state.dreamText || '';
   if (!t) return;
 
-  // Разбиваем на слова и пробелы, чтобы сохранить структуру
   const tokens = t.match(/\S+|\s+/g) || [];
-
   let pos = 0;
   tokens.forEach(token => {
-    // Проверяем, входит ли этот кусок в какой-то блок
     const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
     const span = document.createElement('span');
     span.textContent = token;
@@ -98,7 +95,6 @@ function renderDreamView() {
     span.dataset.end = pos + token.length;
 
     if (block) {
-      // Цвет блока
       const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
       span.style.background = color;
       span.style.color = '#222';
@@ -106,9 +102,14 @@ function renderDreamView() {
       span.title = `Блок #${block.id}`;
       span.addEventListener('click', () => selectBlock(block.id));
     } else {
-      // Серый фон для неразмеченного текста
       span.style.background = '#f0f0f0';
       span.style.color = '#888';
+      // Кликабельность для выделения
+      span.classList.add('tile');
+      span.addEventListener('click', function(e) {
+        e.preventDefault();
+        span.classList.toggle('selected');
+      });
     }
 
     dv.appendChild(span);
@@ -239,14 +240,15 @@ function addWholeBlock() {
 
 // Добавить блок по выделению
 function addBlockFromSelection() {
-  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
-  const off = getSelectionOffsets();
-  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
+  const dv = byId('dreamView');
+  const selected = Array.from(dv.querySelectorAll('.tile.selected'));
+  if (!selected.length) return alert('Выделите плиточки для блока.');
 
-  let start = Math.max(0, Math.min(off.start, state.dreamText.length));
-  let end = Math.max(0, Math.min(off.end, state.dreamText.length));
-  if (start === end) return alert('Пустое выделение.');
+  // Определяем диапазон выделения
+  const start = Math.min(...selected.map(s => parseInt(s.dataset.start, 10)));
+  const end = Math.max(...selected.map(s => parseInt(s.dataset.end, 10)));
 
+  // Проверка на пересечение с существующими блоками
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
@@ -256,6 +258,10 @@ function addBlockFromSelection() {
   const text = state.dreamText.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
+
+  // Снимаем выделение
+  selected.forEach(s => s.classList.remove('selected'));
+
   renderBlocksChips();
 }
 
