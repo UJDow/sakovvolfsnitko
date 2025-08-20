@@ -5,6 +5,7 @@ function showAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('auth-mode');
   setTimeout(() => {
     document.getElementById('authPass').focus();
   }, 100);
@@ -14,6 +15,7 @@ function hideAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'none';
   document.body.style.overflow = '';
+  document.body.classList.remove('auth-mode');
 }
 
 function getToken() {
