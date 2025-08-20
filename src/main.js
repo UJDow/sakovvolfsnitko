@@ -85,15 +85,35 @@ function renderDreamView() {
   const t = state.dreamText || '';
   if (!t) return;
 
-  const sorted = [...state.blocks].sort((a,b)=>a.start-b.start);
-  let idx = 0;
+  // Разбиваем на слова и пробелы, чтобы сохранить структуру
+  const tokens = t.match(/\S+|\s+/g) || [];
 
-  for (const b of sorted) {
-    if (b.start > idx) appendTextSlice(t, idx, b.start, null);
-    appendTextSlice(t, b.start, b.end, b);
-    idx = b.end;
-  }
-  if (idx < t.length) appendTextSlice(t, idx, t.length, null);
+  let pos = 0;
+  tokens.forEach(token => {
+    // Проверяем, входит ли этот кусок в какой-то блок
+    const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
+    const span = document.createElement('span');
+    span.textContent = token;
+    span.dataset.start = pos;
+    span.dataset.end = pos + token.length;
+
+    if (block) {
+      // Цвет блока
+      const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
+      span.style.background = color;
+      span.style.color = '#222';
+      span.setAttribute('data-block', block.id);
+      span.title = `Блок #${block.id}`;
+      span.addEventListener('click', () => selectBlock(block.id));
+    } else {
+      // Серый фон для неразмеченного текста
+      span.style.background = '#f0f0f0';
+      span.style.color = '#888';
+    }
+
+    dv.appendChild(span);
+    pos += token.length;
+  });
 }
 
 function appendTextSlice(t, start, end, wrapMark) {
@@ -181,9 +201,22 @@ function getSelectionOffsets() {
   const dv = byId('dreamView');
   if (!dv.contains(range.startContainer) || !dv.contains(range.endContainer)) return null;
 
-  const start = toAbsolute(range.startContainer, range.startOffset);
-  const end = toAbsolute(range.endContainer, range.endOffset);
-  if (start == null || end == null) return null;
+  // Находим ближайший span с data-start
+  function findSpan(node) {
+    while (node && node !== dv) {
+      if (node.nodeType === 1 && node.hasAttribute('data-start')) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  const startSpan = findSpan(range.startContainer);
+  const endSpan = findSpan(range.endContainer);
+
+  if (!startSpan || !endSpan) return null;
+
+  const start = parseInt(startSpan.dataset.start, 10);
+  const end = parseInt(endSpan.dataset.end, 10);
 
   return start <= end ? { start, end } : { start: end, end: start };
 }
