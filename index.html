@@ -64,6 +64,65 @@
     .quick { display: flex; gap: 8px; margin-top: 6px; }
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
+    #auth { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+    .auth-bg { position: absolute; inset: 0; background: url('/src/download (3).png') center/cover no-repeat; filter: blur(16px) brightness(0.7); opacity: 0.85; z-index: 1; transition: opacity 0.3s; }
+
+.auth-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 4px 32px 0 rgba(60,60,100,0.18), 0 1.5px 8px 0 rgba(60,60,100,0.10);
+  border-radius: 18px;
+  padding: 32px 28px 24px 28px;
+  min-width: 320px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(6px);
+  border: 1.5px solid #e3e6f0;
+}
+
+.auth-card h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: #2f2172;
+  letter-spacing: 0.01em;
+}
+
+.auth-card input[type="password"] {
+  font-size: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #d1d5db;
+  margin-bottom: 16px;
+  width: 220px;
+  background: #f7f7fb;
+  transition: border 0.2s;
+}
+
+.auth-card input[type="password"]:focus {
+  border-color: #2f6fff;
+  outline: none;
+}
+
+.auth-card button {
+  font-size: 16px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: #2f6fff;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(47,111,255,0.08);
+  transition: background 0.2s;
+}
+
+.auth-card button:hover {
+  background: #1d4ed8;
+}
     /* Сигнальные состояния кнопок */
     .btn-warn { background-color: #ffe7e7 !important; border-color: #ffb3b3 !important; color: #7a1c1c !important; }
     .btn-ok { background-color: #e7ffe7 !important; border-color: #b3ffb3 !important; color: #145a14 !important; }
@@ -72,12 +131,14 @@
   </style>
 </head>
 <body>
-  <div id="auth" style="display:none; position:fixed; inset:0; background:#fff; z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
-  <h2>Доступ ограничен</h2>
-  <input type="password" id="authPass" placeholder="Пароль" style="padding:8px; font-size:16px;">
-  <button id="authBtn" style="margin-top:8px; padding:8px 16px;">Войти</button>
-  <div id="authError" style="color:red; margin-top:8px; display:none;">Неверный пароль</div>
-</div>
+  <div id="auth" style="display:none;">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <h2>Доступ ограничен</h2>
+    <input type="password" id="authPass" placeholder="Пароль">
+    <button id="authBtn">Войти</button>
+    <div id="authError" style="color:#c00; margin-top:8px; display:none;">Неверный пароль</div>
+  </div>
   
   <h1>Snova — веб‑MVP (без хранения)</h1>
 
