@@ -64,22 +64,39 @@
     .quick { display: flex; gap: 8px; margin-top: 6px; }
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
-    #auth { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: inherit; }
-    .auth-bg { position: absolute; inset: 0; background: url('/src/download (3).png') center/cover no-repeat; filter: blur(16px) brightness(0.7); opacity: 0.85; z-index: 1; transition: opacity 0.3s; }
+    #auth {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/src/download (3).png') center/cover no-repeat;
+  filter: blur(18px) brightness(0.7);
+  opacity: 0.92;
+  z-index: 1;
+  transition: opacity 0.3s;
+}
 
 .auth-card {
   position: relative;
   z-index: 2;
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 4px 32px 0 rgba(60,60,100,0.18), 0 1.5px 8px 0 rgba(60,60,100,0.10);
-  border-radius: 18px;
-  padding: 32px 28px 24px 28px;
+  background: rgba(255,255,255,0.88);
+  box-shadow: 0 8px 40px 0 rgba(60,60,100,0.18), 0 2px 12px 0 rgba(60,60,100,0.10);
+  border-radius: 20px;
+  padding: 36px 32px 28px 32px;
   min-width: 320px;
   max-width: 90vw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
   border: 1.5px solid #e3e6f0;
 }
 
@@ -131,7 +148,7 @@
   </style>
 </head>
 <body>
-  <div id="auth" style="display:none;">
+ <div id="auth" style="display:none;">
   <div class="auth-bg"></div>
   <div class="auth-card">
     <h2>Доступ ограничен</h2>
@@ -139,6 +156,7 @@
     <button id="authBtn">Войти</button>
     <div id="authError" style="color:#c00; margin-top:8px; display:none;">Неверный пароль</div>
   </div>
+</div>
   
   <h1>Snova — веб‑MVP (без хранения)</h1>
 
