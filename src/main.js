@@ -77,10 +77,6 @@ const state = {
 
 function byId(id) { return document.getElementById(id); }
 
-function getNextBlockColor() {
-  return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
-}
-
 // Рендер сна с точным соответствием текстовых узлов кускам исходного текста.
 // Каждый Text-узел получает __rawStart/__rawEnd для обратного мэппинга выделения.
 function renderDreamView() {
@@ -111,16 +107,9 @@ function renderDreamView() {
       // Кликабельность для выделения
       span.classList.add('tile');
       span.addEventListener('click', function(e) {
-  e.preventDefault();
-  span.classList.toggle('selected');
-  if (span.classList.contains('selected')) {
-    span.style.background = getNextBlockColor();
-    span.style.color = '#222';
-  } else {
-    span.style.background = '#f0f0f0';
-    span.style.color = '#888';
-  }
-});
+        e.preventDefault();
+        span.classList.toggle('selected');
+      });
     }
 
     dv.appendChild(span);
@@ -271,11 +260,7 @@ function addBlockFromSelection() {
   state.currentBlockId = id;
 
   // Снимаем выделение
-  selected.forEach(s => {
-  s.classList.remove('selected');
-  s.style.background = '#f0f0f0';
-  s.style.color = '#888';
-});
+  selected.forEach(s => s.classList.remove('selected'));
 
   renderBlocksChips();
 }
