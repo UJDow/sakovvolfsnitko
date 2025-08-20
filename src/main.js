@@ -8,16 +8,12 @@ function showAuth() {
   setTimeout(() => {
     document.getElementById('authPass').focus();
   }, 100);
-  // Скрываем основной контент
-  document.getElementById('mainContent').style.display = 'none';
 }
 
 function hideAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'none';
   document.body.style.overflow = '';
-  // Показываем основной контент
-  document.getElementById('mainContent').style.display = '';
 }
 
 function getToken() {
