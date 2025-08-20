@@ -19,6 +19,12 @@ const BLOCK_COLORS = [
   '#d9d2e9'  // сиреневый
 ];
 
+// PATCH: выделение цветом будущего блока
+let currentSelectionColor = null;
+function resetSelectionColor() {
+  currentSelectionColor = BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
+}
+
 function hideAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'none';
@@ -110,17 +116,18 @@ function renderDreamView() {
       span.style.color = '#888';
       // Кликабельность для выделения
       span.classList.add('tile');
+      // PATCH: выделение цветом будущего блока
       span.addEventListener('click', function(e) {
-  e.preventDefault();
-  span.classList.toggle('selected');
-  if (span.classList.contains('selected')) {
-    span.style.background = getNextBlockColor();
-    span.style.color = '#222';
-  } else {
-    span.style.background = '#f0f0f0';
-    span.style.color = '#888';
-  }
-});
+        e.preventDefault();
+        span.classList.toggle('selected');
+        if (span.classList.contains('selected')) {
+          span.style.background = currentSelectionColor;
+          span.style.color = '#222';
+        } else {
+          span.style.background = '#f0f0f0';
+          span.style.color = '#888';
+        }
+      });
     }
 
     dv.appendChild(span);
@@ -247,6 +254,8 @@ function addWholeBlock() {
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
   renderBlocksChips();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
 }
 
 // Добавить блок по выделению
@@ -272,12 +281,14 @@ function addBlockFromSelection() {
 
   // Снимаем выделение
   selected.forEach(s => {
-  s.classList.remove('selected');
-  s.style.background = '#f0f0f0';
-  s.style.color = '#888';
-});
+    s.classList.remove('selected');
+    s.style.background = '#f0f0f0';
+    s.style.color = '#888';
+  });
 
   renderBlocksChips();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
 }
 
 // Авторазбиение на предложения
@@ -297,6 +308,8 @@ function autoSplitSentences() {
   }
   state.currentBlockId = state.blocks[0]?.id || null;
   renderBlocksChips();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
 }
 
 function selectBlock(id) {
@@ -329,8 +342,8 @@ function renderChat() {
     const div = document.createElement('div');
     const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
     div.className = baseClass
-  + (m.isFinal ? ' final' : '')
-  + (m.isGlobalFinal ? ' final-global' : '');
+      + (m.isFinal ? ' final' : '')
+      + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
     chat.appendChild(div);
     if (m.quickReplies?.length) {
@@ -606,9 +619,9 @@ async function finalInterpretation() {
     ];
 
     const data = await apiRequest(PROXY_URL, {
-  blockText,
-  history
-});
+      blockText,
+      history
+    });
     let content = (data.choices?.[0]?.message?.content || '').trim();
 
     // Лёгкая инлайн-очистка (как в blockInterpretation)
@@ -625,11 +638,11 @@ async function finalInterpretation() {
 
     // Показываем чистый финальный текст без префиксов
     const b = getCurrentBlock();
-if (b) {
-  appendFinalGlobal(content);
-} else {
-  alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
-}
+    if (b) {
+      appendFinalGlobal(content);
+    } else {
+      alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
+    }
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании итогового толкования: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
@@ -652,32 +665,32 @@ async function llmNextStep(blockText, history) {
 
   try {
     const data = await apiRequest(PROXY_URL, {
-  blockText: b.text,
-  history: [
-    { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-    ...(() => {
-      const prev = getPrevBlocksSummary(b.id, 3);
-      return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
-    })(),
-    ...b.chat.map(m => ({
-      role: m.role === "bot" ? "assistant" : "user",
-      content: m.text
-    }))
-  ]
-});
-    
-const aiRaw = data.choices[0].message.content || '';
+      blockText: b.text,
+      history: [
+        { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+        ...(() => {
+          const prev = getPrevBlocksSummary(b.id, 3);
+          return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+        })(),
+        ...b.chat.map(m => ({
+          role: m.role === "bot" ? "assistant" : "user",
+          content: m.text
+        }))
+      ]
+    });
 
-function stripNoiseLite(s) {
-  if (!s) return s;
-  s = s.replace(/```[\s\S]*?```/g, ' ');
-  s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-  s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-  return s.trim();
-}
+    const aiRaw = data.choices[0].message.content || '';
 
-const aiResponse = stripNoiseLite(aiRaw);
-return parseAIResponse(aiResponse);
+    function stripNoiseLite(s) {
+      if (!s) return s;
+      s = s.replace(/```[\s\S]*?```/g, ' ');
+      s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
+      s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
+      return s.trim();
+    }
+
+    const aiResponse = stripNoiseLite(aiRaw);
+    return parseAIResponse(aiResponse);
 
   } catch (error) {
     return {
@@ -714,16 +727,37 @@ function importJSON(file) {
       state.currentBlockId = state.blocks[0]?.id || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
+      // PATCH: выделение цветом будущего блока
+      resetSelectionColor();
     } catch(e) { alert('Не удалось импортировать JSON'); }
   };
   reader.readAsText(file);
 }
 
 // Handlers
-byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDreamView(); };
+byId('render').onclick = () => {
+  state.dreamText = byId('dream').value;
+  renderDreamView();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
+};
 byId('addBlock').onclick = addBlockFromSelection;
-byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
-byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
+byId('auto').onclick = () => {
+  state.dreamText = byId('dream').value;
+  autoSplitSentences();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
+};
+byId('clear').onclick = () => {
+  state.dreamText = '';
+  state.blocks = [];
+  state.currentBlockId=null;
+  state.nextBlockId=1;
+  byId('dream').value='';
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
+  renderBlocksChips();
+};
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('blockInterpretBtn').onclick = blockInterpretation;
@@ -731,6 +765,9 @@ byId('finalInterpretBtn').onclick = finalInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
 // В самом конце файла, после всех обработчиков:
 updateButtonsState();
+
+// PATCH: выделение цветом будущего блока — при первом запуске
+resetSelectionColor();
 
 // --- Ручной ввод ответа ---
 byId('sendAnswerBtn').onclick = () => {
