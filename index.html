@@ -72,6 +72,13 @@
   </style>
 </head>
 <body>
+  <div id="auth" style="display:none; position:fixed; inset:0; background:#fff; z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
+  <h2>Доступ ограничен</h2>
+  <input type="password" id="authPass" placeholder="Пароль" style="padding:8px; font-size:16px;">
+  <button id="authBtn" style="margin-top:8px; padding:8px 16px;">Войти</button>
+  <div id="authError" style="color:red; margin-top:8px; display:none;">Неверный пароль</div>
+</div>
+  
   <h1>Snova — веб‑MVP (без хранения)</h1>
 
   <div class="row">
