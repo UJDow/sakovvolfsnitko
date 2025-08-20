@@ -5,6 +5,9 @@ function showAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    document.getElementById('authPass').focus();
+  }, 100);
 }
 
 function hideAuth() {
@@ -42,6 +45,16 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('authError').style.display = 'block';
       }
     };
+
+    // Скрывать ошибку при новом вводе
+    document.getElementById('authPass').addEventListener('input', () => {
+      document.getElementById('authError').style.display = 'none';
+    });
+
+    // Enter для отправки пароля
+    document.getElementById('authPass').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('authBtn').click();
+    });
   }
 });
 
