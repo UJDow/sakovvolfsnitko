@@ -9,12 +9,41 @@
     h1 { font-size: 20px; margin: 0 0 12px; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 900px) {
-  .row { grid-template-columns: 1fr; }
-}
+      .row { grid-template-columns: 1fr; }
+    }
+    .center-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 8px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 900px) {
+      .center-wrap {
+        max-width: 100vw;
+        padding: 12px 2vw;
+        justify-content: flex-start;
+        min-height: 0;
+      }
+      .row {
+        grid-template-columns: 1fr;
+      }
+      .card {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+    .center-wrap .row {
+      width: 100%;
+      max-width: 100%;
+    }
     .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
     textarea, input, button { font: inherit; }
-
-    /* Базовый стиль для всех textarea */
     textarea {
       width: 100%;
       padding: 10px;
@@ -23,30 +52,25 @@
       font-size: 14px;
       line-height: 1.4;
       box-sizing: border-box;
-      resize: none; /* 🚫 запрет растягивания */
+      resize: none;
     }
-
-    /* Поле "Введите сон" */
     #dream {
       min-height: 140px;
-      max-height: 140px; /* фиксированная высота */
+      max-height: 140px;
     }
-
-    /* Поле для ответов пользователя */
     #userInput {
-  width: 100%;
-  min-height: 80px;           /* просторное поле */
-  max-height: 80px;           /* фиксированная высота */
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  font-size: 14px;
-  line-height: 1.4;
-  resize: none;               /* запрет растягивания */
-  box-sizing: border-box;
-  margin-bottom: 12px;        /* отделить от кнопок */
-}
-
+      width: 100%;
+      min-height: 80px;
+      max-height: 80px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      line-height: 1.4;
+      resize: none;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
     .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
     button.primary { background: #2f6fff; color: #fff; border-color: #2f6fff; }
@@ -65,180 +89,158 @@
     .muted { color: #666; font-size: 12px; }
     .footer { margin-top: 12px; display: flex; gap: 8px; }
     #auth {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-}
-
-.auth-bg {
-  position: absolute;
-  inset: 0;
-  background: url('/src/download (3).png') center/cover no-repeat;
-  filter: blur(18px) brightness(0.7);
-  opacity: 0.92;
-  z-index: 1;
-  transition: opacity 0.3s;
-}
-
-.auth-card {
-  position: relative;
-  z-index: 2;
-  background: rgba(255,255,255,0.72); /* чуть больше прозрачности */
-  box-shadow: 0 8px 40px 0 rgba(60,60,100,0.22), 0 2px 12px 0 rgba(60,60,100,0.12);
-  border-radius: 20px;
-  padding: 36px 32px 28px 32px;
-  min-width: 320px;
-  max-width: 90vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  backdrop-filter: blur(12px) saturate(1.1); /* чуть больше blur */
-  border: 2px solid rgba(47,111,255,0.18); /* синяя рамка */
-}
-
-.auth-card h2 {
-  font-size: 22px;
-  font-weight: 600;
-  margin-bottom: 18px;
-  color: #2f2172;
-  letter-spacing: 0.01em;
-}
-
-.auth-card input[type="password"] {
-  font-size: 16px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1.5px solid #d1d5db;
-  margin-bottom: 16px;
-  width: 220px;
-  background: #f7f7fb;
-  transition: border 0.2s;
-}
-
-.auth-card input[type="password"]:focus {
-  border-color: #2f6fff;
-  outline: none;
-}
-
-.auth-card button {
-  font-size: 16px;
-  padding: 10px 24px;
-  border-radius: 8px;
-  border: none;
-  background: #2f6fff;
-  color: #fff;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(47,111,255,0.08);
-  transition: background 0.2s;
-}
-
-.tile {
-  margin: 0; /* добавь это! */
-  padding: 0 2px;
-}
-    
-.tile.selected {
-  border-radius: 4px !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-}
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+    .auth-bg {
+      position: absolute;
+      inset: 0;
+      background: url('/src/download (3).png') center/cover no-repeat;
+      filter: blur(18px) brightness(0.7);
+      opacity: 0.92;
+      z-index: 1;
+      transition: opacity 0.3s;
+    }
+    .auth-card {
+      position: relative;
+      z-index: 2;
+      background: rgba(255,255,255,0.72);
+      box-shadow: 0 8px 40px 0 rgba(60,60,100,0.22), 0 2px 12px 0 rgba(60,60,100,0.12);
+      border-radius: 20px;
+      padding: 36px 32px 28px 32px;
+      min-width: 320px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(12px) saturate(1.1);
+      border: 2px solid rgba(47,111,255,0.18);
+    }
+    .auth-card h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      color: #2f2172;
+      letter-spacing: 0.01em;
+    }
+    .auth-card input[type="password"] {
+      font-size: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid #d1d5db;
+      margin-bottom: 16px;
+      width: 220px;
+      background: #f7f7fb;
+      transition: border 0.2s;
+    }
+    .auth-card input[type="password"]:focus {
+      border-color: #2f6fff;
+      outline: none;
+    }
+    .auth-card button {
+      font-size: 16px;
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      background: #2f6fff;
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(47,111,255,0.08);
+      transition: background 0.2s;
+    }
+    .tile { margin: 0; padding: 0 2px; }
+    .tile.selected {
+      border-radius: 4px !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+    }
     .tile, .tile.selected {
-  transition: background 0.1s, color 0.1s, box-shadow 0.1s;
-}
-
-.auth-card button:hover {
-  background: #1d4ed8;
-}
-
-    body.auth-mode > *:not(#auth) {
-  display: none !important;
-}
-    /* Сигнальные состояния кнопок */
+      transition: background 0.1s, color 0.1s, box-shadow 0.1s;
+    }
+    .auth-card button:hover { background: #1d4ed8; }
+    body.auth-mode > *:not(#auth) { display: none !important; }
     .btn-warn { background-color: #ffe7e7 !important; border-color: #ffb3b3 !important; color: #7a1c1c !important; }
     .btn-ok { background-color: #e7ffe7 !important; border-color: #b3ffb3 !important; color: #145a14 !important; }
-
     #sendAnswerBtn { padding:8px 12px; border-radius:8px; border:1px solid #2f6fff; background:#2f6fff; color:#fff; }
   </style>
 </head>
 <body class="auth-mode">
- <div id="auth" style="display:none;">
-  <div class="auth-bg"></div>
-  <div class="auth-card">
-    <h2>Доступ ограничен</h2>
-    <input type="password" id="authPass" placeholder="Пароль">
-    <button id="authBtn">Войти</button>
-    <div id="authError" style="color:#c00; margin-top:8px; display:none;">Неверный пароль</div>
+  <div id="auth" style="display:none;">
+    <div class="auth-bg"></div>
+    <div class="auth-card">
+      <h2>Доступ ограничен</h2>
+      <input type="password" id="authPass" placeholder="Пароль">
+      <button id="authBtn">Войти</button>
+      <div id="authError" style="color:#c00; margin-top:8px; display:none;">Неверный пароль</div>
+    </div>
   </div>
-</div>
-  
-  <h1>Snova — веб‑MVP (без хранения)</h1>
-
-  <!-- STEP 1: Ввод сна -->
-  <div id="step1">
-    <div class="row">
-      <div class="card">
-        <h3>1) Введите сон</h3>
-        <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
-        <div class="controls" style="margin-top:16px;">
-          <button id="toStep2" class="primary">Далее</button>
+  <div class="center-wrap">
+    <h1>Snova — веб‑MVP (без хранения)</h1>
+    <!-- STEP 1: Ввод сна -->
+    <div id="step1">
+      <div class="row">
+        <div class="card">
+          <h3>1) Введите сон</h3>
+          <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
+          <div class="controls" style="margin-top:16px;">
+            <button id="toStep2" class="primary">Далее</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- STEP 2: Разметка блоков -->
+    <div id="step2" style="display:none;">
+      <div class="row">
+        <div class="card">
+          <h3>2) Разметка блоков</h3>
+          <div class="controls">
+            <button id="render">Показать для выделения</button>
+            <button id="auto">Автоблоки (через предложения)</button>
+            <button id="clear">Очистить всё</button>
+            <button id="export">Экспорт JSON</button>
+            <input type="file" id="import" accept="application/json" />
+          </div>
+          <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
+          <div class="dream-view" id="dreamView"></div>
+          <div class="controls">
+            <button id="addBlock">Добавить блок по выделению</button>
+            <button id="addWholeBlock">Добавить весь текст как блок</button>
+          </div>
+          <div class="blocks" id="blocks"></div>
+          <div class="controls" style="margin-top:16px;">
+            <button id="backTo1">Назад</button>
+            <button id="toStep3" class="primary">Далее</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- STEP 3: Диалог по блоку -->
+    <div id="step3" style="display:none;">
+      <div class="row">
+        <div class="card">
+          <h3>3) Диалог по блоку</h3>
+          <div id="currentBlock" class="muted">Блок не выбран</div>
+          <div class="chat" id="chat"></div>
+          <div class="footer">
+            <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
+          </div>
+          <div class="footer">
+            <button class="primary" id="sendAnswerBtn">Ответить</button>
+            <button class="primary" id="start">Начать</button>
+            <button id="blockInterpretBtn">Толкование блока</button>
+            <button id="finalInterpretBtn">Итоговое толкование</button>
+            <button id="backTo2">Назад</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- STEP 2: Разметка блоков -->
-  <div id="step2" style="display:none;">
-    <div class="row">
-      <div class="card">
-        <h3>2) Разметка блоков</h3>
-        <div class="controls">
-          <button id="render">Показать для выделения</button>
-          <button id="auto">Автоблоки (через предложения)</button>
-          <button id="clear">Очистить всё</button>
-          <button id="export">Экспорт JSON</button>
-          <input type="file" id="import" accept="application/json" />
-        </div>
-        <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
-        <div class="dream-view" id="dreamView"></div>
-        <div class="controls">
-          <button id="addBlock">Добавить блок по выделению</button>
-          <button id="addWholeBlock">Добавить весь текст как блок</button>
-        </div>
-        <div class="blocks" id="blocks"></div>
-        <div class="controls" style="margin-top:16px;">
-          <button id="backTo1">Назад</button>
-          <button id="toStep3" class="primary">Далее</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 3: Диалог по блоку -->
-  <div id="step3" style="display:none;">
-    <div class="row">
-      <div class="card">
-        <h3>3) Диалог по блоку</h3>
-        <div id="currentBlock" class="muted">Блок не выбран</div>
-        <div class="chat" id="chat"></div>
-        <div class="footer">
-          <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
-        </div>
-        <div class="footer">
-          <button class="primary" id="sendAnswerBtn">Ответить</button>
-          <button class="primary" id="start">Начать</button>
-          <button id="blockInterpretBtn">Толкование блока</button>
-          <button id="finalInterpretBtn">Итоговое толкование</button>
-          <button id="backTo2">Назад</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
