@@ -468,10 +468,13 @@ function parseAIResponse(text) {
     cleanText = text.substring(0, quickMatch.index).trim();
   }
 
-  const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
-  isFinal = finalKeywords.some(keyword =>
-    cleanText.toLowerCase().includes(keyword.toLowerCase())
-  );
+  const finalKeywords = [
+  "итог", "заключение", "интерпретация", "вывод",
+  "давай закончим", "заканчиваем", "завершай", "финал", "конец"
+];
+isFinal = finalKeywords.some(keyword =>
+  cleanText.toLowerCase().includes(keyword.toLowerCase())
+);
 
   return {
     question: cleanText,
@@ -702,12 +705,16 @@ async function llmNextStep(blockText, history) {
     const aiRaw = data.choices[0].message.content || '';
 
     function stripNoiseLite(s) {
-      if (!s) return s;
-      s = s.replace(/```[\s\S]*?```/g, ' ');
-      s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-      s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-      return s.trim();
-    }
+  if (!s) return s;
+  s = s.replace(/```[\s\S]*?```/g, ' ');
+  s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
+  s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
+  // Удалить китайские символы
+  s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
+  // Удалить отдельные латинские слова (но не числа и не русские)
+  s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
+  return s.trim();
+}
 
     const aiResponse = stripNoiseLite(aiRaw);
     return parseAIResponse(aiResponse);
