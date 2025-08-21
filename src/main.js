@@ -103,6 +103,8 @@ document.getElementById('toStep2').onclick = function() {
   showStep(2);
   // Подставим текст сна в dreamView, если нужно
   renderDreamView();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
 };
 
 // Кнопка "Далее" на шаге 2
@@ -810,29 +812,10 @@ function importJSON(file) {
 }
 
 // Handlers
-byId('render').onclick = () => {
-  state.dreamText = byId('dream').value;
-  renderDreamView();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-};
+
 byId('addBlock').onclick = addBlockFromSelection;
-byId('auto').onclick = () => {
-  state.dreamText = byId('dream').value;
-  autoSplitSentences();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-};
-byId('clear').onclick = () => {
-  state.dreamText = '';
-  state.blocks = [];
-  state.currentBlockId=null;
-  state.nextBlockId=1;
-  byId('dream').value='';
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-  renderBlocksChips();
-};
+
+
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('blockInterpretBtn').onclick = blockInterpretation;
