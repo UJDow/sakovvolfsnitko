@@ -74,12 +74,60 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// В state добавь переменную шага:
 const state = {
   dreamText: '',
-  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: string|null, userAnswersCount: number}
+  blocks: [],
   currentBlockId: null,
-  nextBlockId: 1
+  nextBlockId: 1,
+  currentStep: 1
 };
+
+// Функция для показа нужного шага
+function showStep(step) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    if (el) el.style.display = (i === step) ? '' : 'none';
+  }
+  state.currentStep = step;
+}
+
+// Кнопка "Далее" на шаге 1
+document.getElementById('toStep2').onclick = function() {
+  state.dreamText = document.getElementById('dream').value;
+  if (!state.dreamText.trim()) {
+    alert('Введите текст сна!');
+    return;
+  }
+  // Передаём текст сна на второй шаг
+  showStep(2);
+  // Подставим текст сна в dreamView, если нужно
+  renderDreamView();
+};
+
+// Кнопка "Далее" на шаге 2
+document.getElementById('toStep3').onclick = function() {
+  if (!state.blocks.length) {
+    alert('Добавьте хотя бы один блок!');
+    return;
+  }
+  showStep(3);
+};
+
+// Кнопка "Назад" на шаге 2
+document.getElementById('backTo1').onclick = function() {
+  showStep(1);
+};
+
+// Кнопка "Назад" на шаге 3
+document.getElementById('backTo2').onclick = function() {
+  showStep(2);
+};
+
+// Показывать первый шаг при загрузке:
+window.addEventListener('DOMContentLoaded', function() {
+  showStep(1);
+});
 
 function byId(id) { return document.getElementById(id); }
 
