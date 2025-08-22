@@ -1,533 +1,366 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
   <title>Saviora</title>
-
+  <link rel="icon" type="image/png" href="src/savlogo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* ====== БАЗОВЫЙ СТИЛЬ ПРИЛОЖЕНИЯ (как у тебя) ====== */
     :root {
-      --bg: #ffffff;
-      --text: #111;
-      --muted: #6b7280;
-      --primary: #111;
-      --primary-contrast: #fff;
-      --border: #e5e7eb;
-      --tile-bg: #f0f0f0;
-      --tile-text: #888;
-      --chip-shadow: 0 1px 4px rgba(0,0,0,.06);
-      --radius: 12px;
-      --spacing: 12px;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #64748b;
+      --accent: #06b6d4;
+      --background: #bdcff1;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --border: rgba(0, 0, 0, 0.1);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+      --chat-bg: rgba(255,255,255,0.8);
+      --menu-bg: rgba(255,255,255,0.98);
+      --menu-text: #111827);
+
+      /* Единые размеры основных полей */
+      --panel-max-width: 640px;
+      --surface-height-desktop: 320px;   /* высота основных полей на десктопе */
+      --surface-height-mobile: 48vh;     /* на мобиле — от окна */
     }
 
-    html, body {
-      height: 100%;
+    html, body { height: 100%; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, "Helvetica Neue", Helvetica, sans-serif;
+      padding: 16px;
+      background: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
-    #app {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 16px;
-      box-sizing: border-box;
+    h1 { font-size: 24px; margin: 0 0 20px; text-align: center; font-weight: 700; color: var(--text-primary); }
+    h3 { font-size: 18px; font-weight: 600; margin: 0; color: var(--text-primary); }
+
+    .center-wrap {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      max-width: var(--panel-max-width); margin: 0 auto; padding: 24px 8px; box-sizing: border-box;
     }
 
-    /* Header / Topbar */
-    #topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 8px 16px 8px;
-    }
-    .brand {
-      font-weight: 700;
-      font-size: 20px;
-      letter-spacing: 0.2px;
-    }
-    .top-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
+    .row { width: 100%; max-width: var(--panel-max-width); margin: 0 auto; }
+    .card {
+      position: relative;
+      width: 100%; max-width: var(--panel-max-width);
+      background: var(--card-bg);
+      border-radius: 16px; padding: 24px; box-shadow: var(--shadow);
+      backdrop-filter: blur(10px); border: 1px solid var(--border); animation: fadeIn 0.3s ease-out;
     }
 
-    /* Steps */
-    .step {
-      margin-top: 4px;
+    /* Верхняя эргономичная стрелка Назад для шагов 2 и 3 */
+    .card .top-back {
+      position: absolute; top: 12px; left: 12px;
+      width: 32px; height: 32px; border-radius: 10px;
+      border: 1px solid var(--border); background: #fff; color: var(--text-primary);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: var(--shadow); font-size: 18px; line-height: 1;
     }
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .muted {
-      color: var(--muted);
-      font-size: 14px;
+    .top-back:hover { background: rgba(0,0,0,0.04); }
+
+    .header-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding-left: 36px; /* место под стрелку */
+      margin-bottom: 16px;
     }
 
-    /* Кнопки и элементы управления */
-    .btn {
-      appearance: none;
-      background: #f8f9fa;
+    /* Единые поверхности: textarea dream, dreamView и чат */
+    .surface {
+      background: rgba(255,255,255,0.8);
       border: 1px solid var(--border);
-      color: #111;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background .15s ease, border-color .15s ease;
-    }
-    .btn:hover { background: #f3f4f6; }
-    .btn:disabled { opacity: .6; cursor: default; }
-    .btn-primary {
-      background: var(--primary);
-      color: var(--primary-contrast);
-      border-color: #111;
-    }
-    .btn-primary:hover { filter: brightness(0.95); }
-
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .back-top {
-      background: transparent;
-      border: none;
-      font-size: 24px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 8px;
-    }
-    .back-top:hover {
-      background: #f6f6f7;
-    }
-
-    /* Шаг 1 */
-    .textarea {
-      width: 100%;
-      min-height: 160px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      font-size: 15px;
-      line-height: 1.5;
-      resize: vertical;
-      background: #fff;
-      box-sizing: border-box;
-    }
-
-    /* Шаг 2 */
-    #dreamView {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      background: #fff;
-      line-height: 1.8;
-      user-select: none; /* тайлы кликабельные */
-      white-space: pre-wrap;
-    }
-    #dreamView .tile {
-      display: inline;
-      background: var(--tile-bg);
-      color: var(--tile-text);
-      border-radius: 4px;
-      padding: 0 2px;
-      margin: 0 0px;
-      transition: background .1s ease, color .1s ease, box-shadow .1s ease;
-    }
-    #dreamView .tile.selected {
-      /* цвет подмешивается из JS через rgba(); тут плавность */
-      box-shadow: var(--chip-shadow);
-    }
-
-    .dream-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-      background: #eee;
-      color: #333;
-      box-shadow: var(--chip-shadow);
-      cursor: pointer;
-    }
-    .chip.active {
-      filter: saturate(1.05) contrast(1.02);
-      outline: 1px solid rgba(0,0,0,.06);
-    }
-
-    /* Шаг 3 */
-    .block-previews {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin: 6px 0 8px 0;
-    }
-    .preview {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 10px;
-      background: #fafafa;
-      font-size: 13px;
-      color: #333;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      box-sizing: border-box;
-      transition: background .12s ease, border-color .12s ease, opacity .12s ease;
-      cursor: pointer;
-    }
-    .preview .label {
-      opacity: .9;
-    }
-    .preview.disabled {
-      opacity: .5;
-      cursor: default;
-    }
-
-    .current-block {
-      font-size: 14px;
-      padding: 8px 0 2px 0;
-      color: #222;
-    }
-
-    .chat {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: #fff;
-      padding: 10px;
-      min-height: 220px;
-      max-height: 420px;
-      overflow: auto;
-      box-sizing: border-box;
-    }
-
-    .msg {
-      padding: 8px 10px;
-      border-radius: 10px;
-      margin: 6px 0;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    .msg.user {
-      background: #eef2ff;
-      color: #1e3a8a;
-    }
-    .msg.bot {
-      background: #f3f4f6;
-      color: #111827;
-    }
-    .msg.final {
-      border: 1px dashed #9ca3af;
-      background: #f8fafc;
-    }
-    .msg.final-global {
-      border: 1px solid #111;
-      background: #fff;
-    }
-
-    .quick {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 4px 0 2px 0;
-    }
-    .quick button {
-      padding: 6px 10px;
-      font-size: 13px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #fff;
-      cursor: pointer;
-    }
-
-    .jump {
-      display: none;
-      margin: 6px 0 8px auto;
-      padding: 6px 10px;
-      font-size: 13px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #fff;
-      cursor: pointer;
-    }
-
-    /* Индикатор "думаю" внизу чата */
-    .thinking {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      color: #6b7280;
-      font-size: 13px;
-      padding: 6px 0 6px 2px;
-    }
-    .thinking .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #9ca3af;
-      animation: blink 1.4s infinite ease-in-out both;
-    }
-    .thinking .dot:nth-child(1) { animation-delay: 0s; }
-    .thinking .dot:nth-child(2) { animation-delay: 0.2s; }
-    .thinking .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
-    }
-
-    /* Инпут-бар чата — фиксируем сдвиги, выравнивание и выпадающее меню */
-    .input-wrap {
-      display: grid;
-      grid-template-columns: 34px 1fr 92px;
-      gap: 8px;
-      align-items: center;
-      margin-top: 10px;
-    }
-    .attach, .send {
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #fff;
-      cursor: pointer;
-    }
-    .attach { width: 40px; display: inline-flex; align-items: center; justify-content: center; }
-    .send { padding: 0 12px; }
-
-    .input {
-      width: 100%;
-      min-height: 40px;
-      max-height: 120px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-size: 14px;
-      line-height: 1.4;
-      resize: vertical;
-      box-sizing: border-box;
-    }
-
-    .attach-menu {
-      position: absolute;
-      bottom: 50px;
-      left: 0;
-      display: none;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      box-shadow: 0 6px 22px rgba(0,0,0,.08);
-      padding: 8px;
-      z-index: 10;
-    }
-    .attach-menu button {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      margin: 4px 0;
-    }
-
-    /* ====== МИНИ-БЛОК: только для строки-инструкции и inline-иконки (можно удалить без вреда) ====== */
-    #step2Instruction {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 4px 0 8px 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    #step2Instruction #refreshInline {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      padding: 0 4px;
-      line-height: 1;
-      font-size: 1em;
-      border-radius: 6px;
-    }
-    #step2Instruction #refreshInline:hover {
-      background: #f3f4f6;
-    }
-
-    /* Auth modal */
-    .auth {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .auth-card {
-      width: 320px;
-      max-width: calc(100% - 32px);
-      background: #fff;
       border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 40px rgba(0,0,0,.12);
-      padding: 16px;
-    }
-    .auth-card h3 {
-      margin: 4px 0 12px 0;
-      font-size: 18px;
-    }
-    .auth-card input {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 14px;
       box-sizing: border-box;
-    }
-    .auth-error {
-      color: #b91c1c;
-      font-size: 13px;
-      display: none;
-      margin-top: 6px;
+      width: 100%;
+      height: var(--surface-height-desktop);
+      max-height: var(--surface-height-desktop);
+      min-height: var(--surface-height-desktop);
+      overflow: auto;
     }
 
-    /* Helpers */
-    .mt8 { margin-top: 8px; }
-
-    @media (max-width: 520px) {
-      #app { padding: 12px; }
-      .input-wrap {
-        grid-template-columns: 34px 1fr 86px;
+    /* Мобайл: центровка и динамическая высота */
+    @media (max-width: 900px) {
+      .center-wrap { justify-content: center; padding: 16px 4vw 24px; }
+      .card { padding: 20px; border-radius: 12px; }
+      .surface {
+        height: var(--surface-height-mobile);
+        max-height: var(--surface-height-mobile);
+        min-height: var(--surface-height-mobile);
       }
     }
+
+    textarea, input, button { font: inherit; border: none; outline: none; }
+
+    /* Поле сна (шаг 1) */
+    #dream {
+      padding: 16px; font-size: 16px; line-height: 1.5; resize: none; white-space: pre-wrap;
+    }
+
+    /* Область текста и блоков (шаг 2) */
+    .dream-view {
+      padding: 16px; font-size: 16px; line-height: 1.6; border: 1px dashed var(--border);
+      border-radius: 12px; background: rgba(255,255,255,0.8); white-space: pre-wrap;
+      height: 100%; box-sizing: border-box; overflow: auto;
+    }
+
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; justify-content: flex-end; }
+    .controls.left { justify-content: flex-start; }
+    .btn {
+      padding: 12px 20px; border-radius: 12px; background: white; cursor: pointer; font-weight: 500; font-size: 14px;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease; border: 1px solid var(--border);
+      color: var(--text-primary); box-shadow: var(--shadow);
+    }
+    .btn:hover { box-shadow: 0 6px 12px -1px rgba(0,0,0,0.15); }
+    .btn.primary { background: var(--primary); color: white; border: none; font-weight: 600; }
+    .btn.primary:hover { background: var(--primary-hover); }
+    .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+    .btn.secondary:hover { background: rgba(0,0,0,0.05); }
+
+    .blocks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .chip {
+      padding: 8px 16px; border-radius: 20px; background: #e0f2fe; color: #0369a1; cursor: pointer; border: none; font-size: 14px; font-weight: 500;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .chip:hover { background: #bae6fd; transform: translateY(-1px); }
+    .chip.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+
+    /* Чат (шаг 3) — та же высота, что и у остальных поверхностей */
+    .chat {
+      display: flex; flex-direction: column; gap: 12px; overflow: auto; padding: 16px;
+      border-radius: 12px; background: var(--chat-bg); border: 1px solid var(--border);
+      height: 100%;
+    }
+    .chat-wrap { position: relative; height: var(--surface-height-desktop); }
+    @media (max-width: 900px) { .chat-wrap { height: var(--surface-height-mobile); } }
+
+    .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; overflow-wrap: anywhere; }
+    .bot { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
+    .user { background: var(--primary); color: white; align-self: flex-end; border: none; }
+
+    .msg.bot.final { background: #e0f2fe; color: #0c4a6e; border: 1px solid #bae6fd; }
+    .msg.final-global { background: linear-gradient(135deg, #fef3c7, #fed7aa); border-left: 4px solid #f59e0b; color: #78350f; }
+
+    .muted { color: var(--text-secondary); font-size: 14px; margin: 8px 0; }
+
+    .footer { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+    /* Панель ввода чата — фиксированная, без прыжков */
+    .chat-input-bar {
+      position: relative;
+      width: 100%;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      box-sizing: border-box;
+    }
+
+    #userInput {
+      width: 100%;
+      height: 40px;
+      min-height: 40px;
+      max-height: 40px;
+      padding: 8px 108px 8px 14px;
+      border-radius: 20px;
+      font-size: 15px;
+      line-height: 22px;
+      resize: none;
+      overflow: hidden;
+      background: rgba(255,255,255,0.97);
+      border: 1px solid var(--border);
+      box-sizing: border-box;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .send-icon-btn,
+    .attach-icon-btn {
+      position: absolute;
+      bottom: 10px;
+      top: auto;
+      transform: none;
+      width: 36px; height: 36px; border-radius: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: none; transition: background-color 0.15s ease;
+    }
+    .attach-icon-btn { right: 68px; background: #fff; color: var(--text-primary); border: 1px solid var(--border); font-size: 18px; }
+    .send-icon-btn   { right: 20px; background: var(--primary); color: #fff; border: none; font-size: 16px; }
+    .attach-icon-btn:hover { background: rgba(0,0,0,0.04); }
+    .send-icon-btn:hover   { background: var(--primary-hover); }
+
+    .attach-menu {
+      position: absolute; right: 20px; bottom: 56px; transform: none;
+      background: var(--menu-bg); color: var(--menu-text);
+      border-radius: 12px; padding: 8px 0; box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+      min-width: 220px; z-index: 10; animation: fadeIn 0.15s ease-out; border: 1px solid var(--border);
+      display: none;
+    }
+    .attach-item { width: 100%; text-align: left; background: transparent; border: none; color: var(--menu-text); padding: 10px 14px; font-size: 14px; cursor: pointer; }
+    .attach-item:hover { background: rgba(0,0,0,0.04); }
+
+    .jump-bottom-btn {
+      position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 18px;
+      background: var(--primary); color: #fff; border: none; box-shadow: var(--shadow); cursor: pointer;
+      display: none; opacity: 0.96; font-size: 18px; line-height: 1; transition: background-color 0.2s ease;
+    }
+    .jump-bottom-btn:hover { background: var(--primary-hover); }
+
+    .nav-previews { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; align-items: stretch; }
+    .block-preview {
+      min-height: 52px; max-height: 52px; border-radius: 12px; border: 1px dashed var(--border); box-shadow: var(--shadow);
+      padding: 8px; font-size: 12px; color: var(--text-primary); opacity: 0.95; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; text-align: center; transition: opacity 0.2s ease, background-color 0.2s ease;
+      user-select: none; overflow: hidden;
+    }
+    .block-preview .label {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.25;
+    }
+    .block-preview.disabled { cursor: default; filter: grayscale(0.2); opacity: 0.8; }
+
+    .dialog-header { display: flex; align-items: center; justify-content: center; gap: 8px; padding-left: 36px; margin-bottom: 12px; }
+    .back-link { /* для совместимости, используется в шаге 3 через top-back */
+      display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px;
+      border: 1px solid var(--border); background: #fff; color: var(--text-primary); font-weight: 700; cursor: pointer; box-shadow: var(--shadow);
+    }
+    .back-link:hover { background: rgba(0,0,0,0.04); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .thinking { margin-top: 8px; font-size: 12px; color: var(--text-secondary); display: none; align-items: center; gap: 8px; justify-content: flex-start; }
+    .dots::after { content: '...'; animation: dots 1.2s steps(4, end) infinite; }
+    @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } 100% { content: ''; } }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
   </style>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header id="topbar">
-      <div class="brand">Saviora</div>
-      <div class="top-actions">
-        <button id="exportBtn" class="btn">Экспорт</button>
-        <label class="btn">Импорт
-          <input id="importFile" type="file" accept="application/json" style="display:none">
-        </label>
-      </div>
-    </header>
-
-    <!-- Шаг 1 -->
-    <section id="step1" class="step">
-      <h3 class="muted" style="margin: 0 0 8px 0;">Шаг 1 — Введите текст сна</h3>
-      <textarea id="dream" class="textarea" placeholder="Опишите ваш сон..."></textarea>
-      <div class="actions">
-        <button id="toStep2" class="btn btn-primary">Далее</button>
-      </div>
-    </section>
-
-    <!-- Шаг 2 -->
-    <section id="step2" class="step" style="display:none;">
-      <div class="row">
-        <button id="backTo1Top" class="back-top" aria-label="Назад">‹</button>
-        <div class="muted">Шаг 2 — Смысловые блоки</div>
-      </div>
-
-      <!-- Инструкция + inline refresh -->
-      <div id="step2Instruction">
-        <span>Выделите фрагмент и нажмите «Добавить блок» или «Весь текст»</span>
-        <button id="refreshInline" title="Обновить выделения" aria-label="Обновить">↻</button>
-      </div>
-
-      <div id="dreamView" class="dream-view"></div>
-
-      <div class="dream-actions">
-        <button id="addBlock" class="btn">Добавить блок</button>
-        <button id="addWholeBlock" class="btn">Весь текст</button>
-        <button id="toStep3" class="btn btn-primary">Начать</button>
-      </div>
-
-      <div id="blocks" class="chips"></div>
-    </section>
-
-    <!-- Шаг 3 -->
-    <section id="step3" class="step" style="display:none;">
-      <div class="row">
-        <button id="backTo2Top" class="back-top" aria-label="Назад">‹</button>
-        <div class="muted">Шаг 3 — Работа с блоками</div>
-      </div>
-
-      <div class="block-previews">
-        <div id="prevPreview" class="preview"><span class="label">…</span></div>
-        <div id="nextPreview" class="preview"><span class="label">…</span></div>
-      </div>
-
-      <div class="mt8 current-block" id="currentBlock">Блок не выбран</div>
-
-      <div id="chat" class="chat"></div>
-      <button id="jumpToBottom" class="jump">К последнему сообщению</button>
-
-      <div class="thinking" id="thinking">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        Думаю...
-      </div>
-
-      <div class="input-wrap" id="chatInputBar" style="position:relative;">
-        <button id="attachBtn" class="attach" title="Вставить">📎</button>
-        <textarea id="userInput" class="input" placeholder="Ваш ответ..." rows="1"></textarea>
-        <button id="sendAnswerBtn" class="send">Отправить</button>
-
-        <div id="attachMenu" class="attach-menu">
-          <button id="menuBlockInterpret">Толкование блока</button>
-          <button id="menuFinalInterpret">Общее толкование</button>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="blockInterpretBtn" class="btn">Толкование блока</button>
-        <button id="finalInterpretBtn" class="btn">Общее толкование</button>
-      </div>
-    </section>
-  </div>
-
-  <!-- Модал авторизации -->
-  <div id="auth" class="auth">
-    <div class="auth-card">
-      <h3>Доступ</h3>
-      <input id="authPass" type="password" placeholder="Пароль"/>
-      <div id="authError" class="auth-error">Неверный пароль</div>
-      <div class="actions" style="margin-top:10px;">
-        <button id="authBtn" class="btn btn-primary">Войти</button>
+  <div id="auth" style="display:none;">
+    <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:0.95;z-index:1;"></div>
+    <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
+      <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
+        <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s ease;text-align:center;">
+        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease;width:100%;max-width:280px;">Войти</button>
+        <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
       </div>
     </div>
   </div>
 
-  <!-- Скрипт -->
-  <script src="src/main.js" type="module"></script>
+  <div class="center-wrap">
+    <h1>Saviora</h1>
+
+    <!-- Шаг 1 -->
+    <div id="step1">
+      <div class="row">
+        <div class="card">
+          <div class="header-row">
+            <h3>Мы всегда рады новым историям</h3>
+          </div>
+          <textarea id="dream" class="surface" placeholder="Запишите свое сновидение..."></textarea>
+          <div class="controls">
+            <button id="toStep2" class="btn primary">Далее →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Шаг 2 -->
+    <div id="step2" style="display:none;">
+      <div class="row">
+        <div class="card">
+          <button id="backTo1Top" class="top-back" title="Назад">&larr;</button>
+          <div class="header-row">
+            <h3>Смысловые блоки</h3>
+          </div>
+
+          <div class="dream-view surface" id="dreamView"></div>
+
+          <div class="controls left" style="justify-content: space-between; align-items: center;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="addBlock" class="btn secondary">Добавить блок</button>
+              <button id="addWholeBlock" class="btn secondary">Весь текст</button>
+              <button id="refreshBlocks" class="btn secondary" title="Обновить выбранные блоки">(обновить) ↻</button>
+            </div>
+            <div style="margin-left:auto;"></div>
+          </div>
+
+          <div class="blocks" id="blocks"></div>
+
+          <div class="controls">
+            <button id="toStep3" class="btn primary">Начать</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Шаг 3 -->
+    <div id="step3" style="display:none;">
+      <div class="row">
+        <div class="card">
+          <button id="backTo2Top" class="top-back" title="Назад">&larr;</button>
+          <div class="dialog-header">
+            <h3>Диалог по вашему сновидению</h3>
+          </div>
+
+          <div id="currentBlock" class="muted" style="margin: 0 0 8px;">Блок не выбран</div>
+
+          <div class="chat-wrap surface" style="padding:0;">
+            <div class="chat" id="chat">
+              <button id="jumpToBottom" class="jump-bottom-btn" title="В конец">▼</button>
+            </div>
+          </div>
+
+          <div id="thinking" class="thinking">
+            <span>Думаю</span><span class="dots"></span>
+          </div>
+
+          <div class="footer">
+            <div id="chatInputBar" class="chat-input-bar" style="width:100%;">
+              <textarea id="userInput" placeholder="Напишите ответ..." rows="1"></textarea>
+              <button id="attachBtn" class="attach-icon-btn" title="Действия">📎</button>
+              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
+              <div id="attachMenu" class="attach-menu">
+                <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
+                <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav-previews">
+            <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
+            <div id="nextPreview" class="block-preview"><span class="label"></span></div>
+          </div>
+
+          <!-- Скрытые служебные кнопки -->
+          <div style="display:none;">
+            <button id="blockInterpretBtn">Толкование</button>
+            <button id="finalInterpretBtn">Итог</button>
+            <button id="prevBlockBtn">◀</button>
+            <button id="nextBlockBtn">▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
