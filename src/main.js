@@ -595,6 +595,36 @@ function selectBlock(id) {
   if (b && !b.done && b.chat.length === 0) startOrContinue();
 }
 
+function refreshSelectedBlocks() {
+  // Пересобираем список блоков на основе текущего текста и уже выбранных диапазонов.
+  // Вариант по ТЗ: «рефрешнет все выбранные блоки» — интерпретирую как
+  // удаление всех блоков и очистку выделений, чтобы выбрать заново.
+  const confirmMsg = 'Обновить выбранные блоки? Текущие блоки будут очищены, а выделения сброшены.';
+  if (!confirm(confirmMsg)) return;
+
+  // Очистка блоков и состояния
+  state.blocks = [];
+  state.currentBlockId = null;
+  state.nextBlockId = 1;
+
+  // Сбрасываем выделения в dreamView
+  const dv = byId('dreamView');
+  if (dv) {
+    dv.querySelectorAll('.tile.selected').forEach(s => {
+      s.classList.remove('selected');
+      s.style.background = '#f0f0f0';
+      s.style.color = '#888';
+      s.style.borderRadius = '';
+      s.style.boxShadow = '';
+      s.style.margin = '';
+      s.style.padding = '';
+    });
+  }
+
+  renderBlocksChips();   // перерисует dreamView/chips/prev/next/чат
+  resetSelectionColor();
+}
+
 /* ====== Handlers ====== */
 function initHandlers() {
   onClick('toStep2', () => {
@@ -636,6 +666,8 @@ function initHandlers() {
     renderBlocksChips();
     resetSelectionColor();
   });
+  
+  onClick('refreshBlocks', refreshSelectedBlocks);
 
   onClick('blockInterpretBtn', blockInterpretation);
   onClick('finalInterpretBtn', finalInterpretation);
