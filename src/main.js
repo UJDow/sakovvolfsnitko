@@ -464,7 +464,6 @@ function updateButtonsState() {
   const blockBtn = byId('blockInterpretBtn');
   const finalBtn = byId('finalInterpretBtn');
   const startBtn = byId('start');
-  const sendBtn = byId('sendAnswerBtn');
 
   // Сбросим классы перед проставлением новых
   if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
@@ -491,13 +490,6 @@ function updateButtonsState() {
       startBtn.disabled = false;
       startBtn.onclick = startOrContinue;
     }
-  }
-
-  // Кнопка "Ответить"
-  if (sendBtn) {
-    sendBtn.disabled = !b;
-    sendBtn.style.opacity = b ? '1' : '0.5';
-    sendBtn.style.pointerEvents = b ? 'auto' : 'none';
   }
 }
 
@@ -837,11 +829,6 @@ resetSelectionColor();
 
 // --- Ручной ввод ответа ---
 byId('sendAnswerBtn').onclick = () => {
-  const b = getCurrentBlock();
-  if (!b) {
-    alert('Сначала выберите блок!');
-    return;
-  }
   const val = byId('userInput').value.trim();
   if (!val) return;
   sendAnswer(val);
@@ -851,11 +838,6 @@ byId('sendAnswerBtn').onclick = () => {
 byId('userInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
-    const b = getCurrentBlock();
-    if (!b) {
-      alert('Сначала выберите блок!');
-      return;
-    }
     byId('sendAnswerBtn').click();
   }
 });
