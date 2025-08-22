@@ -26,8 +26,9 @@ function onChange(id, handler) { const el = byId(id); if (el) el.onchange = hand
 function showAuth() {
   const authDiv = byId('auth');
   if (!authDiv) return;
-  authDiv.style.display = 'flex';
+  authDiv.style.display = 'block';
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('pre-auth'); // скрыть задний контент, чтобы не мигал
   setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
 }
 function hideAuth() {
@@ -35,6 +36,7 @@ function hideAuth() {
   if (!authDiv) return;
   authDiv.style.display = 'none';
   document.body.style.overflow = '';
+  document.body.classList.remove('pre-auth'); // показать контент после авторизации
 }
 function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
 function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
@@ -359,7 +361,6 @@ function parseAIResponse(text) {
   let cleanText = (text || '').trim();
   let quickReplies = [];
 
-  // Находим все группы в квадратных скобках
   const bracketGroups = [...cleanText.matchAll(/\[([^\]]+)\]/g)];
 
   for (const m of bracketGroups) {
@@ -367,22 +368,18 @@ function parseAIResponse(text) {
 
     let parts = [];
     if (/\|/.test(inside)) {
-      // Основной формат: [A | B | C]
       parts = inside.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
     } else if (/ и /i.test(inside)) {
-      // Доп. формат для пары: [X и Y]
       const two = inside.split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
-      if (two.length === 2) parts = two; // принимаем только ровно две части
+      if (two.length === 2) parts = two;
     }
 
     if (parts.length >= 2) {
       quickReplies.push(...parts);
-      // Удаляем скобочную группу из текста, чтобы не дублировать
       cleanText = cleanText.replace(m[0], ' ').replace(/\s{2,}/g, ' ').trim();
     }
   }
 
-  // Ограничиваем число быстрых ответов, чтобы не перегружать UI
   quickReplies = quickReplies.slice(0, 4);
 
   const finalKeywords = ['итог','заключение','интерпретация','вывод','давай закончим','заканчиваем','завершай','финал','конец'];
@@ -660,10 +657,10 @@ function initHandlers() {
   });
 
   // Назад
-  onClick('backTo1Top', () => showStep(1)); // Шаг 2 -> Шаг 1
+  onClick('backTo1Top', () => showStep(1));
   onClick('backTo1', () => showStep(1));
   onClick('backTo2Header', () => showStep(2));
-  onClick('backTo2Top', () => showStep(2)); // Шаг 3 -> Шаг 2
+  onClick('backTo2Top', () => showStep(2));
 
   // Добавление блоков (шаг 2)
   onClick('addBlock', addBlockFromSelection);
@@ -685,10 +682,8 @@ function initHandlers() {
     resetSelectionColor();
   });
 
-  // Обновить (inline-иконка ↻ в инструкции шага 2)
   onClick('refreshInline', refreshSelectedBlocks);
 
-  // Доп. лог, чтобы увидеть в консоли, что элемент найден и клик доходит
   const refreshBtn = byId('refreshInline');
   console.log('[init] refreshInline exists?', !!refreshBtn);
   if (refreshBtn) {
@@ -777,7 +772,12 @@ function styleDisplay(el, value) {
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
-  if (!checkAuth()) {
+
+  // Если токен валиден — сразу показываем контент без вспышек
+  if (getToken() === AUTH_TOKEN) {
+    hideAuth(); // снимет pre-auth и вернёт скролл
+  } else {
+    showAuth();
     const authBtn = byId('authBtn');
     const authPass = byId('authPass');
     const authError = byId('authError');
@@ -793,11 +793,10 @@ window.addEventListener('DOMContentLoaded', () => {
           if (authError) authError.style.display = 'block';
         }
       };
-      if (authPass) {
-        authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-        authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
-      }
+      authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+      authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
     }
   }
+
   initHandlers();
 });
