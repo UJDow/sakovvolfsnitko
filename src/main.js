@@ -47,7 +47,7 @@ function checkAuth() {
 function showStep(step) {
   for (let i = 1; i <= 3; i++) {
     const el = byId('step' + i);
-    if (el) el.style.display = (i === step) ? '' : 'none';
+    if (el) el.classList.toggle('active', i === step);
   }
   state.currentStep = step;
 }
@@ -247,8 +247,6 @@ function renderBlockPreviews() {
   const b = getCurrentBlock();
   if (!prevEl || !nextEl) return;
 
-  const list = sortedBlocks();
-  // Текущий — подсветим next/prev относительно строгого порядка
   const prevId = prevUndoneBlockIdStrict();
   const nextId = nextUndoneBlockIdStrict();
 
@@ -588,26 +586,16 @@ function addBlockFromSelection() {
   resetSelectionColor();
 }
 
-function selectBlock(id) {
-  state.currentBlockId = id;
-  renderBlocksChips();
-  const b = getCurrentBlock();
-  if (b && !b.done && b.chat.length === 0) startOrContinue();
-}
-
 function refreshSelectedBlocks() {
-  // Пересобираем список блоков на основе текущего текста и уже выбранных диапазонов.
-  // Вариант по ТЗ: «рефрешнет все выбранные блоки» — интерпретирую как
-  // удаление всех блоков и очистку выделений, чтобы выбрать заново.
   const confirmMsg = 'Обновить выбранные блоки? Текущие блоки будут очищены, а выделения сброшены.';
   if (!confirm(confirmMsg)) return;
 
-  // Очистка блоков и состояния
+  // Сброс блоков
   state.blocks = [];
   state.currentBlockId = null;
   state.nextBlockId = 1;
 
-  // Сбрасываем выделения в dreamView
+  // Сброс выделений в области текста
   const dv = byId('dreamView');
   if (dv) {
     dv.querySelectorAll('.tile.selected').forEach(s => {
@@ -621,8 +609,15 @@ function refreshSelectedBlocks() {
     });
   }
 
-  renderBlocksChips();   // перерисует dreamView/chips/prev/next/чат
+  renderBlocksChips();
   resetSelectionColor();
+}
+
+function selectBlock(id) {
+  state.currentBlockId = id;
+  renderBlocksChips();
+  const b = getCurrentBlock();
+  if (b && !b.done && b.chat.length === 0) startOrContinue();
 }
 
 /* ====== Handlers ====== */
@@ -645,9 +640,13 @@ function initHandlers() {
     if (b && !b.done) startOrContinue();
   });
 
+  // Назад
   onClick('backTo1', () => showStep(1));
   onClick('backTo2Header', () => showStep(2));
+  onClick('backTo1Top', () => showStep(1)); // верхняя кнопка назад (шаг 2)
+  onClick('backTo2Top', () => showStep(2)); // верхняя кнопка назад (шаг 3)
 
+  // Добавление блоков (шаг 2)
   onClick('addBlock', addBlockFromSelection);
   onClick('addWholeBlock', () => {
     const dreamEl = byId('dream');
@@ -666,8 +665,9 @@ function initHandlers() {
     renderBlocksChips();
     resetSelectionColor();
   });
-  
-  onClick('refreshBlocks', refreshSelectedBlocks);
+
+  // Обновить (inline-иконка ↻ в инструкции шага 2)
+  onClick('refreshInline', refreshSelectedBlocks);
 
   onClick('blockInterpretBtn', blockInterpretation);
   onClick('finalInterpretBtn', finalInterpretation);
@@ -693,7 +693,6 @@ function initHandlers() {
         const btn = byId('sendAnswerBtn'); if (btn) btn.click();
       }
     });
-    // Клик по полю ввода — закрываем меню
     userInputEl.addEventListener('focus', hideAttachMenu);
     userInputEl.addEventListener('click', hideAttachMenu);
   }
@@ -706,7 +705,6 @@ function initHandlers() {
       if (!jumpBtn) return;
       jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
     });
-    // Клик по чату — закрыть меню
     chatEl.addEventListener('click', hideAttachMenu);
   }
   onClick('jumpToBottom', scrollChatToBottom);
@@ -719,7 +717,7 @@ function initHandlers() {
     menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
   });
 
-  // Клик вне меню — закрыть (делегируем на документ)
+  // Клик вне меню — закрыть
   document.addEventListener('click', (e) => {
     const menu = byId('attachMenu');
     const bar = byId('chatInputBar');
@@ -730,11 +728,11 @@ function initHandlers() {
   onClick('menuBlockInterpret', () => { hideAttachMenu(); blockInterpretation(); });
   onClick('menuFinalInterpret', () => { hideAttachMenu(); finalInterpretation(); });
 
-  // Старые стрелки — скрыты в HTML, но на всякий
+  // Старые стрелки
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
   onClick('prevBlockBtn', () => { const id = prevUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
 
-  // Экспорт/импорт — подключишь элементы при необходимости
+  // Экспорт/импорт
   onClick('exportBtn', exportJSON);
   onChange('importFile', (e) => { const f = e?.target?.files?.[0]; if (f) importJSON(f); });
 
