@@ -315,13 +315,10 @@ function getSelectionOffsets() {
 
 // Добавить весь текст как блок
 function addWholeBlock() {
-  if (!state.dreamText) {
-    // Если текст сна еще не сохранен, берем его из textarea
-    state.dreamText = byId('dream').value;
-  }
-  
+  // Берем текст из textarea и сохраняем в state
+  state.dreamText = document.getElementById('dream').value;
   if (!state.dreamText.trim()) {
-    alert('Введите текст сна сначала!');
+    alert('Введите текст сна!');
     return;
   }
   
@@ -336,13 +333,12 @@ function addWholeBlock() {
   const text = state.dreamText;
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
-  renderBlocksChips();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
   
-  // Перейти ко второму шагу после добавления блока
+  // Автоматически переходим к шагу 2
   showStep(2);
-};
+  renderBlocksChips();
+  resetSelectionColor();
+}
 
 // Добавить блок по выделению
 function addBlockFromSelection() {
@@ -377,25 +373,23 @@ function addBlockFromSelection() {
   resetSelectionColor();
 }
 
-// Авторазбиение на предложения
-function autoSplitSentences() {
-  const t = (state.dreamText||'').trim();
-  if (!t) return;
-  const sentences = t.split(/(?<=[\.\!\?])\s+/).filter(s => s.length > 10).slice(0, 5);
-  state.blocks = [];
-  state.nextBlockId = 1;
-  let cursor = 0;
-  for (const s of sentences) {
-    const start = state.dreamText.indexOf(s, cursor);
-    const end = start + s.length;
-    const id = state.nextBlockId++;
-    state.blocks.push({ id, start, end, text: s, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
-    cursor = end;
+function setupAnswerButton() {
+  const sendAnswerBtn = document.getElementById('sendAnswerBtn');
+  if (sendAnswerBtn) {
+    sendAnswerBtn.onclick = () => {
+      const val = document.getElementById('userInput').value.trim();
+      if (!val) return;
+      
+      // Проверяем, на каком мы шаге
+      if (state.currentStep === 3) {
+        sendAnswer(val);
+      } else {
+        alert('Перейдите к шагу 3 для работы с блоками');
+      }
+      
+      document.getElementById('userInput').value = '';
+    };
   }
-  state.currentBlockId = state.blocks[0]?.id || null;
-  renderBlocksChips();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
 }
 
 function selectBlock(id) {
@@ -829,14 +823,66 @@ function importJSON(file) {
 
 // Handlers
 
+// Handlers
 byId('addBlock').onclick = addBlockFromSelection;
 
+// ДОБАВЬТЕ эти обработчики для старых кнопок:
+byId('render').onclick = () => {
+  state.dreamText = byId('dream').value;
+  renderDreamView();
+  resetSelectionColor();
+};
+
+byId('auto').onclick = () => {
+  state.dreamText = byId('dream').value;
+  autoSplitSentences();
+  // После авторазбиения переходим к шагу 2
+  showStep(2);
+};
+
+byId('clear').onclick = () => {
+  state.dreamText = '';
+  state.blocks = [];
+  state.currentBlockId = null;
+  state.nextBlockId = 1;
+  byId('dream').value = '';
+  resetSelectionColor();
+  renderBlocksChips();
+  showStep(1); // Возвращаемся к первому шагу
+};
 
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('blockInterpretBtn').onclick = blockInterpretation;
 byId('finalInterpretBtn').onclick = finalInterpretation;
-byId('addWholeBlock').onclick = addWholeBlock;
+
+// ОБНОВИТЕ обработчик addWholeBlock:
+byId('addWholeBlock').onclick = function() {
+  // Сначала сохраняем текст из textarea
+  state.dreamText = byId('dream').value;
+  if (!state.dreamText.trim()) {
+    alert('Введите текст сна сначала!');
+    return;
+  }
+  
+  if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
+    alert('Весь текст уже добавлен как блок.');
+    return;
+  }
+  
+  const id = state.nextBlockId++;
+  const start = 0;
+  const end = state.dreamText.length;
+  const text = state.dreamText;
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
+  state.currentBlockId = id;
+  
+  // Переходим к шагу 2 после добавления
+  showStep(2);
+  renderBlocksChips();
+  resetSelectionColor();
+};
+
 // В самом конце файла, после всех обработчиков:
 updateButtonsState();
 
@@ -845,6 +891,12 @@ resetSelectionColor();
 
 // --- Ручной ввод ответа ---
 byId('sendAnswerBtn').onclick = () => {
+  // Проверяем, что мы на шаге 3
+  if (state.currentStep !== 3) {
+    alert('Перейдите к шагу "Работа с блоками" для отправки ответов');
+    return;
+  }
+  
   const val = byId('userInput').value.trim();
   if (!val) return;
   sendAnswer(val);
