@@ -837,7 +837,6 @@ byId('sendAnswerBtn').onclick = () => {
   sendAnswer(val);
   byId('userInput').value = '';
 };
-
 byId('userInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
