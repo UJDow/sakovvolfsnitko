@@ -19,12 +19,6 @@ const BLOCK_COLORS = [
   '#d9d2e9'  // сиреневый
 ];
 
-// PATCH: выделение цветом будущего блока
-let currentSelectionColor = null;
-function resetSelectionColor() {
-  currentSelectionColor = BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
-}
-
 function hideAuth() {
   const authDiv = document.getElementById('auth');
   authDiv.style.display = 'none';
@@ -74,72 +68,14 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// В state добавь переменную шага:
 const state = {
   dreamText: '',
-  blocks: [],
+  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: string|null, userAnswersCount: number}
   currentBlockId: null,
-  nextBlockId: 1,
-  currentStep: 1
+  nextBlockId: 1
 };
-
-// Функция для показа нужного шага
-function showStep(step) {
-  for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('step' + i);
-    if (el) el.style.display = (i === step) ? '' : 'none';
-  }
-  state.currentStep = step;
-}
-
-// Кнопка "Далее" на шаге 1
-document.getElementById('toStep2').onclick = function() {
-  state.dreamText = document.getElementById('dream').value;
-  if (!state.dreamText.trim()) {
-    alert('Введите текст сна!');
-    return;
-  }
-  // Передаём текст сна на второй шаг
-  showStep(2);
-  // Подставим текст сна в dreamView, если нужно
-  renderDreamView();
-};
-
-// Кнопка "Далее" на шаге 2
-document.getElementById('toStep3').onclick = function() {
-  if (!state.blocks.length) {
-    alert('Добавьте хотя бы один блок!');
-    return;
-  }
-  showStep(3);
-};
-
-// Кнопка "Назад" на шаге 2
-document.getElementById('backTo1').onclick = function() {
-  showStep(1);
-};
-
-// Кнопка "Назад" на шаге 3
-document.getElementById('backTo2').onclick = function() {
-  showStep(2);
-};
-
-// Показывать первый шаг при загрузке:
-window.addEventListener('DOMContentLoaded', function() {
-  showStep(1);
-});
 
 function byId(id) { return document.getElementById(id); }
-
-function getNextBlockColor() {
-  return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
-}
-
-function hexToRgba(hex, alpha) {
-  const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
-  if (!m) return hex;
-  return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${alpha})`;
-}
 
 // Рендер сна с точным соответствием текстовых узлов кускам исходного текста.
 // Каждый Text-узел получает __rawStart/__rawEnd для обратного мэппинга выделения.
@@ -149,56 +85,33 @@ function renderDreamView() {
   const t = state.dreamText || '';
   if (!t) return;
 
+  // Разбиваем на слова и пробелы, чтобы сохранить структуру
   const tokens = t.match(/\S+|\s+/g) || [];
+
   let pos = 0;
   tokens.forEach(token => {
-    const isWord = /\S/.test(token);
-    if (isWord) {
-      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
-      const span = document.createElement('span');
-      span.textContent = token;
-      span.dataset.start = pos;
-      span.dataset.end = pos + token.length;
+    // Проверяем, входит ли этот кусок в какой-то блок
+    const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
+    const span = document.createElement('span');
+    span.textContent = token;
+    span.dataset.start = pos;
+    span.dataset.end = pos + token.length;
 
-      if (block) {
-        const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
-        span.style.background = color;
-        span.style.color = '#222';
-        span.style.borderRadius = '4px';
-        span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-        span.setAttribute('data-block', block.id);
-        span.title = `Блок #${block.id}`;
-        span.addEventListener('click', () => selectBlock(block.id));
-      } else {
-        span.style.background = '#f0f0f0';
-        span.style.color = '#888';
-        span.style.borderRadius = '4px';
-        span.classList.add('tile');
-        span.addEventListener('click', function(e) {
-          e.preventDefault();
-          span.classList.toggle('selected');
-          if (span.classList.contains('selected')) {
-            span.style.background = hexToRgba(currentSelectionColor, 0.32);
-            span.style.color = '#222';
-            span.style.borderRadius = '4px';
-            span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-            span.style.margin = '0px';
-            span.style.padding = '0 4px';
-          } else {
-            span.style.background = '#f0f0f0';
-            span.style.color = '#888';
-            span.style.borderRadius = '';
-            span.style.boxShadow = '';
-            span.style.margin = '';
-            span.style.padding = '';
-          }
-        });
-      }
-      dv.appendChild(span);
+    if (block) {
+      // Цвет блока
+      const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
+      span.style.background = color;
+      span.style.color = '#222';
+      span.setAttribute('data-block', block.id);
+      span.title = `Блок #${block.id}`;
+      span.addEventListener('click', () => selectBlock(block.id));
     } else {
-      // Просто текстовый узел для пробела
-      dv.appendChild(document.createTextNode(token));
+      // Серый фон для неразмеченного текста
+      span.style.background = '#f0f0f0';
+      span.style.color = '#888';
     }
+
+    dv.appendChild(span);
     pos += token.length;
   });
 }
@@ -322,21 +235,18 @@ function addWholeBlock() {
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
   renderBlocksChips();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
 }
 
 // Добавить блок по выделению
 function addBlockFromSelection() {
-  const dv = byId('dreamView');
-  const selected = Array.from(dv.querySelectorAll('.tile.selected'));
-  if (!selected.length) return alert('Выделите плиточки для блока.');
+  if (!state.dreamText) return alert('Сначала вставьте сон и нажмите “Показать для выделения”.');
+  const off = getSelectionOffsets();
+  if (!off) return alert('Не удалось определить выделение. Выделите текст в области ниже.');
 
-  // Определяем диапазон выделения
-  const start = Math.min(...selected.map(s => parseInt(s.dataset.start, 10)));
-  const end = Math.max(...selected.map(s => parseInt(s.dataset.end, 10)));
+  let start = Math.max(0, Math.min(off.start, state.dreamText.length));
+  let end = Math.max(0, Math.min(off.end, state.dreamText.length));
+  if (start === end) return alert('Пустое выделение.');
 
-  // Проверка на пересечение с существующими блоками
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
@@ -346,17 +256,7 @@ function addBlockFromSelection() {
   const text = state.dreamText.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
-
-  // Снимаем выделение
-  selected.forEach(s => {
-    s.classList.remove('selected');
-    s.style.background = '#f0f0f0';
-    s.style.color = '#888';
-  });
-
   renderBlocksChips();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
 }
 
 // Авторазбиение на предложения
@@ -376,8 +276,6 @@ function autoSplitSentences() {
   }
   state.currentBlockId = state.blocks[0]?.id || null;
   renderBlocksChips();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
 }
 
 function selectBlock(id) {
@@ -410,8 +308,8 @@ function renderChat() {
     const div = document.createElement('div');
     const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
     div.className = baseClass
-      + (m.isFinal ? ' final' : '')
-      + (m.isGlobalFinal ? ' final-global' : '');
+  + (m.isFinal ? ' final' : '')
+  + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
     chat.appendChild(div);
     if (m.quickReplies?.length) {
@@ -516,13 +414,10 @@ function parseAIResponse(text) {
     cleanText = text.substring(0, quickMatch.index).trim();
   }
 
-  const finalKeywords = [
-  "итог", "заключение", "интерпретация", "вывод",
-  "давай закончим", "заканчиваем", "завершай", "финал", "конец"
-];
-isFinal = finalKeywords.some(keyword =>
-  cleanText.toLowerCase().includes(keyword.toLowerCase())
-);
+  const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
+  isFinal = finalKeywords.some(keyword =>
+    cleanText.toLowerCase().includes(keyword.toLowerCase())
+  );
 
   return {
     question: cleanText,
@@ -690,9 +585,9 @@ async function finalInterpretation() {
     ];
 
     const data = await apiRequest(PROXY_URL, {
-      blockText,
-      history
-    });
+  blockText,
+  history
+});
     let content = (data.choices?.[0]?.message?.content || '').trim();
 
     // Лёгкая инлайн-очистка (как в blockInterpretation)
@@ -709,11 +604,11 @@ async function finalInterpretation() {
 
     // Показываем чистый финальный текст без префиксов
     const b = getCurrentBlock();
-    if (b) {
-      appendFinalGlobal(content);
-    } else {
-      alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
-    }
+if (b) {
+  appendFinalGlobal(content);
+} else {
+  alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
+}
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании итогового толкования: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
@@ -736,36 +631,32 @@ async function llmNextStep(blockText, history) {
 
   try {
     const data = await apiRequest(PROXY_URL, {
-      blockText: b.text,
-      history: [
-        { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-        ...(() => {
-          const prev = getPrevBlocksSummary(b.id, 3);
-          return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
-        })(),
-        ...b.chat.map(m => ({
-          role: m.role === "bot" ? "assistant" : "user",
-          content: m.text
-        }))
-      ]
-    });
+  blockText: b.text,
+  history: [
+    { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+    ...(() => {
+      const prev = getPrevBlocksSummary(b.id, 3);
+      return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+    })(),
+    ...b.chat.map(m => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.text
+    }))
+  ]
+});
+    
+const aiRaw = data.choices[0].message.content || '';
 
-    const aiRaw = data.choices[0].message.content || '';
-
-    function stripNoiseLite(s) {
+function stripNoiseLite(s) {
   if (!s) return s;
   s = s.replace(/```[\s\S]*?```/g, ' ');
   s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
   s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-  // Удалить китайские символы
-  s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
-  // Удалить отдельные латинские слова (но не числа и не русские)
-  s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
   return s.trim();
 }
 
-    const aiResponse = stripNoiseLite(aiRaw);
-    return parseAIResponse(aiResponse);
+const aiResponse = stripNoiseLite(aiRaw);
+return parseAIResponse(aiResponse);
 
   } catch (error) {
     return {
@@ -802,37 +693,16 @@ function importJSON(file) {
       state.currentBlockId = state.blocks[0]?.id || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
-      // PATCH: выделение цветом будущего блока
-      resetSelectionColor();
     } catch(e) { alert('Не удалось импортировать JSON'); }
   };
   reader.readAsText(file);
 }
 
 // Handlers
-byId('render').onclick = () => {
-  state.dreamText = byId('dream').value;
-  renderDreamView();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-};
+byId('render').onclick = () => { state.dreamText = byId('dream').value; renderDreamView(); };
 byId('addBlock').onclick = addBlockFromSelection;
-byId('auto').onclick = () => {
-  state.dreamText = byId('dream').value;
-  autoSplitSentences();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-};
-byId('clear').onclick = () => {
-  state.dreamText = '';
-  state.blocks = [];
-  state.currentBlockId=null;
-  state.nextBlockId=1;
-  byId('dream').value='';
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-  renderBlocksChips();
-};
+byId('auto').onclick = () => { state.dreamText = byId('dream').value; autoSplitSentences(); };
+byId('clear').onclick = () => { state.dreamText = ''; state.blocks = []; state.currentBlockId=null; state.nextBlockId=1; byId('dream').value=''; renderBlocksChips(); };
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('blockInterpretBtn').onclick = blockInterpretation;
@@ -840,9 +710,6 @@ byId('finalInterpretBtn').onclick = finalInterpretation;
 byId('addWholeBlock').onclick = addWholeBlock;
 // В самом конце файла, после всех обработчиков:
 updateButtonsState();
-
-// PATCH: выделение цветом будущего блока — при первом запуске
-resetSelectionColor();
 
 // --- Ручной ввод ответа ---
 byId('sendAnswerBtn').onclick = () => {
