@@ -49,6 +49,34 @@ function checkAuth() {
   return false;
 }
 
+window.addEventListener('DOMContentLoaded', () => {
+  showStep(1);
+  if (!checkAuth()) {
+    const authBtn = document.getElementById('authBtn');
+    const authPass = document.getElementById('authPass');
+    const authError = document.getElementById('authError');
+
+    if (authBtn && authPass) {
+      authBtn.onclick = () => {
+        const val = authPass.value;
+        if (val === AUTH_PASS) {
+          setToken(AUTH_TOKEN);
+          hideAuth();
+          location.reload();
+        } else {
+          if (authError) authError.style.display = 'block';
+        }
+      };
+      authPass.addEventListener('input', () => {
+        if (authError) authError.style.display = 'none';
+      });
+      authPass.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && authBtn) authBtn.click();
+      });
+    }
+  }
+});
+
 // В state добавь переменную шага:
 const state = {
   dreamText: '',
@@ -112,11 +140,6 @@ document.getElementById('backTo1').onclick = function() {
 document.getElementById('backTo2').onclick = function() {
   showStep(2);
 };
-
-// Показывать первый шаг при загрузке:
-window.addEventListener('DOMContentLoaded', function() {
-  showStep(1);
-});
 
 function byId(id) { return document.getElementById(id); }
 
@@ -371,8 +394,8 @@ function getPrevBlocksSummary(currentBlockId, limit = 3) {
   const current = state.blocks.find(b => b.id === currentBlockId);
   if (!current) return '';
   const prevFinals = state.blocks
-    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation) // любые уже интерпретированные, кроме текущего
-    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0)) // последние по времени анализа
+    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation)
+    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0))
     .slice(0, limit)
     .map(x => `#${x.id}: ${x.finalInterpretation}`);
   return prevFinals.length ? prevFinals.join('\n') : '';
@@ -494,12 +517,12 @@ function parseAIResponse(text) {
   }
 
   const finalKeywords = [
-  "итог", "заключение", "интерпретация", "вывод",
-  "давай закончим", "заканчиваем", "завершай", "финал", "конец"
-];
-isFinal = finalKeywords.some(keyword =>
-  cleanText.toLowerCase().includes(keyword.toLowerCase())
-);
+    "итог", "заключение", "интерпретация", "вывод",
+    "давай закончим", "заканчиваем", "завершай", "финал", "конец"
+  ];
+  isFinal = finalKeywords.some(keyword =>
+    cleanText.toLowerCase().includes(keyword.toLowerCase())
+  );
 
   return {
     question: cleanText,
@@ -730,16 +753,16 @@ async function llmNextStep(blockText, history) {
     const aiRaw = data.choices[0].message.content || '';
 
     function stripNoiseLite(s) {
-  if (!s) return s;
-  s = s.replace(/```[\s\S]*?```/g, ' ');
-  s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-  s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-  // Удалить китайские символы
-  s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
-  // Удалить отдельные латинские слова (но не числа и не русские)
-  s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
-  return s.trim();
-}
+      if (!s) return s;
+      s = s.replace(/```[\s\S]*?```/g, ' ');
+      s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
+      s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
+      // Удалить китайские символы
+      s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
+      // Удалить отдельные латинские слова (но не числа и не русские)
+      s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
+      return s.trim();
+    }
 
     const aiResponse = stripNoiseLite(aiRaw);
     return parseAIResponse(aiResponse);
