@@ -23,7 +23,7 @@
 
       --chat-bg: rgba(255,255,255,0.8);
       --menu-bg: rgba(255,255,255,0.98);
-      --menu-text: #111827);
+      --menu-text: #111827;
 
       /* Единые размеры основных полей */
       --panel-max-width: 640px;
@@ -224,7 +224,7 @@
     .block-preview {
       min-height: 52px; max-height: 52px; border-radius: 12px; border: 1px dashed var(--border); box-shadow: var(--shadow);
       padding: 8px; font-size: 12px; color: var(--text-primary); opacity: 0.95; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; text-align: center; transition: opacity 0.2s ease, background-color 0.2s ease;
+      display: flex; align-items: center; justify-content: center; text-align: center; transition: opacity 0.2s ease, background-color 0.2s.ease;
       user-select: none; overflow: hidden;
     }
     .block-preview .label {
@@ -250,7 +250,7 @@
     ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
 
-    /* ДОБАВЛЕНО: подсказка над dreamView и.inline-иконка обновления */
+    /* Подсказка над dreamView и inline-иконка обновления */
     .hint-inline {
       margin: 6px 0 10px;
       color: var(--text-secondary);
@@ -268,8 +268,10 @@
       cursor: pointer;
       padding: 0 4px;
       line-height: 1;
-      font-size: 14px; /* маленькая иконка */
-      opacity: 0.7;    /* менее навязчивая */
+      font-size: 14px;
+      opacity: 0.7;
+      position: relative;
+      z-index: 1;
     }
     .hint-refresh:hover {
       opacity: 1;
@@ -288,8 +290,8 @@
     <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
       <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
         <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
-        <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s.ease;text-align:center;">
-        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s.ease;width:100%;max-width:280px;">Войти</button>
+        <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s ease;text-align:center;">
+        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease;width:100%;max-width:280px;">Войти</button>
         <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
       </div>
     </div>
@@ -322,21 +324,20 @@
             <h3>Смысловые блоки</h3>
           </div>
 
-          <!-- ДОБАВЛЕНО: подсказка с inline-иконкой обновления -->
+          <!-- Подсказка с inline-иконкой обновления -->
           <div class="hint-inline">
             Выделите фрагмент и нажмите «Добавить блок» или «Весь текст»
-            <button class="hint-refresh" id="hintRefreshBtn" title="Обновить выбранные блоки" aria-label="Обновить выбранные блоки">↻</button>
+            <button class="hint-refresh" id="refreshInline" title="Обновить выбранные блоки" aria-label="Обновить выбранные блоки">↻</button>
           </div>
 
           <div class="dream-view surface" id="dreamView"></div>
 
-          <div class="controls.left" style="justify-content: space-between; align-items: center;">
+          <div class="controls left" style="justify-content: space-between; align-items: center;">
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button id="addBlock" class="btn secondary">Добавить блок</button>
               <button id="addWholeBlock" class="btn secondary">Весь текст</button>
-              <!-- УДАЛЕНО: большая кнопка обновления
-              <button id="refreshBlocks" class="btn secondary" title="Обновить выбранные блоки">(обновить) ↻</button>
-              -->
+              <!-- Удалено: большая кнопка обновления -->
+              <!-- <button id="refreshBlocks" class="btn secondary" title="Обновить выбранные блоки">(обновить) ↻</button> -->
             </div>
             <div style="margin-left:auto;"></div>
           </div>
@@ -384,7 +385,7 @@
           </div>
 
           <div class="nav-previews">
-            <div id="prevPreview" class="block-preview.disabled"><span class="label">…</span></div>
+            <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
             <div id="nextPreview" class="block-preview"><span class="label"></span></div>
           </div>
 
