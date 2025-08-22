@@ -315,11 +315,21 @@ function getSelectionOffsets() {
 
 // Добавить весь текст как блок
 function addWholeBlock() {
-  if (!state.dreamText) return;
+  if (!state.dreamText) {
+    // Если текст сна еще не сохранен, берем его из textarea
+    state.dreamText = byId('dream').value;
+  }
+  
+  if (!state.dreamText.trim()) {
+    alert('Введите текст сна сначала!');
+    return;
+  }
+  
   if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
     alert('Весь текст уже добавлен как блок.');
     return;
   }
+  
   const id = state.nextBlockId++;
   const start = 0;
   const end = state.dreamText.length;
@@ -329,7 +339,10 @@ function addWholeBlock() {
   renderBlocksChips();
   // PATCH: выделение цветом будущего блока
   resetSelectionColor();
-}
+  
+  // Перейти ко второму шагу после добавления блока
+  showStep(2);
+};
 
 // Добавить блок по выделению
 function addBlockFromSelection() {
