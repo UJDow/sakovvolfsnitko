@@ -92,7 +92,7 @@
       height: var(--surface-height-desktop);
       max-height: var(--surface-height-desktop);
       min-height: var(--surface-height-desktop);
-      overflow: auto;
+      overflow: hidden;
     }
 
     /* Мобайл: центровка и динамическая высота */
@@ -143,11 +143,11 @@
 
     /* Чат (шаг 3) — та же высота, что и у остальных поверхностей */
     .chat {
-      display: flex; flex-direction: column; gap: 12px; overflow: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; padding: 16px;
       border-radius: 12px; background: var(--chat-bg); border: 1px solid var(--border);
       height: 100%;
     }
-    .chat-wrap { position: relative; height: var(--surface-height-desktop); }
+    .chat-wrap { position: relative; height: var(--surface-height-desktop); overflow: hidden; }
     @media (max-width: 900px) { .chat-wrap { height: var(--surface-height-mobile); } }
 
     .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; overflow-wrap: anywhere; }
