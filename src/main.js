@@ -113,7 +113,10 @@ document.getElementById('toStep3').onclick = function() {
     alert('Добавьте хотя бы один блок!');
     return;
   }
+  // ВАЖНО: выбрать первый блок!
+  state.currentBlockId = state.blocks[0]?.id || null;
   showStep(3);
+  renderBlocksChips();
 };
 
 // Кнопка "Назад" на шаге 2
