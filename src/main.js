@@ -31,7 +31,7 @@ function showAuth() {
   if (!authDiv) return;
   authDiv.style.display = 'block';
   document.body.style.overflow = 'hidden';
-  document.body.classList.add('pre-auth'); // скрыть задний контент, чтобы не мигал
+  document.body.classList.add('pre-auth'); // скрыть задний контент
   setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
 }
 function hideAuth() {
@@ -39,7 +39,7 @@ function hideAuth() {
   if (!authDiv) return;
   authDiv.style.display = 'none';
   document.body.style.overflow = '';
-  document.body.classList.remove('pre-auth'); // показать контент после авторизации
+  document.body.classList.remove('pre-auth'); // показать контент
 }
 function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
 function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
@@ -185,8 +185,9 @@ function renderChat() {
       + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
 
-    const stab = chat.querySelector('.chat-stabilizer');
-    chat.insertBefore(div, stab || chat.lastChild);
+    // вставляем перед thinking, чтобы thinking оставался внизу
+    const thinking = byId('thinking');
+    chat.insertBefore(div, thinking || chat.firstChild);
 
     if (Array.isArray(m.quickReplies) && m.quickReplies.length) {
       const q = document.createElement('div');
@@ -197,7 +198,7 @@ function renderChat() {
         btn.addEventListener('click', () => sendAnswer(opt));
         q.appendChild(btn);
       });
-      chat.insertBefore(q, stab || chat.lastChild);
+      chat.insertBefore(q, thinking || chat.firstChild);
     }
   }
 
@@ -215,7 +216,7 @@ function setThinking(on) {
   renderThinking();
 }
 function renderThinking() {
-  const t = byId('thinking'); // должен быть внутри .chat
+  const t = byId('thinking'); // внутри .chat
   if (!t) return;
   const wasAtBottom = isChatAtBottom();
   t.style.display = state.isThinking ? 'inline-block' : 'none';
@@ -703,9 +704,8 @@ function initHandlers() {
   onClick('refreshInline', refreshSelectedBlocks);
 
   const refreshBtn = byId('refreshInline');
-  console.log('[init] refreshInline exists?', !!refreshBtn);
   if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => console.log('[click] refreshInline clicked'));
+    refreshBtn.addEventListener('click', () => {});
   }
 
   onClick('blockInterpretBtn', blockInterpretation);
