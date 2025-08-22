@@ -1,6 +1,6 @@
 /* ====== Константы авторизации ====== */
-const AUTH_PASS = 'volfisthebest';
-const AUTH_TOKEN = 'volfisthebest-secret';
+const AUTH_PASS = 'snova';
+const AUTH_TOKEN = 'snova-secret';
 
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
