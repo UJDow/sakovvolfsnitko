@@ -22,6 +22,9 @@ function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
 function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
 
+/* Мягкий вызов в следующий кадр */
+function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
+
 /* ====== Auth ====== */
 function showAuth() {
   const authDiv = byId('auth');
@@ -157,12 +160,22 @@ function renderBlocksChips() {
   renderBlockPreviews();
 }
 
+/* ====== Чат: рендер без дерганий и сохранение служебных узлов ====== */
 function renderChat() {
   const chat = byId('chat');
   if (!chat) return;
-  chat.innerHTML = '';
   const b = getCurrentBlock();
+
+  // Сохраняем только системные элементы: #thinking, .chat-stabilizer, #jumpToBottom
+  const preserve = new Set(['thinking', 'jumpToBottom']);
+  Array.from(chat.children).forEach(node => {
+    const keep = (node.id && preserve.has(node.id)) || node.classList?.contains('chat-stabilizer');
+    if (!keep) chat.removeChild(node);
+  });
+
   if (!b) return;
+
+  const atBottomBefore = isChatAtBottom();
 
   for (const m of b.chat) {
     const div = document.createElement('div');
@@ -171,7 +184,9 @@ function renderChat() {
       + (m.isFinal ? ' final' : '')
       + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
-    chat.appendChild(div);
+
+    const stab = chat.querySelector('.chat-stabilizer');
+    chat.insertBefore(div, stab || chat.lastChild);
 
     if (Array.isArray(m.quickReplies) && m.quickReplies.length) {
       const q = document.createElement('div');
@@ -182,26 +197,29 @@ function renderChat() {
         btn.addEventListener('click', () => sendAnswer(opt));
         q.appendChild(btn);
       });
-      chat.appendChild(q);
+      chat.insertBefore(q, stab || chat.lastChild);
     }
   }
 
-  if (isChatAtBottom()) {
-    chat.scrollTop = chat.scrollHeight;
-    const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
-  } else {
-    const j = byId('jumpToBottom'); if (j) j.style.display = 'inline-flex';
+  const j = byId('jumpToBottom');
+  if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+
+  if (atBottomBefore) {
+    requestAnimationFrame(() => scrollChatToBottom());
   }
 }
 
+/* ====== Индикатор «думаю» внутри чата ====== */
 function setThinking(on) {
   state.isThinking = !!on;
   renderThinking();
 }
 function renderThinking() {
-  const t = byId('thinking');
+  const t = byId('thinking'); // должен быть внутри .chat
   if (!t) return;
-  t.style.display = state.isThinking ? 'flex' : 'none';
+  const wasAtBottom = isChatAtBottom();
+  t.style.display = state.isThinking ? 'inline-block' : 'none';
+  if (wasAtBottom) requestAnimationFrame(() => scrollChatToBottom());
 }
 
 /* ====== Jump-to-bottom ====== */
