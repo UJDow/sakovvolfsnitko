@@ -45,9 +45,11 @@ function checkAuth() {
 
 /* ====== Вспомогательные ====== */
 function showStep(step) {
+  // Сохраняем подход, который у тебя уже используется: управляем display напрямую
   for (let i = 1; i <= 3; i++) {
     const el = byId('step' + i);
-    if (el) el.classList.toggle('active', i === step);
+    if (!el) continue;
+    el.style.display = (i === step) ? '' : 'none';
   }
   state.currentStep = step;
 }
@@ -235,7 +237,7 @@ function prevUndoneBlockIdStrict() {
   return null;
 }
 
-/* ====== Превью блоков: компактные, с цветами ====== */
+/* ====== Превью блоков ====== */
 function previewStyleForBlock(blockId, isCurrent = false) {
   const color = BLOCK_COLORS[(blockId - 1) % BLOCK_COLORS.length];
   return isCurrent ? `background:${hexToRgba(color, 0.35)}; border-color:${hexToRgba('#000000', 0.08)};`
@@ -260,7 +262,6 @@ function renderBlockPreviews() {
     nextEl.onclick = () => { selectBlock(nextId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
   } else {
     nextEl.classList.add('disabled');
-    nextEl.style.cssText += 'background:rgba(255,255,255,0.7);';
     const label = nextEl.querySelector('.label'); if (label) label.textContent = 'Нет следующего блока';
     nextEl.onclick = null;
   }
@@ -590,12 +591,10 @@ function refreshSelectedBlocks() {
   const confirmMsg = 'Обновить выбранные блоки? Текущие блоки будут очищены, а выделения сброшены.';
   if (!confirm(confirmMsg)) return;
 
-  // Сброс блоков
   state.blocks = [];
   state.currentBlockId = null;
   state.nextBlockId = 1;
 
-  // Сброс выделений в области текста
   const dv = byId('dreamView');
   if (dv) {
     dv.querySelectorAll('.tile.selected').forEach(s => {
@@ -640,11 +639,11 @@ function initHandlers() {
     if (b && !b.done) startOrContinue();
   });
 
-  // Назад
+  // Назад — только привязки (стили не меняем)
+  onClick('backTo1Top', () => showStep(1)); // Шаг 2 -> Шаг 1
   onClick('backTo1', () => showStep(1));
   onClick('backTo2Header', () => showStep(2));
-  onClick('backTo1Top', () => showStep(1)); // верхняя кнопка назад (шаг 2)
-  onClick('backTo2Top', () => showStep(2)); // верхняя кнопка назад (шаг 3)
+  onClick('backTo2Top', () => showStep(2)); // Шаг 3 -> Шаг 2
 
   // Добавление блоков (шаг 2)
   onClick('addBlock', addBlockFromSelection);
@@ -728,7 +727,7 @@ function initHandlers() {
   onClick('menuBlockInterpret', () => { hideAttachMenu(); blockInterpretation(); });
   onClick('menuFinalInterpret', () => { hideAttachMenu(); finalInterpretation(); });
 
-  // Старые стрелки
+  // Старые стрелки — если присутствуют в HTML
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
   onClick('prevBlockBtn', () => { const id = prevUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
 
