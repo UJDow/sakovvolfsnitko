@@ -25,29 +25,13 @@ function onChange(id, handler) { const el = byId(id); if (el) el.onchange = hand
 /* Мягкий вызов в следующий кадр */
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
-/* ====== Fix горизонтального скролла (только вертикаль) ====== */
-function enforceNoHorizontalScroll() {
-  const set = (el) => {
-    if (!el) return;
-    el.style.overflowX = 'hidden';
-  };
-  set(document.documentElement);
-  set(document.body);
-  const step2 = byId('step2');
-  const step3 = byId('step3');
-  set(step2);
-  set(step3);
-  const main = byId('app') || byId('container') || byId('root');
-  set(main);
-}
-
 /* ====== Auth ====== */
 function showAuth() {
   const authDiv = byId('auth');
   if (!authDiv) return;
   authDiv.style.display = 'block';
   document.body.style.overflow = 'hidden';
-  document.body.classList.add('pre-auth');
+  document.body.classList.add('pre-auth'); // скрыть задний контент, чтобы не мигал
   setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
 }
 function hideAuth() {
@@ -55,7 +39,7 @@ function hideAuth() {
   if (!authDiv) return;
   authDiv.style.display = 'none';
   document.body.style.overflow = '';
-  document.body.classList.remove('pre-auth');
+  document.body.classList.remove('pre-auth'); // показать контент после авторизации
 }
 function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
 function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
@@ -72,7 +56,6 @@ function showStep(step) {
     el.style.display = (i === step) ? '' : 'none';
   }
   state.currentStep = step;
-  enforceNoHorizontalScroll();
 }
 function getCurrentBlock() {
   return state.blocks.find(b => b.id === state.currentBlockId) || null;
@@ -177,45 +160,23 @@ function renderBlocksChips() {
   renderBlockPreviews();
 }
 
-/* ====== Чат: рендер без дерганий и с индикатором внизу ====== */
+/* ====== Чат: рендер без дерганий и сохранение служебных узлов ====== */
 function renderChat() {
   const chat = byId('chat');
   if (!chat) return;
   const b = getCurrentBlock();
 
-  // Гарантируем, что #thinking существует и находится внизу
-  let thinking = byId('thinking');
-  if (!thinking) {
-    thinking = document.createElement('div');
-    thinking.id = 'thinking';
-    thinking.className = 'msg bot thinking';
-    thinking.textContent = 'Думаю…';
-    thinking.style.display = 'none';
-    chat.appendChild(thinking);
-  }
-
-  // Стабилизатор (служебный разделитель снизу)
-  let stab = chat.querySelector('.chat-stabilizer');
-  if (!stab) {
-    stab = document.createElement('div');
-    stab.className = 'chat-stabilizer';
-    stab.style.height = '1px';
-    stab.style.visibility = 'hidden';
-    chat.appendChild(stab);
-  }
-
-  // Очистить динамические элементы, сохранить служебные
-  const preserveIds = new Set(['thinking', 'jumpToBottom']);
+  // Сохраняем только системные элементы: #thinking, .chat-stabilizer, #jumpToBottom
+  const preserve = new Set(['thinking', 'jumpToBottom']);
   Array.from(chat.children).forEach(node => {
-    const isPreserved = (node.id && preserveIds.has(node.id)) || node.classList?.contains('chat-stabilizer');
-    if (!isPreserved) chat.removeChild(node);
+    const keep = (node.id && preserve.has(node.id)) || node.classList?.contains('chat-stabilizer');
+    if (!keep) chat.removeChild(node);
   });
 
   if (!b) return;
 
   const atBottomBefore = isChatAtBottom();
 
-  // Вставляем сообщения ПЕРЕД стабилизатором; затем перемещаем thinking в самый низ
   for (const m of b.chat) {
     const div = document.createElement('div');
     const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
@@ -223,7 +184,9 @@ function renderChat() {
       + (m.isFinal ? ' final' : '')
       + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
-    chat.insertBefore(div, stab);
+
+    const stab = chat.querySelector('.chat-stabilizer');
+    chat.insertBefore(div, stab || chat.lastChild);
 
     if (Array.isArray(m.quickReplies) && m.quickReplies.length) {
       const q = document.createElement('div');
@@ -234,12 +197,9 @@ function renderChat() {
         btn.addEventListener('click', () => sendAnswer(opt));
         q.appendChild(btn);
       });
-      chat.insertBefore(q, stab);
+      chat.insertBefore(q, stab || chat.lastChild);
     }
   }
-
-  // thinking последним
-  if (thinking.nextSibling) chat.appendChild(thinking);
 
   const j = byId('jumpToBottom');
   if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
@@ -249,19 +209,16 @@ function renderChat() {
   }
 }
 
-/* ====== Индикатор «думаю» всегда снизу ====== */
+/* ====== Индикатор «думаю» внутри чата ====== */
 function setThinking(on) {
   state.isThinking = !!on;
   renderThinking();
 }
 function renderThinking() {
-  const chat = byId('chat');
-  const t = byId('thinking');
-  if (!chat || !t) return;
+  const t = byId('thinking'); // должен быть внутри .chat
+  if (!t) return;
   const wasAtBottom = isChatAtBottom();
   t.style.display = state.isThinking ? 'inline-block' : 'none';
-  // Переместить в самый низ на всякий случай
-  if (t.nextSibling) chat.appendChild(t);
   if (wasAtBottom) requestAnimationFrame(() => scrollChatToBottom());
 }
 
@@ -278,7 +235,7 @@ function scrollChatToBottom() {
   const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
 }
 
-/* ====== Логика порядка блоков ====== */
+/* ====== Логика порядка блоков 1..N (строгая) ====== */
 function sortedBlocks() {
   return [...state.blocks].sort((a, b) => a.id - b.id);
 }
@@ -423,8 +380,10 @@ function parseAIResponse(text) {
   let quickReplies = [];
 
   const bracketGroups = [...cleanText.matchAll(/\[([^\]]+)\]/g)];
+
   for (const m of bracketGroups) {
     const inside = (m[1] || '').trim();
+
     let parts = [];
     if (/\|/.test(inside)) {
       parts = inside.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
@@ -432,11 +391,13 @@ function parseAIResponse(text) {
       const two = inside.split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
       if (two.length === 2) parts = two;
     }
+
     if (parts.length >= 2) {
       quickReplies.push(...parts);
       cleanText = cleanText.replace(m[0], ' ').replace(/\s{2,}/g, ' ').trim();
     }
   }
+
   quickReplies = quickReplies.slice(0, 4);
 
   const finalKeywords = ['итог','заключение','интерпретация','вывод','давай закончим','заканчиваем','завершай','финал','конец'];
@@ -741,6 +702,12 @@ function initHandlers() {
 
   onClick('refreshInline', refreshSelectedBlocks);
 
+  const refreshBtn = byId('refreshInline');
+  console.log('[init] refreshInline exists?', !!refreshBtn);
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => console.log('[click] refreshInline clicked'));
+  }
+
   onClick('blockInterpretBtn', blockInterpretation);
   onClick('finalInterpretBtn', finalInterpretation);
 
@@ -800,7 +767,7 @@ function initHandlers() {
   onClick('menuBlockInterpret', () => { hideAttachMenu(); blockInterpretation(); });
   onClick('menuFinalInterpret', () => { hideAttachMenu(); finalInterpretation(); });
 
-  // Старые стрелки — если присутствуют
+  // Старые стрелки — если присутствуют в HTML
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
   onClick('prevBlockBtn', () => { const id = prevUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
 
@@ -810,7 +777,6 @@ function initHandlers() {
 
   updateButtonsState();
   resetSelectionColor();
-  enforceNoHorizontalScroll();
 }
 
 function hideAttachMenu() {
@@ -823,13 +789,11 @@ function styleDisplay(el, value) {
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
-  // Жёстко запретить горизонтальный скролл с самого старта
-  enforceNoHorizontalScroll();
-
   showStep(1);
 
+  // Если токен валиден — сразу показываем контент без вспышек
   if (getToken() === AUTH_TOKEN) {
-    hideAuth();
+    hideAuth(); // снимет pre-auth и вернёт скролл
   } else {
     showAuth();
     const authBtn = byId('authBtn');
