@@ -1,62 +1,11 @@
+/* ====== Константы авторизации ====== */
 const AUTH_PASS = 'volfisthebest';
 const AUTH_TOKEN = 'volfisthebest-secret';
 
-function showAuth() {
-  const authDiv = document.getElementById('auth');
-  authDiv.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  document.body.classList.add('auth-mode');
-  setTimeout(() => {
-    document.getElementById('authPass').focus();
-  }, 100);
-}
+/* ====== Палитра блоков ====== */
+const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
 
-const BLOCK_COLORS = ['#ffd966','#a4c2f4','#b6d7a8','#f4cccc','#d9d2e9'];
-
-let currentSelectionColor = null;
-function resetSelectionColor() {
-  currentSelectionColor = BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
-}
-
-function hideAuth() {
-  const authDiv = document.getElementById('auth');
-  authDiv.style.display = 'none';
-  document.body.style.overflow = '';
-  document.body.classList.remove('auth-mode');
-}
-
-function getToken() { return localStorage.getItem('snova_token'); }
-function setToken(token) { localStorage.setItem('snova_token', token); }
-
-function checkAuth() {
-  if (getToken() === AUTH_TOKEN) { hideAuth(); return true; }
-  showAuth(); return false;
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  showStep(1);
-  if (!checkAuth()) {
-    const authBtn = document.getElementById('authBtn');
-    const authPass = document.getElementById('authPass');
-    const authError = document.getElementById('authError');
-
-    if (authBtn && authPass) {
-      authBtn.onclick = () => {
-        const val = authPass.value;
-        if (val === AUTH_PASS) {
-          setToken(AUTH_TOKEN);
-          hideAuth();
-          location.reload();
-        } else {
-          if (authError) authError.style.display = 'block';
-        }
-      };
-      authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-      authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
-    }
-  }
-});
-
+/* ====== Глобальное состояние ====== */
 const state = {
   dreamText: '',
   blocks: [],
@@ -65,43 +14,55 @@ const state = {
   currentStep: 1
 };
 
+let currentSelectionColor = null;
+
+/* ====== Утилиты DOM ====== */
+function byId(id) { return document.getElementById(id); }
+function onClick(id, handler) {
+  const el = byId(id);
+  if (el) el.onclick = handler;
+}
+function onChange(id, handler) {
+  const el = byId(id);
+  if (el) el.onchange = handler;
+}
+
+/* ====== Auth ====== */
+function showAuth() {
+  const authDiv = byId('auth');
+  if (!authDiv) return;
+  authDiv.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('auth-mode');
+  setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
+}
+function hideAuth() {
+  const authDiv = byId('auth');
+  if (!authDiv) return;
+  authDiv.style.display = 'none';
+  document.body.style.overflow = '';
+  document.body.classList.remove('auth-mode');
+}
+function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
+function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
+function checkAuth() {
+  if (getToken() === AUTH_TOKEN) { hideAuth(); return true; }
+  showAuth(); return false;
+}
+
+/* ====== Вспомогательные ====== */
 function showStep(step) {
   for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('step' + i);
+    const el = byId('step' + i);
     if (el) el.style.display = (i === step) ? '' : 'none';
   }
   state.currentStep = step;
 }
-
-function byId(id) { return document.getElementById(id); }
-function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
-function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
-
-document.getElementById('toStep2').onclick = function() {
-  state.dreamText = document.getElementById('dream').value;
-  if (!state.dreamText.trim()) { alert('Введите текст сна!'); return; }
-  showStep(2);
-  renderDreamView();
-  resetSelectionColor();
-};
-
-document.getElementById('toStep3').onclick = function() {
-  if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
-  state.currentBlockId = state.blocks[0]?.id || null;
-
-  showStep(3);
-  renderBlocksChips();
-
-  const b = getCurrentBlock();
-  if (b && !b.done) startOrContinue();
-};
-
-document.getElementById('backTo1').onclick = function() { showStep(1); };
-document.getElementById('backTo2').onclick = function() { showStep(2); };
-onClick('backTo2Header', function() { showStep(2); }); // новая стрелка назад в заголовке
-
-function getNextBlockColor() {
-  return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
+function getCurrentBlock() {
+  return state.blocks.find(b => b.id === state.currentBlockId) || null;
+}
+function resetSelectionColor() {
+  currentSelectionColor = BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
 }
 function hexToRgba(hex, alpha) {
   const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
@@ -109,8 +70,10 @@ function hexToRgba(hex, alpha) {
   return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${alpha})`;
 }
 
+/* ====== Рендер сна с плитками/блоками ====== */
 function renderDreamView() {
   const dv = byId('dreamView');
+  if (!dv) return;
   dv.innerHTML = '';
   const t = state.dreamText || '';
   if (!t) return;
@@ -123,8 +86,8 @@ function renderDreamView() {
       const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
       const span = document.createElement('span');
       span.textContent = token;
-      span.dataset.start = pos;
-      span.dataset.end = pos + token.length;
+      span.dataset.start = String(pos);
+      span.dataset.end = String(pos + token.length);
 
       if (block) {
         const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
@@ -132,7 +95,7 @@ function renderDreamView() {
         span.style.color = '#222';
         span.style.borderRadius = '4px';
         span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
-        span.setAttribute('data-block', block.id);
+        span.setAttribute('data-block', String(block.id));
         span.title = `Блок #${block.id}`;
         span.addEventListener('click', () => selectBlock(block.id));
       } else {
@@ -140,7 +103,7 @@ function renderDreamView() {
         span.style.color = '#888';
         span.style.borderRadius = '4px';
         span.classList.add('tile');
-        span.addEventListener('click', function(e) {
+        span.addEventListener('click', (e) => {
           e.preventDefault();
           span.classList.toggle('selected');
           if (span.classList.contains('selected')) {
@@ -168,6 +131,7 @@ function renderDreamView() {
   });
 }
 
+/* ====== Chips, чат, превью навигации ====== */
 function renderBlocksChips() {
   const wrap = byId('blocks');
   if (wrap) {
@@ -175,38 +139,63 @@ function renderBlocksChips() {
     state.blocks.forEach(b => {
       const el = document.createElement('div');
       el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
-      el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+      el.textContent = `#${b.id} ${b.text.slice(0, 20)}${b.text.length > 20 ? '…' : ''}`;
       el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
       el.style.color = '#222';
-      el.addEventListener('click', ()=>selectBlock(b.id));
+      el.addEventListener('click', () => selectBlock(b.id));
       wrap.appendChild(el);
     });
   }
   const cb = byId('currentBlock');
   const b = getCurrentBlock();
   if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+
   renderDreamView();
   renderChat();
   updateButtonsState();
-  renderBlockPreviews(); // обновляем превью
+  renderBlockPreviews();
 }
 
-function getCurrentBlock() {
-  return state.blocks.find(b => b.id === state.currentBlockId) || null;
+function renderChat() {
+  const chat = byId('chat');
+  if (!chat) return;
+  chat.innerHTML = '';
+  const b = getCurrentBlock();
+  if (!b) return;
+
+  for (const m of b.chat) {
+    const div = document.createElement('div');
+    const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
+    div.className = baseClass
+      + (m.isFinal ? ' final' : '')
+      + (m.isGlobalFinal ? ' final-global' : '');
+    div.textContent = m.text;
+    chat.appendChild(div);
+
+    if (Array.isArray(m.quickReplies) && m.quickReplies.length) {
+      const q = document.createElement('div');
+      q.className = 'quick';
+      m.quickReplies.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.addEventListener('click', () => sendAnswer(opt));
+        q.appendChild(btn);
+      });
+      chat.appendChild(q);
+    }
+  }
+
+  // Скролл к низу — если пользователь уже внизу
+  if (isChatAtBottom()) {
+    chat.scrollTop = chat.scrollHeight;
+    const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
+  } else {
+    const j = byId('jumpToBottom'); if (j) j.style.display = 'inline-flex';
+  }
+  updateButtonsState();
 }
 
-function getPrevBlocksSummary(currentBlockId, limit = 3) {
-  const current = state.blocks.find(b => b.id === currentBlockId);
-  if (!current) return '';
-  const prevFinals = state.blocks
-    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation)
-    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0))
-    .slice(0, limit)
-    .map(x => `#${x.id}: ${x.finalInterpretation}`);
-  return prevFinals.length ? prevFinals.join('\n') : '';
-}
-
-/* ========= Chat helpers: jump-to-bottom ========= */
+/* ====== Jump-to-bottom ====== */
 function isChatAtBottom() {
   const chat = byId('chat');
   if (!chat) return true;
@@ -219,43 +208,7 @@ function scrollChatToBottom() {
   const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
 }
 
-function renderChat() {
-  const chat = byId('chat');
-  const b = getCurrentBlock();
-  if (!chat) return;
-  chat.innerHTML = '';
-  if (!b) return;
-  for (const m of b.chat) {
-    const div = document.createElement('div');
-    const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
-    div.className = baseClass
-      + (m.isFinal ? ' final' : '')
-      + (m.isGlobalFinal ? ' final-global' : '');
-    div.textContent = m.text;
-    chat.appendChild(div);
-    if (m.quickReplies?.length) {
-      const q = document.createElement('div');
-      q.className = 'quick';
-      m.quickReplies.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.textContent = opt;
-        btn.addEventListener('click', ()=>sendAnswer(opt));
-        q.appendChild(btn);
-      });
-      chat.appendChild(q);
-    }
-  }
-  // Автоскролл вниз только если пользователь был у низа
-  if (isChatAtBottom()) {
-    chat.scrollTop = chat.scrollHeight;
-    const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
-  } else {
-    const j = byId('jumpToBottom'); if (j) j.style.display = 'inline-flex';
-  }
-  updateButtonsState();
-}
-
-/* ========= Поиск след./пред. незавершённого ========= */
+/* ====== Логика next/prev незавершённых ====== */
 function nextUndoneBlockId() {
   if (!state.blocks.length) return null;
   const sorted = [...state.blocks].sort((a, b) => a.id - b.id);
@@ -281,7 +234,7 @@ function prevUndoneBlockId() {
   return null;
 }
 
-/* ========= Рендер превью предыдущего/следующего блока ========= */
+/* ====== Превью блоков ====== */
 function renderBlockPreviews() {
   const prevEl = byId('prevPreview');
   const nextEl = byId('nextPreview');
@@ -294,11 +247,12 @@ function renderBlockPreviews() {
     const nb = state.blocks.find(x => x.id === nextId);
     nextEl.classList.remove('disabled');
     nextEl.style.background = 'rgba(255,255,255,0.7)';
-    nextEl.querySelector('.label').textContent = nb ? `#${nb.id}: ${nb.text.slice(0, 60)}${nb.text.length>60?'…':''}` : 'Следующий блок';
+    const labelNext = nextEl.querySelector('.label');
+    if (labelNext) labelNext.textContent = nb ? `#${nb.id}: ${nb.text.slice(0, 60)}${nb.text.length > 60 ? '…' : ''}` : 'Следующий блок';
     nextEl.onclick = () => { selectBlock(nextId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
   } else {
     nextEl.classList.add('disabled');
-    nextEl.querySelector('.label').textContent = 'Нет следующего блока';
+    const ln = nextEl.querySelector('.label'); if (ln) ln.textContent = 'Нет следующего блока';
     nextEl.onclick = null;
   }
 
@@ -308,31 +262,17 @@ function renderBlockPreviews() {
     const pb = state.blocks.find(x => x.id === prevId);
     prevEl.classList.remove('disabled');
     prevEl.style.background = 'rgba(255,255,255,0.7)';
-    prevEl.querySelector('.label').textContent = pb ? `#${pb.id}: ${pb.text.slice(0, 60)}${pb.text.length>60?'…':''}` : 'Предыдущий блок';
+    const labelPrev = prevEl.querySelector('.label');
+    if (labelPrev) labelPrev.textContent = pb ? `#${pb.id}: ${pb.text.slice(0, 60)}${pb.text.length > 60 ? '…' : ''}` : 'Предыдущий блок';
     prevEl.onclick = () => { selectBlock(prevId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
   } else {
-    // если нет предыдущего — серое маленькое поле с «…»
     prevEl.classList.add('disabled');
-    prevEl.querySelector('.label').textContent = '…';
+    const lp = prevEl.querySelector('.label'); if (lp) lp.textContent = '…';
     prevEl.onclick = null;
   }
 }
 
-function goToNextBlock() {
-  const nextId = nextUndoneBlockId();
-  if (!nextId) { alert('Больше нет незавершённых блоков.'); return; }
-  selectBlock(nextId);
-  const b = getCurrentBlock();
-  if (b && !b.done) startOrContinue();
-}
-function goToPrevBlock() {
-  const prevId = prevUndoneBlockId();
-  if (!prevId) { alert('Предыдущих незавершённых блоков нет.'); return; }
-  selectBlock(prevId);
-  const b = getCurrentBlock();
-  if (b && !b.done) startOrContinue();
-}
-
+/* ====== Обновление состояния доступности кнопок ====== */
 function updateButtonsState() {
   const b = getCurrentBlock();
   const blockBtn = byId('blockInterpretBtn');
@@ -342,33 +282,84 @@ function updateButtonsState() {
   if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
 
   const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
-  if (blockBtn) blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
-  if (blockBtn) blockBtn.disabled = !enoughForBlock || !b || b.done;
+  if (blockBtn) {
+    blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
+    blockBtn.disabled = !enoughForBlock || !b || b.done;
+  }
 
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
   const enoughForFinal = finalsCount >= 2;
-  if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
-  if (finalBtn) finalBtn.disabled = !enoughForFinal;
+  if (finalBtn) {
+    finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
+    finalBtn.disabled = !enoughForFinal;
+  }
 
-  // Синхронизация доступности пунктов меню скрепки
+  // Синхронизация пунктов меню скрепки
   const miBlock = byId('menuBlockInterpret');
   const miFinal = byId('menuFinalInterpret');
   if (miBlock) { miBlock.disabled = blockBtn ? blockBtn.disabled : false; miBlock.style.opacity = miBlock.disabled ? 0.5 : 1; }
   if (miFinal) { miFinal.disabled = finalBtn ? finalBtn.disabled : false; miFinal.style.opacity = miFinal.disabled ? 0.5 : 1; }
 }
 
-function appendUser(text) {
-  const b = getCurrentBlock(); if (!b) return;
-  b.chat.push({ role: 'user', text });
-  b.userAnswersCount = (b.userAnswersCount || 0) + 1;
-  renderChat();
+/* ====== Импорт/экспорт ====== */
+function exportJSON() {
+  const data = { dreamText: state.dreamText, blocks: state.blocks };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'snova_session.json';
+  a.click();
 }
-function appendFinalGlobal(text) {
-  const b = getCurrentBlock(); if (!b) return;
-  b.chat.push({ role: 'bot', text, quickReplies: [], isFinal: true, isGlobalFinal: true });
-  renderChat();
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      state.dreamText = data.dreamText || '';
+      state.blocks = (data.blocks || []).map(b => ({
+        ...b,
+        chat: Array.isArray(b.chat) ? b.chat : [],
+        finalInterpretation: b.finalInterpretation ?? null,
+        userAnswersCount: b.userAnswersCount ?? 0
+      }));
+      const maxId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0);
+      state.nextBlockId = Math.max(1, maxId + 1);
+      state.currentBlockId = state.blocks[0]?.id || null;
+      const dreamEl = byId('dream'); if (dreamEl) dreamEl.value = state.dreamText;
+      renderBlocksChips();
+      resetSelectionColor();
+    } catch (e) { alert('Не удалось импортировать JSON'); }
+  };
+  reader.readAsText(file);
 }
 
+/* ====== API ====== */
+async function apiRequest(url, data) {
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data)
+  });
+
+  if (res.status === 401) {
+    setToken('');
+    showAuth();
+    throw new Error('Unauthorized');
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
+  }
+  return res.json();
+}
+
+/* ====== Обработка LLM ====== */
 function parseAIResponse(text) {
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
@@ -381,46 +372,89 @@ function parseAIResponse(text) {
   }
 
   const finalKeywords = [
-    "итог","заключение","интерпретация","вывод",
-    "давай закончим","заканчиваем","завершай","финал","конец"
+    'итог','заключение','интерпретация','вывод',
+    'давай закончим','заканчиваем','завершай','финал','конец'
   ];
   isFinal = finalKeywords.some(k => cleanText.toLowerCase().includes(k));
 
   return { question: cleanText, quickReplies, isFinal };
 }
 
-function sendAnswer(ans) {
-  appendUser(ans);
-  startOrContinue();
+async function llmNextStep(blockText, history) {
+  const b = getCurrentBlock();
+  if (!b) return { question: 'Ошибка: блок не выбран', quickReplies: ['Повторить'], isFinal: false };
+
+  const PROXY_URL = 'https://deepseek-api-key.lexsnitko.workers.dev/';
+
+  try {
+    const data = await apiRequest(PROXY_URL, {
+      blockText: b.text,
+      history: [
+        { role: 'user', content: 'Контекст блока сна:\n' + b.text },
+        ...(() => {
+          const prev = getPrevBlocksSummary(b.id, 3);
+          return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
+        })(),
+        ...b.chat.map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text }))
+      ]
+    });
+
+    const aiRaw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    function stripNoiseLite(s) {
+      if (!s) return s;
+      s = s.replace(/```[\s\S]*?```/g, ' ');
+      s = s.replace(/<[^>]+>/g, ' ');
+      s = s.replace(/[\u2502\uFF5C]/g, ' ');
+      s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
+      // англ. слова убираем, если диалог строго на русском
+      s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
+      return s.replace(/\s+/g, ' ').trim();
+    }
+    const aiResponse = stripNoiseLite(aiRaw);
+    return parseAIResponse(aiResponse);
+  } catch (error) {
+    return { question: `Ошибка API: ${error.message || 'Проверьте подключение'}`, quickReplies: ['Повторить запрос'], isFinal: false };
+  }
+}
+
+function getPrevBlocksSummary(currentBlockId, limit = 3) {
+  const current = state.blocks.find(b => b.id === currentBlockId);
+  if (!current) return '';
+  const prevFinals = state.blocks
+    .filter(x => x.id !== currentBlockId && !!x.finalInterpretation)
+    .sort((a, b) => (b.finalAt || 0) - (a.finalAt || 0))
+    .slice(0, limit)
+    .map(x => `#${x.id}: ${x.finalInterpretation}`);
+  return prevFinals.length ? prevFinals.join('\n') : '';
+}
+
+/* ====== Поток диалога ====== */
+function appendUser(text) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'user', text });
+  b.userAnswersCount = (b.userAnswersCount || 0) + 1;
+  renderChat();
 }
 function appendBot(text, quickReplies = [], isFinal = false) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies, isFinal });
   renderChat();
 }
-
-async function apiRequest(url, data) {
-  const token = getToken();
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  });
-  if (res.status === 401) {
-    setToken('');
-    showAuth();
-    throw new Error('Unauthorized');
-  }
-  return res.json();
+function appendFinalGlobal(text) {
+  const b = getCurrentBlock(); if (!b) return;
+  b.chat.push({ role: 'bot', text, quickReplies: [], isFinal: true, isGlobalFinal: true });
+  renderChat();
 }
 
-/* ====== Основной цикл ИИ без кнопки start ====== */
+function sendAnswer(ans) {
+  appendUser(ans);
+  startOrContinue();
+}
+
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
+
   try {
     const history = b.chat.map(m => ({ role: m.role, text: m.text }));
     const next = await llmNextStep(b.text, history);
@@ -437,7 +471,7 @@ async function startOrContinue() {
     }
   } catch (e) {
     console.error(e);
-    appendBot("Ошибка при обработке запроса", ["Повторить"]);
+    appendBot('Ошибка при обработке запроса', ['Повторить']);
   } finally {
     updateButtonsState();
     renderBlockPreviews();
@@ -450,22 +484,24 @@ async function blockInterpretation() {
   if (!b) return alert('Выберите блок.');
   if ((b.userAnswersCount || 0) < 5) return alert('Нужно минимум 5 ответов по этому блоку.');
 
-  const btn = byId('blockInterpretBtn'); if (btn) { btn.disabled = true; var prevText = btn.textContent; btn.textContent = 'Формируем толкование...'; }
+  const btn = byId('blockInterpretBtn');
+  let prevText = '';
+  if (btn) { btn.disabled = true; prevText = btn.textContent; btn.textContent = 'Формируем толкование...'; }
 
   try {
-    const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
+    const PROXY_URL = 'https://deepseek-api-key.lexsnitko.workers.dev/';
     const history = [
       { role: 'user', content: 'Контекст блока сна:\n' + b.text },
       ...(() => { const prev = getPrevBlocksSummary(b.id, 3); return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : []; })(),
-      ...b.chat.map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text })),
+      ...b.chat.map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text })),
       { role: 'user', content: 'Составь единое итоговое толкование сна (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
     const data = await apiRequest(PROXY_URL, { blockText: b.text, history });
     let content = (data.choices?.[0]?.message?.content || '').trim();
-    content = content.replace(/```[\s\S]*?```/g, ' ')
+    content = content
+      .replace(/```[\s\S]*?```/g, ' ')
       .replace(/<[^>]+>/g, ' ')
-      .replace(/<\u2502?[^>]*\u2502?>/g, ' ')
-      .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
+      .replace(/[\u2502\uFF5C]/g, ' ')
       .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
@@ -479,7 +515,7 @@ async function blockInterpretation() {
     renderBlockPreviews();
   } catch (e) {
     console.error(e);
-    appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
+    appendBot('Ошибка при формировании толкования блока: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = prevText; }
   }
@@ -489,10 +525,12 @@ async function finalInterpretation() {
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
   if (interpreted.length === 0) return alert('Нет ни одного толкования блока.');
 
-  const btn = byId('finalInterpretBtn'); if (btn) { btn.disabled = true; var prevText2 = btn.textContent; btn.textContent = 'Формируем итог...'; }
+  const btn = byId('finalInterpretBtn');
+  let prevText2 = '';
+  if (btn) { btn.disabled = true; prevText2 = btn.textContent; btn.textContent = 'Формируем итог...'; }
 
   try {
-    const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
+    const PROXY_URL = 'https://deepseek-api-key.lexsnitko.workers.dev/';
     const blockText = (state.dreamText || '').slice(0, 4000);
     const history = [
       { role: 'user', content: 'Краткий контекст сна:\n' + blockText },
@@ -501,182 +539,45 @@ async function finalInterpretation() {
     ];
     const data = await apiRequest(PROXY_URL, { blockText, history });
     let content = (data.choices?.[0]?.message?.content || '').trim();
-    content = content.replace(/```[\s\S]*?```/g, ' ')
+    content = content
+      .replace(/```[\s\S]*?```/g, ' ')
       .replace(/<[^>]+>/g, ' ')
-      .replace(/<\u2502?[^>]*\u2502?>/g, ' ')
-      .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
+      .replace(/[\u2502\uFF5C]/g, ' ')
       .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
     if (!content) content = 'Не удалось получить итоговое толкование';
+
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
     else alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
   } catch (e) {
     console.error(e);
-    appendBot("Ошибка при формировании итогового толкования: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
+    appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = prevText2; }
   }
 }
 
-/* ====== Ход диалога ====== */
-async function llmNextStep(blockText, history) {
-  const b = getCurrentBlock();
-  if (!b) return { question: "Ошибка: блок не выбран", quickReplies: ["Повторить"], isFinal: false };
-
-  const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
-
-  try {
-    const data = await apiRequest(PROXY_URL, {
-      blockText: b.text,
-      history: [
-        { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-        ...(() => { const prev = getPrevBlocksSummary(b.id, 3); return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : []; })(),
-        ...b.chat.map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text }))
-      ]
-    });
-
-    const aiRaw = data.choices[0].message.content || '';
-    function stripNoiseLite(s) {
-      if (!s) return s;
-      s = s.replace(/```[\s\S]*?```/g, ' ');
-      s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-      s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-      s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
-      s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
-      return s.trim();
-    }
-    const aiResponse = stripNoiseLite(aiRaw);
-    return parseAIResponse(aiResponse);
-  } catch (error) {
-    return { question: `Ошибка API: ${error.message || "Проверьте подключение"}`, quickReplies: ["Повторить запрос"], isFinal: false };
-  }
-}
-
-/* ====== Экспорт/импорт ====== */
-function exportJSON() {
-  const data = { dreamText: state.dreamText, blocks: state.blocks };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'snova_session.json';
-  a.click();
-}
-function importJSON(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      state.dreamText = data.dreamText || '';
-      state.blocks = (data.blocks || []).map(b => ({
-        ...b,
-        chat: b.chat || [],
-        finalInterpretation: b.finalInterpretation ?? null,
-        userAnswersCount: b.userAnswersCount ?? 0
-      }));
-      state.nextBlockId = Math.max(1, ...state.blocks.map(b=>b.id+1));
-      state.currentBlockId = state.blocks[0]?.id || null;
-      byId('dream').value = state.dreamText;
-      renderBlocksChips();
-      resetSelectionColor();
-    } catch(e) { alert('Не удалось импортировать JSON'); }
-  };
-  reader.readAsText(file);
-}
-
-/* ====== Handlers ====== */
-onClick('addBlock', addBlockFromSelection);
-onClick('addWholeBlock', function() {
-  state.dreamText = byId('dream').value;
-  if (!state.dreamText.trim()) { alert('Введите текст сна сначала!'); return; }
-  if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
-    alert('Весь текст уже добавлен как блок.'); return;
-  }
-  const id = state.nextBlockId++;
-  const start = 0;
-  const end = state.dreamText.length;
-  const text = state.dreamText;
-  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
-  state.currentBlockId = id;
-  showStep(2);
-  renderBlocksChips();
-  resetSelectionColor();
-});
-onClick('blockInterpretBtn', blockInterpretation);
-onClick('finalInterpretBtn', finalInterpretation);
-
-// Отправка ответа
-onClick('sendAnswerBtn', () => {
-  if (state.currentStep !== 3) { alert('Перейдите к шагу "Работа с блоками"'); return; }
-  const el = byId('userInput');
-  const val = el.value.trim();
-  if (!val) return;
-  sendAnswer(val);
-  el.value = '';
-  // Авто-склейка к низу
-  setTimeout(scrollChatToBottom, 0);
-});
-
-// Enter в textarea
-const userInputEl = byId('userInput');
-if (userInputEl) {
-  userInputEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const btn = byId('sendAnswerBtn'); if (btn) btn.click();
-    }
-  });
-}
-
-// Jump-to-bottom
-const chatEl = byId('chat');
-if (chatEl) {
-  chatEl.addEventListener('scroll', () => {
-    const jumpBtn = byId('jumpToBottom');
-    if (!jumpBtn) return;
-    jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
-  });
-}
-onClick('jumpToBottom', scrollChatToBottom);
-
-// Скрепка и меню
-onClick('attachBtn', () => {
-  const menu = byId('attachMenu');
-  if (!menu) return;
-  menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
-});
-document.addEventListener('click', (e) => {
-  const menu = byId('attachMenu');
-  const bar = byId('chatInputBar');
-  if (!menu || !bar) return;
-  if (!bar.contains(e.target)) menu.style.display = 'none';
-});
-onClick('menuBlockInterpret', () => { blockInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
-onClick('menuFinalInterpret', () => { finalInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
-
-// Стрелки (оставлены для совместимости, но не используются в UI)
-onClick('nextBlockBtn', goToNextBlock);
-onClick('prevBlockBtn', goToPrevBlock);
-
-// Инициализация
-updateButtonsState();
-resetSelectionColor();
-
-/* ====== Выделение блоков ====== */
+/* ====== Добавление блоков по выделению ====== */
 function addBlockFromSelection() {
   const dv = byId('dreamView');
+  if (!dv) return;
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
   if (!selected.length) return alert('Выделите плиточки для блока.');
 
-  const start = Math.min(...selected.map(s => parseInt(s.dataset.start, 10)));
-  const end = Math.max(...selected.map(s => parseInt(s.dataset.end, 10)));
+  const starts = selected.map(s => parseInt(s.dataset.start || '0', 10));
+  const ends = selected.map(s => parseInt(s.dataset.end || '0', 10));
+  const start = Math.min(...starts);
+  const end = Math.max(...ends);
 
+  // Проверка пересечений
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
     }
   }
+
   const id = state.nextBlockId++;
   const text = state.dreamText.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
@@ -698,3 +599,135 @@ function selectBlock(id) {
   const b = getCurrentBlock();
   if (b && !b.done && b.chat.length === 0) startOrContinue();
 }
+
+/* ====== Навешивание обработчиков и старт ====== */
+function initHandlers() {
+  onClick('toStep2', () => {
+    const dreamEl = byId('dream');
+    state.dreamText = dreamEl ? dreamEl.value : '';
+    if (!state.dreamText.trim()) { alert('Введите текст сна!'); return; }
+    showStep(2);
+    renderDreamView();
+    resetSelectionColor();
+  });
+
+  onClick('toStep3', () => {
+    if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
+    state.currentBlockId = state.blocks[0]?.id || null;
+    showStep(3);
+    renderBlocksChips();
+    const b = getCurrentBlock();
+    if (b && !b.done) startOrContinue();
+  });
+
+  onClick('backTo1', () => showStep(1));
+  // Кнопка в шапке шага 3
+  onClick('backTo2Header', () => showStep(2));
+
+  onClick('addBlock', addBlockFromSelection);
+  onClick('addWholeBlock', () => {
+    const dreamEl = byId('dream');
+    state.dreamText = dreamEl ? dreamEl.value : '';
+    if (!state.dreamText.trim()) { alert('Введите текст сна сначала!'); return; }
+    if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
+      alert('Весь текст уже добавлен как блок.'); return;
+    }
+    const id = state.nextBlockId++;
+    const start = 0;
+    const end = state.dreamText.length;
+    const text = state.dreamText;
+    state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
+    state.currentBlockId = id;
+    showStep(2);
+    renderBlocksChips();
+    resetSelectionColor();
+  });
+
+  onClick('blockInterpretBtn', blockInterpretation);
+  onClick('finalInterpretBtn', finalInterpretation);
+
+  // Отправка ответа
+  onClick('sendAnswerBtn', () => {
+    if (state.currentStep !== 3) { alert('Перейдите к шагу "Работа с блоками"'); return; }
+    const el = byId('userInput');
+    const val = (el && el.value || '').trim();
+    if (!val) return;
+    sendAnswer(val);
+    if (el) el.value = '';
+    setTimeout(scrollChatToBottom, 0);
+  });
+
+  // Enter в textarea
+  const userInputEl = byId('userInput');
+  if (userInputEl) {
+    userInputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const btn = byId('sendAnswerBtn'); if (btn) btn.click();
+      }
+    });
+  }
+
+  // Jump-to-bottom
+  const chatEl = byId('chat');
+  if (chatEl) {
+    chatEl.addEventListener('scroll', () => {
+      const jumpBtn = byId('jumpToBottom');
+      if (!jumpBtn) return;
+      jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+    });
+  }
+  onClick('jumpToBottom', scrollChatToBottom);
+
+  // Скрепка и меню
+  onClick('attachBtn', () => {
+    const menu = byId('attachMenu');
+    if (!menu) return;
+    menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
+  });
+  document.addEventListener('click', (e) => {
+    const menu = byId('attachMenu');
+    const bar = byId('chatInputBar');
+    if (!menu || !bar) return;
+    if (!bar.contains(e.target)) menu.style.display = 'none';
+  });
+  onClick('menuBlockInterpret', () => { blockInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
+  onClick('menuFinalInterpret', () => { finalInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
+
+  // Старые стрелки — скрыты в HTML, но на всякий
+  onClick('nextBlockBtn', () => { const id = nextUndoneBlockId(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
+  onClick('prevBlockBtn', () => { const id = prevUndoneBlockId(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
+
+  // Экспорт/импорт — подключишь элементы по желанию
+  onClick('exportBtn', exportJSON);
+  onChange('importFile', (e) => { const f = e?.target?.files?.[0]; if (f) importJSON(f); });
+
+  updateButtonsState();
+  resetSelectionColor();
+}
+
+/* ====== Boot ====== */
+window.addEventListener('DOMContentLoaded', () => {
+  showStep(1);
+  if (!checkAuth()) {
+    const authBtn = byId('authBtn');
+    const authPass = byId('authPass');
+    const authError = byId('authError');
+
+    if (authBtn && authPass) {
+      authBtn.onclick = () => {
+        const val = authPass.value;
+        if (val === AUTH_PASS) {
+          setToken(AUTH_TOKEN);
+          hideAuth();
+          location.reload();
+        } else {
+          if (authError) authError.style.display = 'block';
+        }
+      };
+      authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+      authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
+    }
+  }
+  initHandlers();
+});
