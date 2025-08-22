@@ -1,5 +1,5 @@
-const AUTH_PASS = 'volfisthebest'; // твой пароль
-const AUTH_TOKEN = 'volfisthebest-secret'; // этот же токен будет использоваться для запросов к воркеру
+const AUTH_PASS = 'volfisthebest';
+const AUTH_TOKEN = 'volfisthebest-secret';
 
 function showAuth() {
   const authDiv = document.getElementById('auth');
@@ -11,15 +11,8 @@ function showAuth() {
   }, 100);
 }
 
-const BLOCK_COLORS = [
-  '#ffd966', // жёлтый
-  '#a4c2f4', // голубой
-  '#b6d7a8', // зелёный
-  '#f4cccc', // розовый
-  '#d9d2e9'  // сиреневый
-];
+const BLOCK_COLORS = ['#ffd966','#a4c2f4','#b6d7a8','#f4cccc','#d9d2e9'];
 
-// PATCH: выделение цветом будущего блока
 let currentSelectionColor = null;
 function resetSelectionColor() {
   currentSelectionColor = BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
@@ -32,21 +25,12 @@ function hideAuth() {
   document.body.classList.remove('auth-mode');
 }
 
-function getToken() {
-  return localStorage.getItem('snova_token');
-}
-
-function setToken(token) {
-  localStorage.setItem('snova_token', token);
-}
+function getToken() { return localStorage.getItem('snova_token'); }
+function setToken(token) { localStorage.setItem('snova_token', token); }
 
 function checkAuth() {
-  if (getToken() === AUTH_TOKEN) {
-    hideAuth();
-    return true;
-  }
-  showAuth();
-  return false;
+  if (getToken() === AUTH_TOKEN) { hideAuth(); return true; }
+  showAuth(); return false;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -67,17 +51,12 @@ window.addEventListener('DOMContentLoaded', () => {
           if (authError) authError.style.display = 'block';
         }
       };
-      authPass.addEventListener('input', () => {
-        if (authError) authError.style.display = 'none';
-      });
-      authPass.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && authBtn) authBtn.click();
-      });
+      authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+      authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
     }
   }
 });
 
-// В state добавь переменную шага:
 const state = {
   dreamText: '',
   blocks: [],
@@ -86,7 +65,6 @@ const state = {
   currentStep: 1
 };
 
-// Функция для показа нужного шага
 function showStep(step) {
   for (let i = 1; i <= 3; i++) {
     const el = document.getElementById('step' + i);
@@ -95,74 +73,41 @@ function showStep(step) {
   state.currentStep = step;
 }
 
-function onClick(id, handler) {
-  const el = byId(id);
-  if (el) el.onclick = handler;
-}
-function onChange(id, handler) {
-  const el = byId(id);
-  if (el) el.onchange = handler;
-}
+function byId(id) { return document.getElementById(id); }
+function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
+function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
 
-// Кнопка "Далее" на шаге 1
 document.getElementById('toStep2').onclick = function() {
   state.dreamText = document.getElementById('dream').value;
-  if (!state.dreamText.trim()) {
-    alert('Введите текст сна!');
-    return;
-  }
-  // Передаём текст сна на второй шаг
+  if (!state.dreamText.trim()) { alert('Введите текст сна!'); return; }
   showStep(2);
-  // Подставим текст сна в dreamView, если нужно
   renderDreamView();
-  // PATCH: выделение цветом будущего блока
   resetSelectionColor();
 };
 
-// Кнопка "Далее" на шаге 2
 document.getElementById('toStep3').onclick = function() {
-  if (!state.blocks.length) {
-    alert('Добавьте хотя бы один блок!');
-    return;
-  }
-  // Выбрать первый блок (или весь текст, если он добавлен как блок #1)
+  if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
   state.currentBlockId = state.blocks[0]?.id || null;
 
   showStep(3);
   renderBlocksChips();
 
-  // Автостарт диалога по текущему (первому) блоку
-  // Начнём только если блок еще не завершен
   const b = getCurrentBlock();
-  if (b && !b.done) {
-    startOrContinue();
-  }
+  if (b && !b.done) startOrContinue();
 };
 
-// Кнопка "Назад" на шаге 2
-document.getElementById('backTo1').onclick = function() {
-  showStep(1);
-};
-
-// Кнопка "Назад" на шаге 3
-document.getElementById('backTo2').onclick = function() {
-  showStep(2);
-};
-
-function byId(id) { return document.getElementById(id); }
+document.getElementById('backTo1').onclick = function() { showStep(1); };
+document.getElementById('backTo2').onclick = function() { showStep(2); };
 
 function getNextBlockColor() {
   return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
 }
-
 function hexToRgba(hex, alpha) {
   const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
   if (!m) return hex;
   return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${alpha})`;
 }
 
-// Рендер сна с точным соответствием текстовых узлов кускам исходного текста.
-// Каждый Text-узел получает __rawStart/__rawEnd для обратного мэппинга выделения.
 function renderDreamView() {
   const dv = byId('dreamView');
   dv.innerHTML = '';
@@ -216,60 +161,10 @@ function renderDreamView() {
       }
       dv.appendChild(span);
     } else {
-      // Просто текстовый узел для пробела
       dv.appendChild(document.createTextNode(token));
     }
     pos += token.length;
   });
-}
-
-function appendTextSlice(t, start, end, wrapMark) {
-  if (start >= end) return;
-  const text = t.slice(start, end);
-  const textNode = document.createTextNode(text);
-  textNode.__rawStart = start;
-  textNode.__rawEnd = end;
-
-  if (wrapMark) {
-    const mark = document.createElement('mark');
-    mark.setAttribute('data-block', wrapMark.id);
-    mark.title = `Блок #${wrapMark.id}`;
-    mark.appendChild(textNode);
-
-    // Цвет блока
-    const color = BLOCK_COLORS[(wrapMark.id - 1) % BLOCK_COLORS.length];
-    mark.style.background = color;
-    mark.style.color = '#222';
-    mark.style.borderRadius = '3px';
-    mark.style.padding = '0 2px';
-
-    dv.appendChild(mark);
-    mark.addEventListener('click', () => selectBlock(wrapMark.id));
-  } else {
-    // Серый фон для неразмеченного текста
-    const span = document.createElement('span');
-    span.style.background = '#f0f0f0';
-    span.style.color = '#888';
-    span.appendChild(textNode);
-    dv.appendChild(span);
-  }
-}
-
-// Утилиты для преобразования DOM-Range в абсолютные индексы исходного текста
-function findTextNodeAndLocalOffset(node, offset) {
-  if (node.nodeType === Node.TEXT_NODE) return { node, offset };
-  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
-  let curr = walker.nextNode();
-  let seen = 0;
-  while (curr) {
-    const len = curr.nodeValue.length;
-    if (offset <= seen + len) {
-      return { node: curr, offset: Math.max(0, offset - seen) };
-    }
-    seen += len;
-    curr = walker.nextNode();
-  }
-  return null;
 }
 
 function renderBlocksChips() {
@@ -292,117 +187,10 @@ function renderBlocksChips() {
   updateButtonsState();
 }
 
-function toAbsolute(node, off) {
-  const res = findTextNodeAndLocalOffset(node, off);
-  if (!res || res.node.__rawStart == null) return null;
-  const local = Math.max(0, Math.min(off, res.node.nodeValue.length));
-  return res.node.__rawStart + local;
-}
-
-function getSelectionOffsets() {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return null;
-  const range = sel.getRangeAt(0);
-  if (!range || range.collapsed) return null;
-
-  const dv = byId('dreamView');
-  if (!dv.contains(range.startContainer) || !dv.contains(range.endContainer)) return null;
-
-  // Находим ближайший span с data-start
-  function findSpan(node) {
-    while (node && node !== dv) {
-      if (node.nodeType === 1 && node.hasAttribute('data-start')) return node;
-      node = node.parentNode;
-    }
-    return null;
-  }
-
-  const startSpan = findSpan(range.startContainer);
-  const endSpan = findSpan(range.endContainer);
-
-  if (!startSpan || !endSpan) return null;
-
-  const start = parseInt(startSpan.dataset.start, 10);
-  const end = parseInt(endSpan.dataset.end, 10);
-
-  return start <= end ? { start, end } : { start: end, end: start };
-}
-
-// Добавить весь текст как блок
-function addWholeBlock() {
-  // Берем текст из textarea и сохраняем в state
-  state.dreamText = document.getElementById('dream').value;
-  if (!state.dreamText.trim()) {
-    alert('Введите текст сна!');
-    return;
-  }
-  
-  if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
-    alert('Весь текст уже добавлен как блок.');
-    return;
-  }
-  
-  const id = state.nextBlockId++;
-  const start = 0;
-  const end = state.dreamText.length;
-  const text = state.dreamText;
-  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
-  state.currentBlockId = id;
-  
-  // Автоматически переходим к шагу 2
-  showStep(2);
-  renderBlocksChips();
-  resetSelectionColor();
-}
-
-// Добавить блок по выделению
-function addBlockFromSelection() {
-  const dv = byId('dreamView');
-  const selected = Array.from(dv.querySelectorAll('.tile.selected'));
-  if (!selected.length) return alert('Выделите плиточки для блока.');
-
-  // Определяем диапазон выделения
-  const start = Math.min(...selected.map(s => parseInt(s.dataset.start, 10)));
-  const end = Math.max(...selected.map(s => parseInt(s.dataset.end, 10)));
-
-  // Проверка на пересечение с существующими блоками
-  for (const b of state.blocks) {
-    if (!(end <= b.start || start >= b.end)) {
-      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
-    }
-  }
-  const id = state.nextBlockId++;
-  const text = state.dreamText.slice(start, end);
-  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
-  state.currentBlockId = id;
-
-  // Снимаем выделение
-  selected.forEach(s => {
-    s.classList.remove('selected');
-    s.style.background = '#f0f0f0';
-    s.style.color = '#888';
-  });
-
-  renderBlocksChips();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-}
-
-function selectBlock(id) {
-  state.currentBlockId = id;
-  renderBlocksChips();
-  const b = getCurrentBlock();
-  if (b && !b.done && b.chat.length === 0) {
-    // Автостарт только если диалог пустой (чтобы не навязываться в середине)
-    startOrContinue();
-  }
-}
-
 function getCurrentBlock() {
   return state.blocks.find(b => b.id === state.currentBlockId) || null;
 }
 
-// Собрать краткие итоги предыдущих блоков (1–3 последних финала перед текущим)
 function getPrevBlocksSummary(currentBlockId, limit = 3) {
   const current = state.blocks.find(b => b.id === currentBlockId);
   if (!current) return '';
@@ -412,6 +200,19 @@ function getPrevBlocksSummary(currentBlockId, limit = 3) {
     .slice(0, limit)
     .map(x => `#${x.id}: ${x.finalInterpretation}`);
   return prevFinals.length ? prevFinals.join('\n') : '';
+}
+
+/* ========= Chat helpers: jump-to-bottom ========= */
+function isChatAtBottom() {
+  const chat = byId('chat');
+  if (!chat) return true;
+  const threshold = 8;
+  return chat.scrollHeight - chat.scrollTop - chat.clientHeight <= threshold;
+}
+function scrollChatToBottom() {
+  const chat = byId('chat'); if (!chat) return;
+  chat.scrollTop = chat.scrollHeight;
+  const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
 }
 
 function renderChat() {
@@ -439,68 +240,84 @@ function renderChat() {
       chat.appendChild(q);
     }
   }
-  chat.scrollTop = chat.scrollHeight;
+  // Автоскролл вниз только если пользователь был у низа
+  if (isChatAtBottom()) {
+    chat.scrollTop = chat.scrollHeight;
+    const j = byId('jumpToBottom'); if (j) j.style.display = 'none';
+  } else {
+    const j = byId('jumpToBottom'); if (j) j.style.display = 'inline-flex';
+  }
   updateButtonsState();
 }
 
+/* ========= Навигация по блокам ========= */
 function nextUndoneBlockId() {
   if (!state.blocks.length) return null;
   const sorted = [...state.blocks].sort((a, b) => a.id - b.id);
   const curr = getCurrentBlock();
   const currId = curr?.id ?? -Infinity;
-
-  // 1) сначала ищем следующий по id > текущего
-  for (const x of sorted) {
-    if (x.id > currId && !x.done) return x.id;
+  for (const x of sorted) { if (x.id > currId && !x.done) return x.id; }
+  for (const x of sorted) { if (!x.done) return x.id; }
+  return null;
+}
+function prevUndoneBlockId() {
+  if (!state.blocks.length) return null;
+  const sorted = [...state.blocks].sort((a, b) => a.id - b.id);
+  const curr = getCurrentBlock();
+  const currId = curr?.id ?? Infinity;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const x = sorted[i];
+    if (x.id < currId && !x.done) return x.id;
   }
-  // 2) если не нашли — ищем с начала
-  for (const x of sorted) {
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const x = sorted[i];
     if (!x.done) return x.id;
   }
   return null;
 }
-
 function goToNextBlock() {
   const nextId = nextUndoneBlockId();
-  if (!nextId) {
-    alert('Все блоки завершены.');
-    return;
-  }
+  if (!nextId) { alert('Больше нет незавершённых блоков.'); return; }
   selectBlock(nextId);
-  // Автостарт для нового блока, если он не завершен
   const b = getCurrentBlock();
-  if (b && !b.done) {
-    startOrContinue();
-  }
+  if (b && !b.done) startOrContinue();
+}
+function goToPrevBlock() {
+  const prevId = prevUndoneBlockId();
+  if (!prevId) { alert('Предыдущих незавершённых блоков нет.'); return; }
+  selectBlock(prevId);
+  const b = getCurrentBlock();
+  if (b && !b.done) startOrContinue();
 }
 
 function updateButtonsState() {
   const b = getCurrentBlock();
   const blockBtn = byId('blockInterpretBtn');
   const finalBtn = byId('finalInterpretBtn');
-  const nextBtn = byId('nextBlockBtn'); // новая кнопка
 
-  // Сброс классов
   if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
   if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
 
-  // Логика для "Толкование блока"
   const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
   if (blockBtn) blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
-  if (blockBtn) blockBtn.disabled = !enoughForBlock || !b || b.done; // если блок уже завершён — толковать повторно не даём
+  if (blockBtn) blockBtn.disabled = !enoughForBlock || !b || b.done;
 
-  // Логика для "Итоговое толкование"
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
   const enoughForFinal = finalsCount >= 2;
   if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
   if (finalBtn) finalBtn.disabled = !enoughForFinal;
 
-  // Кнопка "Следующий блок"
-  if (nextBtn) {
-    nextBtn.onclick = goToNextBlock;
-    // Активной становится, когда ТЕКУЩИЙ блок завершён
-    nextBtn.disabled = !(b && b.done);
-  }
+  // Навигационные стрелки: активны если есть куда идти
+  const prevBtn = byId('prevBlockBtn');
+  const nextBtn2 = byId('nextBlockBtn');
+  if (prevBtn) prevBtn.disabled = !prevUndoneBlockId();
+  if (nextBtn2) nextBtn2.disabled = !nextUndoneBlockId();
+
+  // Синхронизация доступности пунктов меню скрепки
+  const miBlock = byId('menuBlockInterpret');
+  const miFinal = byId('menuFinalInterpret');
+  if (miBlock) { miBlock.disabled = blockBtn ? blockBtn.disabled : false; miBlock.style.opacity = miBlock.disabled ? 0.5 : 1; }
+  if (miFinal) { miFinal.disabled = finalBtn ? finalBtn.disabled : false; miFinal.style.opacity = miFinal.disabled ? 0.5 : 1; }
 }
 
 function appendUser(text) {
@@ -509,14 +326,12 @@ function appendUser(text) {
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
   renderChat();
 }
-
 function appendFinalGlobal(text) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies: [], isFinal: true, isGlobalFinal: true });
   renderChat();
 }
 
-// Функция для парсинга ответов ИИ
 function parseAIResponse(text) {
   const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
   let quickReplies = [];
@@ -529,26 +344,18 @@ function parseAIResponse(text) {
   }
 
   const finalKeywords = [
-    "итог", "заключение", "интерпретация", "вывод",
-    "давай закончим", "заканчиваем", "завершай", "финал", "конец"
+    "итог","заключение","интерпретация","вывод",
+    "давай закончим","заканчиваем","завершай","финал","конец"
   ];
-  isFinal = finalKeywords.some(keyword =>
-    cleanText.toLowerCase().includes(keyword.toLowerCase())
-  );
+  isFinal = finalKeywords.some(k => cleanText.toLowerCase().includes(k));
 
-  return {
-    question: cleanText,
-    quickReplies,
-    isFinal
-  };
+  return { question: cleanText, quickReplies, isFinal };
 }
 
-// Отправка ответа пользователя
 function sendAnswer(ans) {
   appendUser(ans);
   startOrContinue();
 }
-
 function appendBot(text, quickReplies = [], isFinal = false) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies, isFinal });
@@ -573,17 +380,12 @@ async function apiRequest(url, data) {
   return res.json();
 }
 
-// Основная функция для работы с ИИ
+/* ====== Основной цикл ИИ без кнопки start ====== */
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
-
   try {
-    const history = b.chat.map(m => ({
-      role: m.role,
-      text: m.text
-    }));
-
+    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
     const next = await llmNextStep(b.text, history);
 
     if (next.isFinal) {
@@ -603,53 +405,31 @@ async function startOrContinue() {
   }
 }
 
-// Толкование блока (финал для текущего блока) — упрощённая версия
+/* ====== Толкования ====== */
 async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
+  if ((b.userAnswersCount || 0) < 5) return alert('Нужно минимум 5 ответов по этому блоку.');
 
-  if ((b.userAnswersCount || 0) < 5) {
-    return alert('Нужно минимум 5 ответов по этому блоку перед финальной интерпретацией.');
-  }
-
-  const btn = byId('blockInterpretBtn');
-  btn.disabled = true;
-  const prevText = btn.textContent;
-  btn.textContent = 'Формируем толкование...';
+  const btn = byId('blockInterpretBtn'); if (btn) { btn.disabled = true; var prevText = btn.textContent; btn.textContent = 'Формируем толкование...'; }
 
   try {
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
-
     const history = [
       { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-      ...(() => {
-        const prev = getPrevBlocksSummary(b.id, 3);
-        return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
-      })(),
-      ...b.chat.map(m => ({
-        role: m.role === "bot" ? "assistant" : "user",
-        content: m.text
-      })),
+      ...(() => { const prev = getPrevBlocksSummary(b.id, 3); return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : []; })(),
+      ...b.chat.map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text })),
       { role: 'user', content: 'Составь единое итоговое толкование сна (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
-
-    // Только этот вызов!
-    const data = await apiRequest(PROXY_URL, {
-      blockText: b.text,
-      history
-    });
-
+    const data = await apiRequest(PROXY_URL, { blockText: b.text, history });
     let content = (data.choices?.[0]?.message?.content || '').trim();
-
-    content = content
-      .replace(/```[\s\S]*?```/g, ' ')
+    content = content.replace(/```[\s\S]*?```/g, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/<\u2502?[^>]*\u2502?>/g, ' ')
       .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
       .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
-
     if (!content) content = 'Не удалось получить толкование.';
 
     b.finalInterpretation = content;
@@ -657,86 +437,53 @@ async function blockInterpretation() {
     b.done = true;
     appendBot(content, [], true);
     updateButtonsState();
-
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
   } finally {
-    btn.disabled = false;
-    btn.textContent = prevText;
+    if (btn) { btn.disabled = false; btn.textContent = prevText; }
   }
 }
 
-// Итоговое толкование по всем блокам — упрощённая версия
 async function finalInterpretation() {
-  // Берём только блоки, где уже есть финальные интерпретации
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
+  if (interpreted.length === 0) return alert('Нет ни одного толкования блока.');
 
-  if (interpreted.length === 0) {
-    return alert('Нет ни одного толкования блока. Сначала выполните "Толкование блока" хотя бы для одного блока.');
-  }
-
-  const btn = byId('finalInterpretBtn');
-  btn.disabled = true;
-  const prevText = btn.textContent;
-  btn.textContent = 'Формируем итог...';
+  const btn = byId('finalInterpretBtn'); if (btn) { btn.disabled = true; var prevText2 = btn.textContent; btn.textContent = 'Формируем итог...'; }
 
   try {
     const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
-
-    // Краткий контекст общего сна (ограничим длину)
     const blockText = (state.dreamText || '').slice(0, 4000);
-
-    // История: даём краткий контекст сна и все готовые интерпретации блоков
     const history = [
       { role: 'user', content: 'Краткий контекст сна:\n' + blockText },
       { role: 'user', content: 'Итоговые толкования блоков:\n' + interpreted.map(b => `#${b.id}: ${b.finalInterpretation}`).join('\n') },
-      // Финальная инструкция — один абзац, без префиксов/кода/тегов
       { role: 'user', content: 'Составь единое итоговое толкование сна (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Не используй специальную терминологию. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
-
-    const data = await apiRequest(PROXY_URL, {
-      blockText,
-      history
-    });
+    const data = await apiRequest(PROXY_URL, { blockText, history });
     let content = (data.choices?.[0]?.message?.content || '').trim();
-
-    // Лёгкая инлайн-очистка (как в blockInterpretation)
-    content = content
-      .replace(/```[\s\S]*?```/g, ' ')
+    content = content.replace(/```[\s\S]*?```/g, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/<\u2502?[^>]*\u2502?>/g, ' ')
       .replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ')
       .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
-
     if (!content) content = 'Не удалось получить итоговое толкование.';
-
-    // Показываем чистый финальный текст без префиксов
     const b = getCurrentBlock();
-    if (b) {
-      appendFinalGlobal(content);
-    } else {
-      alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
-    }
+    if (b) appendFinalGlobal(content);
+    else alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании итогового толкования: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
   } finally {
-    btn.disabled = false;
-    btn.textContent = prevText;
+    if (btn) { btn.disabled = false; btn.textContent = prevText2; }
   }
 }
 
-// Следующий шаг диалога с ИИ
+/* ====== Ход диалога ====== */
 async function llmNextStep(blockText, history) {
   const b = getCurrentBlock();
-  if (!b) return {
-    question: "Ошибка: блок не выбран",
-    quickReplies: ["Повторить"],
-    isFinal: false
-  };
+  if (!b) return { question: "Ошибка: блок не выбран", quickReplies: ["Повторить"], isFinal: false };
 
   const PROXY_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
@@ -745,44 +492,29 @@ async function llmNextStep(blockText, history) {
       blockText: b.text,
       history: [
         { role: 'user', content: 'Контекст блока сна:\n' + b.text },
-        ...(() => {
-          const prev = getPrevBlocksSummary(b.id, 3);
-          return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
-        })(),
-        ...b.chat.map(m => ({
-          role: m.role === "bot" ? "assistant" : "user",
-          content: m.text
-        }))
+        ...(() => { const prev = getPrevBlocksSummary(b.id, 3); return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : []; })(),
+        ...b.chat.map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text }))
       ]
     });
 
     const aiRaw = data.choices[0].message.content || '';
-
     function stripNoiseLite(s) {
       if (!s) return s;
       s = s.replace(/```[\s\S]*?```/g, ' ');
       s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
       s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-      // Удалить китайские символы
       s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
-      // Удалить отдельные латинские слова (но не числа и не русские)
       s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
       return s.trim();
     }
-
     const aiResponse = stripNoiseLite(aiRaw);
     return parseAIResponse(aiResponse);
-
   } catch (error) {
-    return {
-      question: `Ошибка API: ${error.message || "Проверьте подключение"}`,
-      quickReplies: ["Повторить запрос"],
-      isFinal: false
-    };
+    return { question: `Ошибка API: ${error.message || "Проверьте подключение"}`, quickReplies: ["Повторить запрос"], isFinal: false };
   }
 }
 
-// Экспорт/импорт
+/* ====== Экспорт/импорт ====== */
 function exportJSON() {
   const data = { dreamText: state.dreamText, blocks: state.blocks };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
@@ -791,7 +523,6 @@ function exportJSON() {
   a.download = 'snova_session.json';
   a.click();
 }
-
 function importJSON(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -808,25 +539,19 @@ function importJSON(file) {
       state.currentBlockId = state.blocks[0]?.id || null;
       byId('dream').value = state.dreamText;
       renderBlocksChips();
-      // PATCH: выделение цветом будущего блока
       resetSelectionColor();
     } catch(e) { alert('Не удалось импортировать JSON'); }
   };
   reader.readAsText(file);
 }
 
-// Handlers (ТОЛЬКО существующие элементы)
-onClick('nextBlockBtn', goToNextBlock);
+/* ====== Handlers ====== */
 onClick('addBlock', addBlockFromSelection);
 onClick('addWholeBlock', function() {
   state.dreamText = byId('dream').value;
-  if (!state.dreamText.trim()) {
-    alert('Введите текст сна сначала!');
-    return;
-  }
+  if (!state.dreamText.trim()) { alert('Введите текст сна сначала!'); return; }
   if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
-    alert('Весь текст уже добавлен как блок.');
-    return;
+    alert('Весь текст уже добавлен как блок.'); return;
   }
   const id = state.nextBlockId++;
   const start = 0;
@@ -834,41 +559,102 @@ onClick('addWholeBlock', function() {
   const text = state.dreamText;
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
-
   showStep(2);
   renderBlocksChips();
   resetSelectionColor();
 });
-
 onClick('blockInterpretBtn', blockInterpretation);
 onClick('finalInterpretBtn', finalInterpretation);
 
-// Кнопки шагов уже заданы выше (toStep2, toStep3, backTo1, backTo2)
-
-// Кнопка отправки ответа (шаг 3)
+// Отправка ответа
 onClick('sendAnswerBtn', () => {
-  if (state.currentStep !== 3) {
-    alert('Перейдите к шагу "Работа с блоками" для отправки ответов');
-    return;
-  }
-  const val = byId('userInput').value.trim();
+  if (state.currentStep !== 3) { alert('Перейдите к шагу "Работа с блоками"'); return; }
+  const el = byId('userInput');
+  const val = el.value.trim();
   if (!val) return;
   sendAnswer(val);
-  byId('userInput').value = '';
+  el.value = '';
+  // Авто-склейка к низу
+  setTimeout(scrollChatToBottom, 0);
 });
 
-// Enter в textarea ответа
+// Enter в textarea
 const userInputEl = byId('userInput');
 if (userInputEl) {
   userInputEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      const btn = byId('sendAnswerBtn');
-      if (btn) btn.click();
+      const btn = byId('sendAnswerBtn'); if (btn) btn.click();
     }
   });
 }
 
-// Инициализация состояния кнопок
+// Jump-to-bottom
+const chatEl = byId('chat');
+if (chatEl) {
+  chatEl.addEventListener('scroll', () => {
+    const jumpBtn = byId('jumpToBottom');
+    if (!jumpBtn) return;
+    jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+  });
+}
+onClick('jumpToBottom', scrollChatToBottom);
+
+// Скрепка и меню
+onClick('attachBtn', () => {
+  const menu = byId('attachMenu');
+  if (!menu) return;
+  menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
+});
+document.addEventListener('click', (e) => {
+  const menu = byId('attachMenu');
+  const bar = byId('chatInputBar');
+  if (!menu || !bar) return;
+  if (!bar.contains(e.target)) menu.style.display = 'none';
+});
+onClick('menuBlockInterpret', () => { blockInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
+onClick('menuFinalInterpret', () => { finalInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
+
+// Стрелки
+onClick('nextBlockBtn', goToNextBlock);
+onClick('prevBlockBtn', goToPrevBlock);
+
+// Инициализация
 updateButtonsState();
 resetSelectionColor();
+
+/* ====== Выделение блоков (оставлено без изменений) ====== */
+function addBlockFromSelection() {
+  const dv = byId('dreamView');
+  const selected = Array.from(dv.querySelectorAll('.tile.selected'));
+  if (!selected.length) return alert('Выделите плиточки для блока.');
+
+  const start = Math.min(...selected.map(s => parseInt(s.dataset.start, 10)));
+  const end = Math.max(...selected.map(s => parseInt(s.dataset.end, 10)));
+
+  for (const b of state.blocks) {
+    if (!(end <= b.start || start >= b.end)) {
+      return alert('Этот фрагмент пересекается с уже добавленным блоком.');
+    }
+  }
+  const id = state.nextBlockId++;
+  const text = state.dreamText.slice(start, end);
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
+  state.currentBlockId = id;
+
+  selected.forEach(s => {
+    s.classList.remove('selected');
+    s.style.background = '#f0f0f0';
+    s.style.color = '#888';
+  });
+
+  renderBlocksChips();
+  resetSelectionColor();
+}
+
+function selectBlock(id) {
+  state.currentBlockId = id;
+  renderBlocksChips();
+  const b = getCurrentBlock();
+  if (b && !b.done && b.chat.length === 0) startOrContinue();
+}
