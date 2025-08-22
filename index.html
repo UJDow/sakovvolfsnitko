@@ -43,6 +43,11 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Скрыть основной контент до проверки авторизации, чтобы не было “мигания” */
+    .pre-auth .center-wrap { visibility: hidden; }
+    /* Страховка: слой авторизации рендерится поверх сразу */
+    #auth { display: block; }
+
     h1 { font-size: 24px; margin: 0 0 20px; text-align: center; font-weight: 700; color: var(--text-primary); }
     h3 { font-size: 18px; font-weight: 600; margin: 0; color: var(--text-primary); }
 
@@ -131,7 +136,7 @@
     .blocks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
     .chip {
       padding: 8px 16px; border-radius: 20px; background: #e0f2fe; color: #0369a1; cursor: pointer; border: none; font-size: 14px; font-weight: 500;
-      transition: background-color 0.2s ease, transform 0.2s ease;
+      transition: background-color 0.2s ease, transform 0.2s.ease;
     }
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
     .chip.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
@@ -216,7 +221,7 @@
     .jump-bottom-btn {
       position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 18px;
       background: var(--primary); color: #fff; border: none; box-shadow: var(--shadow); cursor: pointer;
-      display: none; opacity: 0.96; font-size: 18px; line-height: 1; transition: background-color 0.2s ease;
+      display: none; opacity: 0.96; font-size: 18px; line-height: 1; transition: background-color 0.2s.ease;
     }
     .jump-bottom-btn:hover { background: var(--primary-hover); }
 
@@ -262,22 +267,21 @@
 .quick button {
   appearance: none;
   -webkit-appearance: none;
-  background: #fff;                     /* белые, как окна диалога */
+  background: #fff;
   color: var(--text-primary);
-  border: 1px solid rgba(0,0,0,0.08);   /* приятный ободок */
-  border-radius: 6px;                   /* можно 4px — см. вариант ниже */
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 6px;
   padding: 8px 12px;
   font-size: 14px;
   line-height: 1.2;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06); /* лёгкая тень */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
   transition: background-color 0.15s ease, color 0.15s ease,
               box-shadow 0.15s ease, border-color 0.15s ease,
               transform 0.06s ease;
   white-space: nowrap;
 }
 
-/* Ховер/фокус — более заметно, но деликатно */
 .quick button:hover {
   border-color: rgba(0,0,0,0.16);
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
@@ -289,7 +293,6 @@
   border-color: var(--primary);
 }
 
-/* Активное нажатие — лёгкий отклик */
 .quick button:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -302,8 +305,8 @@
   font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;          /* чуть больше расстояние */
-  min-height: 32px;  /* под размер кнопки */
+  gap: 8px;
+  min-height: 32px;
 }
 
 .hint-refresh {
@@ -312,25 +315,19 @@
   background: transparent;
   border: none;
   cursor: pointer;
-
-  /* Увеличенная кликабельная область */
   min-width: 32px;
   min-height: 32px;
   padding: 4px 8px;
-
-  /* Выравнивание символа ↻ по центру hit area */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   line-height: 1;
-  font-size: 17px;           /* было 14px → +~20% */
-  color: var(--primary);     /* синий как у кнопок */
+  font-size: 17px;
+  color: var(--primary);
   opacity: 0.95;
   position: relative;
   z-index: 1;
-
-  border-radius: 8px;        /* комфортный тап */
+  border-radius: 8px;
   transition: transform 0.12s ease, opacity 0.12s ease, color 0.12s ease, background-color 0.12s ease;
 }
 
@@ -338,16 +335,15 @@
   opacity: 1;
   color: var(--primary-hover);
   transform: scale(1.06);
-  background: rgba(37, 99, 235, 0.06); /* лёгкий фон на hover для явной кликабельности */
+  background: rgba(37, 99, 235, 0.06);
 }
 
 .hint-refresh:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); /* фокус-обводка для клавиатуры */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
 }
 
 @media (pointer: coarse) {
-  /* На тач-устройствах делаем hit area ещё комфортнее */
   .hint-refresh {
     min-width: 36px;
     min-height: 36px;
@@ -356,9 +352,9 @@
 }
   </style>
 </head>
-<body>
-  <div id="auth" style="display:none;">
-    <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1 !important;z-index:1;"></div>
+<body class="pre-auth">
+  <div id="auth" style="display:block;">
+    <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
     <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
       <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
         <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
@@ -408,8 +404,6 @@
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button id="addBlock" class="btn secondary">Добавить блок</button>
               <button id="addWholeBlock" class="btn secondary">Весь текст</button>
-              <!-- Удалено: большая кнопка обновления -->
-              <!-- <button id="refreshBlocks" class="btn secondary" title="Обновить выбранные блоки">(обновить) ↻</button> -->
             </div>
             <div style="margin-left:auto;"></div>
           </div>
