@@ -98,6 +98,7 @@ document.getElementById('toStep3').onclick = function() {
 
 document.getElementById('backTo1').onclick = function() { showStep(1); };
 document.getElementById('backTo2').onclick = function() { showStep(2); };
+onClick('backTo2Header', function() { showStep(2); }); // новая стрелка назад в заголовке
 
 function getNextBlockColor() {
   return BLOCK_COLORS[(state.nextBlockId - 1) % BLOCK_COLORS.length];
@@ -169,22 +170,25 @@ function renderDreamView() {
 
 function renderBlocksChips() {
   const wrap = byId('blocks');
-  wrap.innerHTML = '';
-  state.blocks.forEach(b => {
-    const el = document.createElement('div');
-    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
-    el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
-    el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
-    el.style.color = '#222';
-    el.addEventListener('click', ()=>selectBlock(b.id));
-    wrap.appendChild(el);
-  });
+  if (wrap) {
+    wrap.innerHTML = '';
+    state.blocks.forEach(b => {
+      const el = document.createElement('div');
+      el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+      el.textContent = `#${b.id} ${b.text.slice(0,20)}${b.text.length>20?'…':''}`;
+      el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
+      el.style.color = '#222';
+      el.addEventListener('click', ()=>selectBlock(b.id));
+      wrap.appendChild(el);
+    });
+  }
   const cb = byId('currentBlock');
   const b = getCurrentBlock();
-  cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
   renderDreamView();
   renderChat();
   updateButtonsState();
+  renderBlockPreviews(); // обновляем превью
 }
 
 function getCurrentBlock() {
@@ -218,6 +222,7 @@ function scrollChatToBottom() {
 function renderChat() {
   const chat = byId('chat');
   const b = getCurrentBlock();
+  if (!chat) return;
   chat.innerHTML = '';
   if (!b) return;
   for (const m of b.chat) {
@@ -250,7 +255,7 @@ function renderChat() {
   updateButtonsState();
 }
 
-/* ========= Навигация по блокам ========= */
+/* ========= Поиск след./пред. незавершённого ========= */
 function nextUndoneBlockId() {
   if (!state.blocks.length) return null;
   const sorted = [...state.blocks].sort((a, b) => a.id - b.id);
@@ -275,6 +280,44 @@ function prevUndoneBlockId() {
   }
   return null;
 }
+
+/* ========= Рендер превью предыдущего/следующего блока ========= */
+function renderBlockPreviews() {
+  const prevEl = byId('prevPreview');
+  const nextEl = byId('nextPreview');
+  const b = getCurrentBlock();
+  if (!prevEl || !nextEl) return;
+
+  // Следующий
+  const nextId = nextUndoneBlockId();
+  if (nextId && b && nextId !== b.id) {
+    const nb = state.blocks.find(x => x.id === nextId);
+    nextEl.classList.remove('disabled');
+    nextEl.style.background = 'rgba(255,255,255,0.7)';
+    nextEl.querySelector('.label').textContent = nb ? `#${nb.id}: ${nb.text.slice(0, 60)}${nb.text.length>60?'…':''}` : 'Следующий блок';
+    nextEl.onclick = () => { selectBlock(nextId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
+  } else {
+    nextEl.classList.add('disabled');
+    nextEl.querySelector('.label').textContent = 'Нет следующего блока';
+    nextEl.onclick = null;
+  }
+
+  // Предыдущий
+  const prevId = prevUndoneBlockId();
+  if (prevId && b && prevId !== b.id) {
+    const pb = state.blocks.find(x => x.id === prevId);
+    prevEl.classList.remove('disabled');
+    prevEl.style.background = 'rgba(255,255,255,0.7)';
+    prevEl.querySelector('.label').textContent = pb ? `#${pb.id}: ${pb.text.slice(0, 60)}${pb.text.length>60?'…':''}` : 'Предыдущий блок';
+    prevEl.onclick = () => { selectBlock(prevId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
+  } else {
+    // если нет предыдущего — серое маленькое поле с «…»
+    prevEl.classList.add('disabled');
+    prevEl.querySelector('.label').textContent = '…';
+    prevEl.onclick = null;
+  }
+}
+
 function goToNextBlock() {
   const nextId = nextUndoneBlockId();
   if (!nextId) { alert('Больше нет незавершённых блоков.'); return; }
@@ -306,12 +349,6 @@ function updateButtonsState() {
   const enoughForFinal = finalsCount >= 2;
   if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
   if (finalBtn) finalBtn.disabled = !enoughForFinal;
-
-  // Навигационные стрелки: активны если есть куда идти
-  const prevBtn = byId('prevBlockBtn');
-  const nextBtn2 = byId('nextBlockBtn');
-  if (prevBtn) prevBtn.disabled = !prevUndoneBlockId();
-  if (nextBtn2) nextBtn2.disabled = !nextUndoneBlockId();
 
   // Синхронизация доступности пунктов меню скрепки
   const miBlock = byId('menuBlockInterpret');
@@ -394,6 +431,7 @@ async function startOrContinue() {
       b.done = true;
       appendBot(next.question, [], true);
       updateButtonsState();
+      renderBlockPreviews();
     } else {
       appendBot(next.question, next.quickReplies);
     }
@@ -402,6 +440,7 @@ async function startOrContinue() {
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
     updateButtonsState();
+    renderBlockPreviews();
   }
 }
 
@@ -430,13 +469,14 @@ async function blockInterpretation() {
       .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
-    if (!content) content = 'Не удалось получить толкование.';
+    if (!content) content = 'Не удалось получить толкование';
 
     b.finalInterpretation = content;
     b.finalAt = Date.now();
     b.done = true;
     appendBot(content, [], true);
     updateButtonsState();
+    renderBlockPreviews();
   } catch (e) {
     console.error(e);
     appendBot("Ошибка при формировании толкования блока: " + (e.message || 'Неизвестная ошибка'), ["Повторить"]);
@@ -468,7 +508,7 @@ async function finalInterpretation() {
       .replace(/^\s*(толкование блока|итоговое толкование сна)\s*:\s*/i, '')
       .replace(/\s+/g, ' ')
       .trim();
-    if (!content) content = 'Не удалось получить итоговое толкование.';
+    if (!content) content = 'Не удалось получить итоговое толкование';
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
     else alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
@@ -615,7 +655,7 @@ document.addEventListener('click', (e) => {
 onClick('menuBlockInterpret', () => { blockInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
 onClick('menuFinalInterpret', () => { finalInterpretation(); const m = byId('attachMenu'); if (m) m.style.display = 'none'; });
 
-// Стрелки
+// Стрелки (оставлены для совместимости, но не используются в UI)
 onClick('nextBlockBtn', goToNextBlock);
 onClick('prevBlockBtn', goToPrevBlock);
 
@@ -623,7 +663,7 @@ onClick('prevBlockBtn', goToPrevBlock);
 updateButtonsState();
 resetSelectionColor();
 
-/* ====== Выделение блоков (оставлено без изменений) ====== */
+/* ====== Выделение блоков ====== */
 function addBlockFromSelection() {
   const dv = byId('dreamView');
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
