@@ -53,7 +53,7 @@
     .center-wrap {
       min-height: 100vh;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      max-width: var(--panel-max-width); margin: 0 auto; padding: 24px 8px; box-sizing: border-box;
+      max-width: var(--panel-max-width); width: 100%; margin: 0 auto; padding: 24px 8px; box-sizing: border-box;
     }
 
     .row { width: 100%; max-width: var(--panel-max-width); margin: 0 auto; }
@@ -63,6 +63,8 @@
       background: var(--card-bg);
       border-radius: 16px; padding: 24px; box-shadow: var(--shadow);
       backdrop-filter: blur(10px); border: 1px solid var(--border); animation: fadeIn 0.3s ease-out;
+      overflow: visible;
+      scrollbar-gutter: stable both-edges; /* убирает скачок ширины при появлении вертикального скролла */
     }
 
     /* Верхняя стрелка Назад */
@@ -91,7 +93,7 @@
       height: var(--surface-height-desktop);
       max-height: var(--surface-height-desktop);
       min-height: var(--surface-height-desktop);
-      overflow: hidden; /* скролл — на внутреннем контенте */
+      overflow: hidden; /* скролл задаём на внутреннем контенте */
     }
 
     /* Мобайл */
@@ -111,6 +113,7 @@
     #dream {
       padding: 16px; font-size: 16px; line-height: 1.5; resize: none; white-space: pre-wrap;
       overflow: auto; /* textarea скроллится внутри */
+      scrollbar-gutter: stable;
     }
 
     /* DreamView (шаг 2) */
@@ -118,6 +121,7 @@
       padding: 16px; font-size: 16px; line-height: 1.6; border: 1px dashed var(--border);
       border-radius: 12px; background: rgba(255,255,255,0.8); white-space: pre-wrap;
       height: 100%; box-sizing: border-box; overflow: auto;
+      scrollbar-gutter: stable;
     }
 
     .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; justify-content: flex-end; }
@@ -141,7 +145,7 @@
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
     .chip.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
 
-    /* Чат (шаг 3) — стабильная высота, перенос слов, скролл только внутри .chat */
+    /* Чат — фикс. высота контейнера, скролл только внутри .chat, ширина стабильна */
     .chat-wrap { position: relative; height: var(--surface-height-desktop); overflow: hidden; }
     @media (max-width: 900px) { .chat-wrap { height: var(--surface-height-mobile); } }
 
@@ -149,22 +153,27 @@
       display: flex; flex-direction: column; gap: 12px;
       height: 100%;
       padding: 16px 20px 16px 16px; /* справа запас под кнопку "В конец" */
-      border-radius: 12px; background: var(--chat-bg); border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--chat-bg);
+      /* рамку даёт .surface — второй не нужен, чтобы визуально ширина не менялась */
       overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable; /* исключаем горизонтальный «рывок» при появлении скролла */
+      contain: paint; /* стабильная компоновка внутри */
     }
 
+    /* Пузырьки — не шире 85% и не шире 560px, корректные переносы */
     .msg {
-      max-width: 85%;
+      max-width: min(85%, 560px);
       padding: 12px 16px;
       border-radius: 18px;
       font-size: 15px;
       line-height: 1.5;
       word-wrap: break-word;
       overflow-wrap: anywhere;
-      white-space: pre-wrap; /* сохраняем абзацы и безопасно переносим */
+      white-space: pre-wrap; /* сохраняем абзацы и переносим строки */
     }
-    .bot { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
-    .user { background: var(--primary); color: white; align-self: flex-end; border: none; }
+    .bot  { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
+    .user { background: var(--primary);  color: #fff;               align-self: flex-end;   border: none; }
 
     .msg.bot.final { background: #e0f2fe; color: #0c4a6e; border: 1px solid #bae6fd; }
     .msg.final-global { background: linear-gradient(135deg, #fef3c7, #fed7aa); border-left: 4px solid #f59e0b; color: #78350f; }
@@ -173,7 +182,7 @@
 
     .footer { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
-    /* Панель ввода чата — без изменений по логике, косметика прежняя */
+    /* Панель ввода чата */
     .chat-input-bar {
       position: relative;
       width: 100%;
@@ -304,7 +313,7 @@
       <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
         <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
         <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s ease;text-align:center;">
-        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease;width:100%;max-width:280px;">Войти</button>
+        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s.ease;width:100%;max-width:280px;">Войти</button>
         <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
       </div>
     </div>
