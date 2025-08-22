@@ -50,27 +50,30 @@ function checkAuth() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  showStep(1);
   if (!checkAuth()) {
-    document.getElementById('authBtn').onclick = () => {
-      const val = document.getElementById('authPass').value;
-      if (val === AUTH_PASS) {
-        setToken(AUTH_TOKEN);
-        hideAuth();
-        location.reload();
-      } else {
-        document.getElementById('authError').style.display = 'block';
-      }
-    };
+    const authBtn = document.getElementById('authBtn');
+    const authPass = document.getElementById('authPass');
+    const authError = document.getElementById('authError');
 
-    // Скрывать ошибку при новом вводе
-    document.getElementById('authPass').addEventListener('input', () => {
-      document.getElementById('authError').style.display = 'none';
-    });
-
-    // Enter для отправки пароля
-    document.getElementById('authPass').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('authBtn').click();
-    });
+    if (authBtn && authPass) {
+      authBtn.onclick = () => {
+        const val = authPass.value;
+        if (val === AUTH_PASS) {
+          setToken(AUTH_TOKEN);
+          hideAuth();
+          location.reload();
+        } else {
+          if (authError) authError.style.display = 'block';
+        }
+      };
+      authPass.addEventListener('input', () => {
+        if (authError) authError.style.display = 'none';
+      });
+      authPass.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && authBtn) authBtn.click();
+      });
+    }
   }
 });
 
@@ -90,6 +93,15 @@ function showStep(step) {
     if (el) el.style.display = (i === step) ? '' : 'none';
   }
   state.currentStep = step;
+}
+
+function onClick(id, handler) {
+  const el = byId(id);
+  if (el) el.onclick = handler;
+}
+function onChange(id, handler) {
+  const el = byId(id);
+  if (el) el.onchange = handler;
 }
 
 // Кнопка "Далее" на шаге 1
@@ -371,25 +383,6 @@ function addBlockFromSelection() {
   renderBlocksChips();
   // PATCH: выделение цветом будущего блока
   resetSelectionColor();
-}
-
-function setupAnswerButton() {
-  const sendAnswerBtn = document.getElementById('sendAnswerBtn');
-  if (sendAnswerBtn) {
-    sendAnswerBtn.onclick = () => {
-      const val = document.getElementById('userInput').value.trim();
-      if (!val) return;
-      
-      // Проверяем, на каком мы шаге
-      if (state.currentStep === 3) {
-        sendAnswer(val);
-      } else {
-        alert('Перейдите к шагу 3 для работы с блоками');
-      }
-      
-      document.getElementById('userInput').value = '';
-    };
-  }
 }
 
 function selectBlock(id) {
@@ -821,91 +814,59 @@ function importJSON(file) {
   reader.readAsText(file);
 }
 
-// Handlers
-
-// Handlers
-byId('addBlock').onclick = addBlockFromSelection;
-
-// ДОБАВЬТЕ эти обработчики для старых кнопок:
-byId('render').onclick = () => {
-  state.dreamText = byId('dream').value;
-  renderDreamView();
-  resetSelectionColor();
-};
-
-byId('auto').onclick = () => {
-  state.dreamText = byId('dream').value;
-  autoSplitSentences();
-  // После авторазбиения переходим к шагу 2
-  showStep(2);
-};
-
-byId('clear').onclick = () => {
-  state.dreamText = '';
-  state.blocks = [];
-  state.currentBlockId = null;
-  state.nextBlockId = 1;
-  byId('dream').value = '';
-  resetSelectionColor();
-  renderBlocksChips();
-  showStep(1); // Возвращаемся к первому шагу
-};
-
-byId('export').onclick = exportJSON;
-byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
-byId('blockInterpretBtn').onclick = blockInterpretation;
-byId('finalInterpretBtn').onclick = finalInterpretation;
-
-// ОБНОВИТЕ обработчик addWholeBlock:
-byId('addWholeBlock').onclick = function() {
-  // Сначала сохраняем текст из textarea
+// Handlers (ТОЛЬКО существующие элементы)
+onClick('addBlock', addBlockFromSelection);
+onClick('addWholeBlock', function() {
   state.dreamText = byId('dream').value;
   if (!state.dreamText.trim()) {
     alert('Введите текст сна сначала!');
     return;
   }
-  
   if (state.blocks.some(b => b.start === 0 && b.end === state.dreamText.length)) {
     alert('Весь текст уже добавлен как блок.');
     return;
   }
-  
   const id = state.nextBlockId++;
   const start = 0;
   const end = state.dreamText.length;
   const text = state.dreamText;
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
   state.currentBlockId = id;
-  
-  // Переходим к шагу 2 после добавления
+
   showStep(2);
   renderBlocksChips();
   resetSelectionColor();
-};
+});
 
-// В самом конце файла, после всех обработчиков:
-updateButtonsState();
+onClick('blockInterpretBtn', blockInterpretation);
+onClick('finalInterpretBtn', finalInterpretation);
 
-// PATCH: выделение цветом будущего блока — при первом запуске
-resetSelectionColor();
+// Кнопки шагов уже заданы выше (toStep2, toStep3, backTo1, backTo2)
 
-// --- Ручной ввод ответа ---
-byId('sendAnswerBtn').onclick = () => {
-  // Проверяем, что мы на шаге 3
+// Кнопка отправки ответа (шаг 3)
+onClick('sendAnswerBtn', () => {
   if (state.currentStep !== 3) {
     alert('Перейдите к шагу "Работа с блоками" для отправки ответов');
     return;
   }
-  
   const val = byId('userInput').value.trim();
   if (!val) return;
   sendAnswer(val);
   byId('userInput').value = '';
-};
-
-byId('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    byId('sendAnswerBtn').click();
-  }
 });
+
+// Enter в textarea ответа
+const userInputEl = byId('userInput');
+if (userInputEl) {
+  userInputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const btn = byId('sendAnswerBtn');
+      if (btn) btn.click();
+    }
+  });
+}
+
+// Инициализация состояния кнопок
+updateButtonsState();
+resetSelectionColor();
