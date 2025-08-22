@@ -74,12 +74,62 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// В state добавь переменную шага:
 const state = {
   dreamText: '',
-  blocks: [], // {id, start, end, text, done:false, chat: [], finalInterpretation: string|null, userAnswersCount: number}
+  blocks: [],
   currentBlockId: null,
-  nextBlockId: 1
+  nextBlockId: 1,
+  currentStep: 1
 };
+
+// Функция для показа нужного шага
+function showStep(step) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    if (el) el.style.display = (i === step) ? '' : 'none';
+  }
+  state.currentStep = step;
+}
+
+// Кнопка "Далее" на шаге 1
+document.getElementById('toStep2').onclick = function() {
+  state.dreamText = document.getElementById('dream').value;
+  if (!state.dreamText.trim()) {
+    alert('Введите текст сна!');
+    return;
+  }
+  // Передаём текст сна на второй шаг
+  showStep(2);
+  // Подставим текст сна в dreamView, если нужно
+  renderDreamView();
+  // PATCH: выделение цветом будущего блока
+  resetSelectionColor();
+};
+
+// Кнопка "Далее" на шаге 2
+document.getElementById('toStep3').onclick = function() {
+  if (!state.blocks.length) {
+    alert('Добавьте хотя бы один блок!');
+    return;
+  }
+  showStep(3);
+};
+
+// Кнопка "Назад" на шаге 2
+document.getElementById('backTo1').onclick = function() {
+  showStep(1);
+};
+
+// Кнопка "Назад" на шаге 3
+document.getElementById('backTo2').onclick = function() {
+  showStep(2);
+};
+
+// Показывать первый шаг при загрузке:
+window.addEventListener('DOMContentLoaded', function() {
+  showStep(1);
+});
 
 function byId(id) { return document.getElementById(id); }
 
@@ -468,10 +518,13 @@ function parseAIResponse(text) {
     cleanText = text.substring(0, quickMatch.index).trim();
   }
 
-  const finalKeywords = ["итог", "заключение", "интерпретация", "вывод"];
-  isFinal = finalKeywords.some(keyword =>
-    cleanText.toLowerCase().includes(keyword.toLowerCase())
-  );
+  const finalKeywords = [
+  "итог", "заключение", "интерпретация", "вывод",
+  "давай закончим", "заканчиваем", "завершай", "финал", "конец"
+];
+isFinal = finalKeywords.some(keyword =>
+  cleanText.toLowerCase().includes(keyword.toLowerCase())
+);
 
   return {
     question: cleanText,
@@ -702,12 +755,16 @@ async function llmNextStep(blockText, history) {
     const aiRaw = data.choices[0].message.content || '';
 
     function stripNoiseLite(s) {
-      if (!s) return s;
-      s = s.replace(/```[\s\S]*?```/g, ' ');
-      s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
-      s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
-      return s.trim();
-    }
+  if (!s) return s;
+  s = s.replace(/```[\s\S]*?```/g, ' ');
+  s = s.replace(/<\u2502?[^>]*\u2502?>/g, ' ');
+  s = s.replace(/<\uFF5C?[^>]*\uFF5C?>/g, ' ');
+  // Удалить китайские символы
+  s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
+  // Удалить отдельные латинские слова (но не числа и не русские)
+  s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
+  return s.trim();
+}
 
     const aiResponse = stripNoiseLite(aiRaw);
     return parseAIResponse(aiResponse);
@@ -755,29 +812,10 @@ function importJSON(file) {
 }
 
 // Handlers
-byId('render').onclick = () => {
-  state.dreamText = byId('dream').value;
-  renderDreamView();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-};
+
 byId('addBlock').onclick = addBlockFromSelection;
-byId('auto').onclick = () => {
-  state.dreamText = byId('dream').value;
-  autoSplitSentences();
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-};
-byId('clear').onclick = () => {
-  state.dreamText = '';
-  state.blocks = [];
-  state.currentBlockId=null;
-  state.nextBlockId=1;
-  byId('dream').value='';
-  // PATCH: выделение цветом будущего блока
-  resetSelectionColor();
-  renderBlocksChips();
-};
+
+
 byId('export').onclick = exportJSON;
 byId('import').onchange = e => e.target.files[0] && importJSON(e.target.files[0]);
 byId('blockInterpretBtn').onclick = blockInterpretation;
