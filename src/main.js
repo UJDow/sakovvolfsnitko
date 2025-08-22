@@ -125,10 +125,18 @@ document.getElementById('toStep3').onclick = function() {
     alert('Добавьте хотя бы один блок!');
     return;
   }
-  // ВАЖНО: выбрать первый блок!
+  // Выбрать первый блок (или весь текст, если он добавлен как блок #1)
   state.currentBlockId = state.blocks[0]?.id || null;
+
   showStep(3);
   renderBlocksChips();
+
+  // Автостарт диалога по текущему (первому) блоку
+  // Начнём только если блок еще не завершен
+  const b = getCurrentBlock();
+  if (b && !b.done) {
+    startOrContinue();
+  }
 };
 
 // Кнопка "Назад" на шаге 2
@@ -383,6 +391,11 @@ function addBlockFromSelection() {
 function selectBlock(id) {
   state.currentBlockId = id;
   renderBlocksChips();
+  const b = getCurrentBlock();
+  if (b && !b.done && b.chat.length === 0) {
+    // Автостарт только если диалог пустой (чтобы не навязываться в середине)
+    startOrContinue();
+  }
 }
 
 function getCurrentBlock() {
@@ -447,47 +460,46 @@ function nextUndoneBlockId() {
   return null;
 }
 
-function goToNextUndoneAndStart() {
+function goToNextBlock() {
   const nextId = nextUndoneBlockId();
   if (!nextId) {
     alert('Все блоки завершены.');
     return;
   }
   selectBlock(nextId);
-  startOrContinue();
+  // Автостарт для нового блока, если он не завершен
+  const b = getCurrentBlock();
+  if (b && !b.done) {
+    startOrContinue();
+  }
 }
 
 function updateButtonsState() {
   const b = getCurrentBlock();
   const blockBtn = byId('blockInterpretBtn');
   const finalBtn = byId('finalInterpretBtn');
-  const startBtn = byId('start');
+  const nextBtn = byId('nextBlockBtn'); // новая кнопка
 
-  // Сбросим классы перед проставлением новых
+  // Сброс классов
   if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
   if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
 
   // Логика для "Толкование блока"
   const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
   if (blockBtn) blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn');
+  if (blockBtn) blockBtn.disabled = !enoughForBlock || !b || b.done; // если блок уже завершён — толковать повторно не даём
 
   // Логика для "Итоговое толкование"
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
   const enoughForFinal = finalsCount >= 2;
   if (finalBtn) finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn');
+  if (finalBtn) finalBtn.disabled = !enoughForFinal;
 
-  // Динамика для кнопки "Начать"
-  if (startBtn) {
-    startBtn.onclick = null; // чтобы не накапливались обработчики
-    if (b && b.done) {
-      startBtn.textContent = 'Перейти к следующему блоку';
-      startBtn.disabled = false;
-      startBtn.onclick = goToNextUndoneAndStart;
-    } else {
-      startBtn.textContent = 'Начать';
-      startBtn.disabled = false;
-      startBtn.onclick = startOrContinue;
-    }
+  // Кнопка "Следующий блок"
+  if (nextBtn) {
+    nextBtn.onclick = goToNextBlock;
+    // Активной становится, когда ТЕКУЩИЙ блок завершён
+    nextBtn.disabled = !(b && b.done);
   }
 }
 
@@ -566,10 +578,6 @@ async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
 
-  const startBtn = byId('start');
-  startBtn.disabled = true;
-  startBtn.textContent = "Генерируем...";
-
   try {
     const history = b.chat.map(m => ({
       role: m.role,
@@ -578,13 +586,12 @@ async function startOrContinue() {
 
     const next = await llmNextStep(b.text, history);
 
-    // Если модель выдала финал естественно — фиксируем это как итог блока
     if (next.isFinal) {
       b.finalInterpretation = next.question.trim();
       b.finalAt = Date.now();
       b.done = true;
       appendBot(next.question, [], true);
-      updateButtonsState(); // сменить "Начать" -> "Перейти к следующему блоку"
+      updateButtonsState();
     } else {
       appendBot(next.question, next.quickReplies);
     }
@@ -592,8 +599,7 @@ async function startOrContinue() {
     console.error(e);
     appendBot("Ошибка при обработке запроса", ["Повторить"]);
   } finally {
-    startBtn.disabled = false;
-    updateButtonsState(); // вернуть корректный текст и обработчик
+    updateButtonsState();
   }
 }
 
@@ -810,6 +816,7 @@ function importJSON(file) {
 }
 
 // Handlers (ТОЛЬКО существующие элементы)
+onClick('nextBlockBtn', goToNextBlock);
 onClick('addBlock', addBlockFromSelection);
 onClick('addWholeBlock', function() {
   state.dreamText = byId('dream').value;
