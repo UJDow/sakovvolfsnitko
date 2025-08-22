@@ -1,4 +1,4 @@
-!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -137,18 +137,16 @@
   transition: background 0.2s;
 }
 
-.tile {
-  margin: 0; /* добавь это! */
+    .tile {
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  transition: background 0.2s;
   padding: 0 2px;
 }
-    
 .tile.selected {
-  border-radius: 4px !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-}
-    .tile, .tile.selected {
-  transition: background 0.1s, color 0.1s, box-shadow 0.1s;
+  background: #b3d1ff !important;
+  color: #222 !important;
 }
 
 .auth-card button:hover {
@@ -178,67 +176,46 @@
   
   <h1>Snova — веб‑MVP (без хранения)</h1>
 
-  <!-- STEP 1: Ввод сна -->
-  <div id="step1">
-    <div class="row">
-      <div class="card">
-        <h3>1) Введите сон</h3>
-        <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
-        <div class="controls" style="margin-top:16px;">
-          <button id="toStep2" class="primary">Далее</button>
-        </div>
+  <div class="row">
+    <div class="card">
+      <h3>1) Введите сон</h3>
+      <textarea id="dream" placeholder="Вставьте текст сна..."></textarea>
+      <div class="controls">
+        <button id="render">Показать для выделения</button>
+        <button id="auto">Автоблоки (через предложения)</button>
+        <button id="clear">Очистить всё</button>
+        <button id="export">Экспорт JSON</button>
+        <input type="file" id="import" accept="application/json" />
       </div>
+      <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
+      <div class="dream-view" id="dreamView"></div>
+      <div class="controls">
+        <button id="addBlock">Добавить блок по выделению</button>
+        <button id="addWholeBlock">Добавить весь текст как блок</button>
+      </div>
+      <div class="blocks" id="blocks"></div>
     </div>
+
+    <div class="card">
+  <h3>2) Диалог по блоку</h3>
+  <div id="currentBlock" class="muted">Блок не выбран</div>
+  <div class="chat" id="chat"></div>
+
+  <!-- Поле ввода -->
+  <div class="footer">
+    <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
   </div>
 
-  <!-- STEP 2: Разметка блоков -->
-  <div id="step2" style="display:none;">
-    <div class="row">
-      <div class="card">
-        <h3>2) Разметка блоков</h3>
-        <div class="controls">
-          <button id="render">Показать для выделения</button>
-          <button id="auto">Автоблоки (через предложения)</button>
-          <button id="clear">Очистить всё</button>
-          <button id="export">Экспорт JSON</button>
-          <input type="file" id="import" accept="application/json" />
-        </div>
-        <p class="muted">Выделите мышкой фрагмент ниже и нажмите “Добавить блок”.</p>
-        <div class="dream-view" id="dreamView"></div>
-        <div class="controls">
-          <button id="addBlock">Добавить блок по выделению</button>
-          <button id="addWholeBlock">Добавить весь текст как блок</button>
-        </div>
-        <div class="blocks" id="blocks"></div>
-        <div class="controls" style="margin-top:16px;">
-          <button id="backTo1">Назад</button>
-          <button id="toStep3" class="primary">Далее</button>
-        </div>
-      </div>
-    </div>
+  <!-- Кнопки -->
+  <div class="footer">
+    <button class="primary" id="sendAnswerBtn">Ответить</button>
+    <button class="primary" id="start">Начать</button>
+    <button id="blockInterpretBtn">Толкование блока</button>
+    <button id="finalInterpretBtn">Итоговое толкование</button>
   </div>
+</div>
 
-  <!-- STEP 3: Диалог по блоку -->
-  <div id="step3" style="display:none;">
-    <div class="row">
-      <div class="card">
-        <h3>3) Диалог по блоку</h3>
-        <div id="currentBlock" class="muted">Блок не выбран</div>
-        <div class="chat" id="chat"></div>
-        <div class="footer">
-          <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
-        </div>
-        <div class="footer">
-          <button class="primary" id="sendAnswerBtn">Ответить</button>
-          <button class="primary" id="start">Начать</button>
-          <button id="blockInterpretBtn">Толкование блока</button>
-          <button id="finalInterpretBtn">Итоговое толкование</button>
-          <button id="backTo2">Назад</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- Подключаем JS-файл -->
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
