@@ -49,34 +49,6 @@ function checkAuth() {
   return false;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  showStep(1);
-  if (!checkAuth()) {
-    const authBtn = document.getElementById('authBtn');
-    const authPass = document.getElementById('authPass');
-    const authError = document.getElementById('authError');
-
-    if (authBtn && authPass) {
-      authBtn.onclick = () => {
-        const val = authPass.value;
-        if (val === AUTH_PASS) {
-          setToken(AUTH_TOKEN);
-          hideAuth();
-          location.reload();
-        } else {
-          if (authError) authError.style.display = 'block';
-        }
-      };
-      authPass.addEventListener('input', () => {
-        if (authError) authError.style.display = 'none';
-      });
-      authPass.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && authBtn) authBtn.click();
-      });
-    }
-  }
-});
-
 // В state добавь переменную шага:
 const state = {
   dreamText: '',
