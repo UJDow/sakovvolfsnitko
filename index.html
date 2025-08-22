@@ -69,60 +69,69 @@
     textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
     #dream { min-height: 120px; max-height: 120px; }
 
-    /* Поле ввода чата — капсула 48px, кнопки 32px внутри, ничего не скачет */
+    /* 1) Панель ввода — фиксированная высота, чтобы ничего не прыгало */
     .chat-input-bar {
       position: relative;
       width: 100%;
+      min-height: 56px;            /* фиксируем высоту панели */
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 0; /* поле само содержит внутренние отступы */
+      padding: 8px 0;              /* верх/низ одинаковые */
+      box-sizing: border-box;
     }
 
+    /* 2) Поле — фикс. высота и стабильная типографика */
     #userInput {
       width: 100%;
-      height: 48px;
-      min-height: 48px;
-      max-height: 48px;
-      padding: 12px 112px 12px 16px;  /* справа место под две кнопки + зазор */
-      border-radius: 24px;
+      height: 40px;                /* меньше высоты панели */
+      min-height: 40px;
+      max-height: 40px;
+      padding: 8px 108px 8px 14px; /* справа место под 2 кнопки + зазор */
+      border-radius: 20px;
       font-size: 15px;
-      line-height: 1.4;
+      line-height: 22px;           /* фиксированная строка */
       resize: none;
-      box-sizing: border-box;
+      overflow: hidden;            /* никаких внутренних полос */
       background: rgba(255,255,255,0.97);
       border: 1px solid var(--border);
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      overflow: hidden; /* не показываем внутренние скроллы */
+      box-sizing: border-box;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-text-size-adjust: 100%;
     }
 
-    /* Кнопки — внутри поля, по вертикали по центру, без тени-бляшки */
+    /* 3) Кнопки — привязка к панели (а не к полю) по нижней кромке */
     .send-icon-btn,
     .attach-icon-btn {
       position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 32px;
-      height: 32px;
-      border-radius: 16px;
+      bottom: 10px;               /* 8px паддинг панели + 2px оптический вынос */
+      top: auto;
+      transform: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: background-color 0.2s ease, box-shadow 0.2s ease;
       box-shadow: none;
+      transition: background-color 0.15s ease;
     }
-    .attach-icon-btn { right: 72px; background: #fff; color: var(--text-primary); border: 1px solid var(--border); font-size: 18px; }
-    .send-icon-btn   { right: 24px; background: var(--primary); color: #fff; border: none; font-size: 16px; }
+
+    .attach-icon-btn { right: 68px; background: #fff; color: var(--text-primary); border: 1px solid var(--border); font-size: 18px; }
+    .send-icon-btn   { right: 20px; background: var(--primary); color: #fff; border: none; font-size: 16px; }
 
     .attach-icon-btn:hover { background: rgba(0,0,0,0.04); }
-    .send-icon-btn:hover { background: var(--primary-hover); }
+    .send-icon-btn:hover   { background: var(--primary-hover); }
 
-    /* Меню скрепки — позиция над кнопкой отправки (внутри поля) */
+    /* 4) Меню скрепки — отталкиваем от нижней кромки панели, не от поля */
     .attach-menu {
       position: absolute;
-      right: 24px;                 /* совпадает с правым отступом кнопки отправки */
-      bottom: 56px;                /* 48px высота поля + 8px зазор */
+      right: 20px;                /* выровнено с send-icon-btn */
+      bottom: 56px;               /* высота панели */
+      transform: none;
       background: var(--menu-bg);
       color: var(--menu-text);
       border-radius: 12px;
@@ -132,6 +141,7 @@
       z-index: 10;
       animation: fadeIn 0.15s ease-out;
       border: 1px solid var(--border);
+      display: none;              /* по умолчанию скрыто */
     }
     .attach-item { width: 100%; text-align: left; background: transparent; border: none; color: var(--menu-text); padding: 10px 14px; font-size: 14px; cursor: pointer; }
     .attach-item:hover { background: rgba(0,0,0,0.04); }
@@ -140,7 +150,7 @@
     .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
     button {
       padding: 12px 20px; border-radius: 12px; background: white; cursor: pointer; font-weight: 500; font-size: 14px;
-      transition: background-color 0.2s ease, box-shadow 0.2s ease; border: 1px solid var(--border);
+      transition: background-color 0.2s ease, box-shadow 0.2s.ease; border: 1px solid var(--border);
       color: var(--text-primary); box-shadow: var(--shadow);
     }
     button:hover { box-shadow: 0 6px 12px -1px rgba(0,0,0,0.15); }
@@ -158,7 +168,7 @@
     .blocks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
     .chip {
       padding: 8px 16px; border-radius: 20px; background: #e0f2fe; color: #0369a1; cursor: pointer; border: none; font-size: 14px; font-weight: 500;
-      transition: background-color 0.2s.ease, transform 0.2s.ease;
+      transition: background-color 0.2s ease, transform 0.2s ease;
     }
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
     .chip.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
@@ -293,7 +303,7 @@
               <textarea id="userInput" placeholder="Напишите ответ..." rows="1"></textarea>
               <button id="attachBtn" class="attach-icon-btn" title="Действия">📎</button>
               <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
-              <div id="attachMenu" class="attach-menu" style="display:none;">
+              <div id="attachMenu" class="attach-menu">
                 <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
                 <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
               </div>
