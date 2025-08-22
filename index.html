@@ -120,18 +120,18 @@
       max-height: 120px;
     }
 
+    /* Старый крупный #userInput больше не используется — стиль оставим нейтральный */
     #userInput {
       width: 100%;
-      min-height: 80px;
-      max-height: 80px;
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 16px;
-      line-height: 1.5;
+      min-height: 44px;
+      max-height: 120px;
+      padding: 12px 44px 12px 12px; /* справа место под кнопку отправки */
+      border-radius: 22px;
+      font-size: 15px;
+      line-height: 1.4;
       resize: none;
       box-sizing: border-box;
-      margin-bottom: 16px;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.9);
       border: 1px solid var(--border);
     }
 
@@ -297,6 +297,7 @@
       display: flex; 
       gap: 12px; 
       flex-wrap: wrap; 
+      align-items: center;
     }
 
     #auth {
@@ -378,15 +379,6 @@
       transform: translateY(-1px);
     }
 
-    #sendAnswerBtn { 
-      padding: 12px 24px; 
-      border-radius: 12px; 
-      background: var(--primary); 
-      color: white; 
-      border: none;
-      font-weight: 600;
-    }
-
     .btn-warn { 
       background-color: var(--error) !important; 
       color: white !important; 
@@ -397,6 +389,47 @@
       background-color: var(--success) !important; 
       color: white !important; 
       border: none !important;
+    }
+
+    /* Телеграм-стиль панели ввода */
+    .chat-input-bar {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chat-input-bar textarea#userInput {
+      flex: 1;
+      padding-right: 44px; /* место под кнопку отправки */
+    }
+    .send-icon-btn {
+      position: absolute;
+      right: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .send-icon-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Кнопка Следующий блок (рядом) */
+    #nextBlockBtn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      white-space: nowrap;
     }
 
     /* Анимации */
@@ -482,12 +515,17 @@
           <h3>Диалог по вашему сновидению</h3>
           <div id="currentBlock" class="muted">Блок не выбран</div>
           <div class="chat" id="chat"></div>
+
+          <!-- Новая панель ввода в стиле мессенджера -->
           <div class="footer">
-            <textarea id="userInput" placeholder="Введите свой ответ..."></textarea>
+            <div id="chatInputBar" class="chat-input-bar" style="width:100%;">
+              <textarea id="userInput" placeholder="Напишите ответ..." rows="1"></textarea>
+              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
+              <button id="nextBlockBtn" class="secondary" disabled>Следующий блок</button>
+            </div>
           </div>
+
           <div class="footer">
-            <button class="primary" id="sendAnswerBtn">✉️ Ответить</button>
-            <button class="primary" id="start">🚀 Начать</button>
             <button id="blockInterpretBtn" class="secondary">📖 Толкование</button>
             <button id="finalInterpretBtn" class="secondary">🎯 Итог</button>
             <button id="backTo2" class="secondary">← Назад</button>
