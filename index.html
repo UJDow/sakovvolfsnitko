@@ -22,6 +22,7 @@
       --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
+    html, body { height: 100%; }
     body { 
       font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; 
       margin: 0; 
@@ -29,6 +30,8 @@
       background: var(--background); 
       color: var(--text-primary);
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     
     h1 { 
@@ -58,6 +61,7 @@
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
+      animation: fadeIn 0.3s ease-out;
     }
     
     .center-wrap {
@@ -120,18 +124,18 @@
       max-height: 120px;
     }
 
-    /* Старый крупный #userInput больше не используется — стиль оставим нейтральный */
+    /* Ввод сообщения — компактный, не «вылазит» на мобильных */
     #userInput {
       width: 100%;
       min-height: 44px;
       max-height: 120px;
-      padding: 12px 44px 12px 12px; /* справа место под кнопку отправки */
+      padding: 12px 96px 12px 12px; /* справа запас для скрепки и отправки */
       border-radius: 22px;
       font-size: 15px;
       line-height: 1.4;
       resize: none;
       box-sizing: border-box;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       border: 1px solid var(--border);
     }
 
@@ -252,6 +256,8 @@
       border-radius: 18px; 
       font-size: 15px;
       line-height: 1.4;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
     }
 
     .msg.bot.final { 
@@ -284,6 +290,7 @@
       display: flex; 
       gap: 8px; 
       margin-top: 12px; 
+      flex-wrap: wrap;
     }
 
     .muted { 
@@ -299,6 +306,110 @@
       flex-wrap: wrap; 
       align-items: center;
     }
+
+    /* Jump to bottom */
+    .chat-wrap { position: relative; }
+    .jump-bottom-btn {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      display: none;
+      opacity: 0.96;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .jump-bottom-btn:hover { background: var(--primary-hover); }
+
+    /* Панель ввода как мессенджер */
+    .chat-input-bar {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .send-icon-btn, .attach-icon-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .send-icon-btn {
+      right: 8px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-size: 16px;
+    }
+    .send-icon-btn:hover { background: var(--primary-hover); }
+    .attach-icon-btn {
+      right: 52px;
+      background: #fff;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      font-size: 18px;
+    }
+    .attach-icon-btn:hover { background: rgba(0,0,0,0.04); }
+
+    /* Меню скрепки */
+    .attach-menu {
+      position: absolute;
+      right: 0;
+      bottom: 46px;
+      background: #101828;
+      color: #fff;
+      border-radius: 12px;
+      padding: 8px 0;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+      min-width: 220px;
+      z-index: 10;
+      animation: fadeIn 0.15s ease-out;
+    }
+    .attach-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .attach-item:hover { background: rgba(255,255,255,0.08); }
+    .attach-item:disabled { opacity: 0.5; cursor: default; }
+
+    /* Стрелки навигации */
+    .nav-arrows { align-items: center; }
+    .round-nav {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .round-nav:disabled { opacity: 0.5; cursor: default; }
 
     #auth {
       position: fixed;
@@ -391,75 +502,16 @@
       border: none !important;
     }
 
-    /* Телеграм-стиль панели ввода */
-    .chat-input-bar {
-      position: relative;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .chat-input-bar textarea#userInput {
-      flex: 1;
-      padding-right: 44px; /* место под кнопку отправки */
-    }
-    .send-icon-btn {
-      position: absolute;
-      right: 8px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .send-icon-btn:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-    }
-
-    /* Кнопка Следующий блок (рядом) */
-    #nextBlockBtn {
-      height: 36px;
-      padding: 0 12px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-
-    /* Анимации */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .card {
-      animation: fadeIn 0.3s ease-out;
-    }
-
     /* Кастомный скроллбар */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.1);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--primary);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--primary-hover);
-    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
   </style>
 </head>
 <body class="auth-mode">
@@ -514,22 +566,35 @@
         <div class="card">
           <h3>Диалог по вашему сновидению</h3>
           <div id="currentBlock" class="muted">Блок не выбран</div>
-          <div class="chat" id="chat"></div>
 
-          <!-- Новая панель ввода в стиле мессенджера -->
+          <div class="chat chat-wrap" id="chat">
+            <button id="jumpToBottom" class="jump-bottom-btn" title="В конец">▼</button>
+          </div>
+
           <div class="footer">
             <div id="chatInputBar" class="chat-input-bar" style="width:100%;">
               <textarea id="userInput" placeholder="Напишите ответ..." rows="1"></textarea>
+              <button id="attachBtn" class="attach-icon-btn" title="Действия">📎</button>
               <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
-              <button id="nextBlockBtn" class="secondary" disabled>Следующий блок</button>
+              <div id="attachMenu" class="attach-menu" style="display:none;">
+                <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
+                <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
+              </div>
             </div>
           </div>
 
-          <div class="footer">
-            <button id="blockInterpretBtn" class="secondary">📖 Толкование</button>
-            <button id="finalInterpretBtn" class="secondary">🎯 Итог</button>
-            <button id="backTo2" class="secondary">← Назад</button>
+          <div class="footer nav-arrows">
+            <button id="prevBlockBtn" class="round-nav" title="Предыдущий блок">◀</button>
+            <button id="nextBlockBtn" class="round-nav" title="Следующий блок">▶</button>
+            <button id="backTo2" class="secondary" style="margin-left:auto;">← Назад</button>
           </div>
+
+          <!-- Скрытые оригинальные кнопки для совместимости -->
+          <div style="display:none;">
+            <button id="blockInterpretBtn">Толкование</button>
+            <button id="finalInterpretBtn">Итог</button>
+          </div>
+
         </div>
       </div>
     </div>
