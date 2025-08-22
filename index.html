@@ -1,310 +1,467 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Saviora</title>
+
   <style>
-    :root{
-      --bg:#f7f7f9;
-      --panel:#ffffff;
-      --text:#222;
-      --muted:#666;
-      --muted-2:#888;
-      --border:#e5e6eb;
-      --accent:#3b82f6;
-      --chip-shadow:0 1px 4px rgba(0,0,0,0.07);
-      --tile-bg:#f0f0f0;
-      --chat-bot:#f6f7fb;
-      --chat-user:#e8f3ff;
-      --chat-input:#ffffff;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;
-      background:var(--bg);
-      color:var(--text);
-    }
-    button{font:inherit}
-
-    /* Layout */
-    .app{
-      max-width:960px;
-      margin:0 auto;
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:12px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.03);
-      padding:16px;
-    }
-    .hidden{display:none !important}
-
-    /* Header */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-    }
-    .brand{
-      font-weight:700;
-      letter-spacing:0.2px;
-    }
-    .top-actions{display:flex; gap:8px;}
-
-    /* Steps visibility */
-    .step{display:none}
-    .step.active{display:block}
-
-    /* Step 1 */
-    .step1 .textarea{
-      width:100%;
-      min-height:180px;
-      resize:vertical;
-      padding:12px 14px;
-      border:1px solid var(--border);
-      border-radius:10px;
-      outline:none;
-      background:#fff;
-      color:var(--text);
-      font-size:15px;
-      line-height:1.5;
-    }
-    .actions{
-      margin-top:12px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      appearance:none;-webkit-appearance:none;
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--text);
-      padding:10px 14px;
-      border-radius:10px;
-      cursor:pointer;
-      transition:background .15s, border-color .15s, color .15s, transform .02s;
-    }
-    .btn:hover{background:#fafafa}
-    .btn:active{transform:translateY(1px)}
-    .btn-primary{
-      background:var(--accent);
-      border-color:var(--accent);
-      color:#fff;
-    }
-    .btn-primary:hover{filter:brightness(0.98)}
-    .btn-ok{border-color:#22c55e}
-    .btn-warn{border-color:#f59e0b}
-
-    /* Step 2 */
-    .back-top{
-      appearance:none;-webkit-appearance:none;
-      border:none;background:transparent;
-      font-size:22px;line-height:1;
-      cursor:pointer;color:#444;
-      padding:6px 8px;border-radius:6px;
-      margin:-4px -4px 6px -4px;
-    }
-    .back-top:hover{background:rgba(0,0,0,0.06); color:#111;}
-
-    .step2-instruction{
-      display:flex;align-items:center;gap:8px;
-      color:#555;font-size:14px;margin:8px 0 10px;
-    }
-    .inline-refresh{
-      border:none;background:transparent;
-      color:#666;font-size:16px;line-height:1;
-      cursor:pointer;padding:2px 4px;border-radius:4px;
-    }
-    .inline-refresh:hover{background:rgba(0,0,0,0.06); color:#222;}
-
-    .dream-view{
-      padding:12px;
-      border:1px dashed var(--border);
-      border-radius:10px;
-      background:#fff;
-      min-height:110px;
-      line-height:1.85;
-      font-size:15px;
-      word-wrap:break-word;
-      user-select:none;
-    }
-    .dream-actions{
-      margin-top:10px;
-      display:flex; gap:8px; flex-wrap:wrap;
-    }
-    .tile{
-      background:var(--tile-bg);
-      color:var(--muted-2);
-      border-radius:4px;
-      padding:0 4px; margin:0 1px;
-      cursor:pointer;
-      transition:background .15s, color .15s;
-    }
-    .tile.selected{outline:2px solid rgba(59,130,246,.35)}
-    .chips{
-      display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
-    }
-    .chip{
-      background:#fff; border:1px solid var(--border);
-      border-radius:16px; padding:6px 10px;
-      box-shadow:var(--chip-shadow);
-      font-size:13px; color:#222; cursor:pointer;
-    }
-    .chip.active{outline:2px solid rgba(59,130,246,.35)}
-
-    /* Step 3 - chat */
-    .work{
-      display:grid; grid-template-columns:1fr; gap:12px;
-    }
-    .block-previews{
-      display:flex; justify-content:space-between; gap:12px;
-    }
-    .preview{
-      flex:1; min-height:42px; padding:8px 10px;
-      border:1px solid var(--border);
-      border-radius:10px; background:#fafafa;
-      display:flex; align-items:center; gap:8px;
-      cursor:pointer; transition:background .15s, border-color .15s;
-    }
-    .preview.disabled{opacity:.6; cursor:default}
-    .preview .label{
-      font-size:13px; color:#333; white-space:nowrap;
-      overflow:hidden; text-overflow:ellipsis;
+    /* ====== БАЗОВЫЙ СТИЛЬ ПРИЛОЖЕНИЯ (как у тебя) ====== */
+    :root {
+      --bg: #ffffff;
+      --text: #111;
+      --muted: #6b7280;
+      --primary: #111;
+      --primary-contrast: #fff;
+      --border: #e5e7eb;
+      --tile-bg: #f0f0f0;
+      --tile-text: #888;
+      --chip-shadow: 0 1px 4px rgba(0,0,0,.06);
+      --radius: 12px;
+      --spacing: 12px;
     }
 
-    .current-block{
-      font-size:14px; color:#444;
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, "Helvetica Neue", Helvetica, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    .chat{
-      border:1px solid var(--border);
-      background:#fff; border-radius:12px;
-      height:360px; overflow:auto; padding:12px;
-    }
-    .msg{
-      max-width:85%;
-      padding:10px 12px;border-radius:10px;margin:6px 0;
-      box-shadow:var(--chip-shadow); font-size:14px;
-      white-space:pre-wrap;
-    }
-    .msg.bot{background:var(--chat-bot)}
-    .msg.user{background:var(--chat-user); margin-left:auto}
-    .msg.final{border:1px solid #22c55e3d}
-    .msg.final-global{border:1px solid #3b82f63d}
-
-    .quick{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0}
-    .quick button{
-      font-size:13px; padding:6px 10px; border-radius:8px;
-      border:1px solid var(--border); background:#fff; cursor:pointer;
-    }
-    .thinking{
-      display:none; align-items:center; gap:8px; color:#666; font-size:13px;
-    }
-    .thinking .dot{width:6px; height:6px; border-radius:50%; background:#bbb; animation:blink 1s infinite alternate}
-    .thinking .dot:nth-child(2){animation-delay:.2s}
-    .thinking .dot:nth-child(3){animation-delay:.4s}
-    @keyframes blink{from{opacity:.3}to{opacity:1}}
-
-    /* Input bar: фиксированная высота, без подпрыгивания */
-    .input-wrap{
-      border:1px solid var(--border); background:var(--chat-input);
-      border-radius:12px; padding:8px; display:flex; align-items:center; gap:8px;
-    }
-    .attach{appearance:none;border:none;background:transparent;cursor:pointer;color:#555; font-size:18px; padding:6px; border-radius:8px;}
-    .attach:hover{background:rgba(0,0,0,.06)}
-    .input{
-      flex:1; min-height:38px; max-height:38px;
-      border:none; outline:none; resize:none; padding:8px 10px;
-      font-size:14px; line-height:22px; overflow:auto;
-    }
-    .send{
-      appearance:none;border:none; background:var(--accent); color:#fff;
-      padding:10px 12px; border-radius:10px; cursor:pointer;
-      font-weight:600;
-    }
-    .send:hover{filter:brightness(.98)}
-
-    .attach-menu{
-      display:none; position:absolute; background:#fff; border:1px solid var(--border);
-      border-radius:10px; padding:8px; margin-top:6px; z-index:10;
-      box-shadow:0 8px 24px rgba(0,0,0,.08);
-    }
-    .attach-menu button{
-      display:block; width:100%; text-align:left; padding:8px 10px;
-      background:#fff; border:1px solid var(--border); border-radius:8px; margin:4px 0; cursor:pointer;
+    #app {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px;
+      box-sizing: border-box;
     }
 
-    .row{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap}
-    .mt8{margin-top:8px}
-    .muted{color:var(--muted); font-size:13px}
-    .sep{height:1px; background:var(--border); margin:10px 0}
+    /* Header / Topbar */
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 8px 16px 8px;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 0.2px;
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
-    /* Jump to bottom */
-    .jump{
-      display:none; position:sticky; bottom:10px; margin-left:auto;
-      background:#fff; border:1px solid var(--border); padding:6px 10px; border-radius:20px; cursor:pointer;
-      font-size:13px;
+    /* Steps */
+    .step {
+      margin-top: 4px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Кнопки и элементы управления */
+    .btn {
+      appearance: none;
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      color: #111;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .btn:hover { background: #f3f4f6; }
+    .btn:disabled { opacity: .6; cursor: default; }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-contrast);
+      border-color: #111;
+    }
+    .btn-primary:hover { filter: brightness(0.95); }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .back-top {
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+    }
+    .back-top:hover {
+      background: #f6f6f7;
+    }
+
+    /* Шаг 1 */
+    .textarea {
+      width: 100%;
+      min-height: 160px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: vertical;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    /* Шаг 2 */
+    #dreamView {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      background: #fff;
+      line-height: 1.8;
+      user-select: none; /* тайлы кликабельные */
+      white-space: pre-wrap;
+    }
+    #dreamView .tile {
+      display: inline;
+      background: var(--tile-bg);
+      color: var(--tile-text);
+      border-radius: 4px;
+      padding: 0 2px;
+      margin: 0 0px;
+      transition: background .1s ease, color .1s ease, box-shadow .1s ease;
+    }
+    #dreamView .tile.selected {
+      /* цвет подмешивается из JS через rgba(); тут плавность */
+      box-shadow: var(--chip-shadow);
+    }
+
+    .dream-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #eee;
+      color: #333;
+      box-shadow: var(--chip-shadow);
+      cursor: pointer;
+    }
+    .chip.active {
+      filter: saturate(1.05) contrast(1.02);
+      outline: 1px solid rgba(0,0,0,.06);
+    }
+
+    /* Шаг 3 */
+    .block-previews {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 6px 0 8px 0;
+    }
+    .preview {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fafafa;
+      font-size: 13px;
+      color: #333;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      transition: background .12s ease, border-color .12s ease, opacity .12s ease;
+      cursor: pointer;
+    }
+    .preview .label {
+      opacity: .9;
+    }
+    .preview.disabled {
+      opacity: .5;
+      cursor: default;
+    }
+
+    .current-block {
+      font-size: 14px;
+      padding: 8px 0 2px 0;
+      color: #222;
+    }
+
+    .chat {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 10px;
+      min-height: 220px;
+      max-height: 420px;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+
+    .msg {
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin: 6px 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .msg.user {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+    .msg.bot {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .msg.final {
+      border: 1px dashed #9ca3af;
+      background: #f8fafc;
+    }
+    .msg.final-global {
+      border: 1px solid #111;
+      background: #fff;
+    }
+
+    .quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 4px 0 2px 0;
+    }
+    .quick button {
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .jump {
+      display: none;
+      margin: 6px 0 8px auto;
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* Индикатор "думаю" внизу чата */
+    .thinking {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      color: #6b7280;
+      font-size: 13px;
+      padding: 6px 0 6px 2px;
+    }
+    .thinking .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #9ca3af;
+      animation: blink 1.4s infinite ease-in-out both;
+    }
+    .thinking .dot:nth-child(1) { animation-delay: 0s; }
+    .thinking .dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* Инпут-бар чата — фиксируем сдвиги, выравнивание и выпадающее меню */
+    .input-wrap {
+      display: grid;
+      grid-template-columns: 34px 1fr 92px;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .attach, .send {
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+    }
+    .attach { width: 40px; display: inline-flex; align-items: center; justify-content: center; }
+    .send { padding: 0 12px; }
+
+    .input {
+      width: 100%;
+      min-height: 40px;
+      max-height: 120px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      line-height: 1.4;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .attach-menu {
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      display: none;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 6px 22px rgba(0,0,0,.08);
+      padding: 8px;
+      z-index: 10;
+    }
+    .attach-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      margin: 4px 0;
+    }
+
+    /* ====== МИНИ-БЛОК: только для строки-инструкции и inline-иконки (можно удалить без вреда) ====== */
+    #step2Instruction {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 8px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    #step2Instruction #refreshInline {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      font-size: 1em;
+      border-radius: 6px;
+    }
+    #step2Instruction #refreshInline:hover {
+      background: #f3f4f6;
     }
 
     /* Auth modal */
-    .auth{
-      position:fixed; inset:0; background:rgba(0,0,0,.4);
-      display:none; align-items:center; justify-content:center; z-index:1000;
+    .auth {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
     }
-    .auth-card{
-      background:#fff; border-radius:12px; padding:16px; width:320px;
-      border:1px solid var(--border);
+    .auth-card {
+      width: 320px;
+      max-width: calc(100% - 32px);
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 40px rgba(0,0,0,.12);
+      padding: 16px;
     }
-    .auth-card h3{margin:0 0 8px}
-    .auth-card input{
-      width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; outline:none;
+    .auth-card h3 {
+      margin: 4px 0 12px 0;
+      font-size: 18px;
     }
-    .auth-error{display:none; color:#e11d48; font-size:13px; margin-top:6px}
+    .auth-card input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .auth-error {
+      color: #b91c1c;
+      font-size: 13px;
+      display: none;
+      margin-top: 6px;
+    }
+
+    /* Helpers */
+    .mt8 { margin-top: 8px; }
+
+    @media (max-width: 520px) {
+      #app { padding: 12px; }
+      .input-wrap {
+        grid-template-columns: 34px 1fr 86px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
+  <div id="app">
+    <!-- Header -->
+    <header id="topbar">
       <div class="brand">Saviora</div>
       <div class="top-actions">
         <button id="exportBtn" class="btn">Экспорт</button>
-        <label class="btn">
-          Импорт
+        <label class="btn">Импорт
           <input id="importFile" type="file" accept="application/json" style="display:none">
         </label>
       </div>
-    </div>
+    </header>
 
-    <!-- Step 1 -->
-    <div id="step1" class="panel step step1 active">
-      <h3>Шаг 1 — Введите текст сна</h3>
+    <!-- Шаг 1 -->
+    <section id="step1" class="step">
+      <h3 class="muted" style="margin: 0 0 8px 0;">Шаг 1 — Введите текст сна</h3>
       <textarea id="dream" class="textarea" placeholder="Опишите ваш сон..."></textarea>
       <div class="actions">
         <button id="toStep2" class="btn btn-primary">Далее</button>
       </div>
-    </div>
+    </section>
 
-    <!-- Step 2 -->
-    <div id="step2" class="panel step step2">
+    <!-- Шаг 2 -->
+    <section id="step2" class="step" style="display:none;">
       <div class="row">
         <button id="backTo1Top" class="back-top" aria-label="Назад">‹</button>
         <div class="muted">Шаг 2 — Смысловые блоки</div>
       </div>
 
-      <div class="step2-instruction">
+      <!-- Инструкция + inline refresh -->
+      <div id="step2Instruction">
         <span>Выделите фрагмент и нажмите «Добавить блок» или «Весь текст»</span>
-        <button id="refreshInline" class="inline-refresh" title="Обновить выделения" aria-label="Обновить">↻</button>
+        <button id="refreshInline" title="Обновить выделения" aria-label="Обновить">↻</button>
       </div>
 
       <div id="dreamView" class="dream-view"></div>
@@ -316,27 +473,23 @@
       </div>
 
       <div id="blocks" class="chips"></div>
-    </div>
+    </section>
 
-    <!-- Step 3 -->
-    <div id="step3" class="panel step step3">
+    <!-- Шаг 3 -->
+    <section id="step3" class="step" style="display:none;">
       <div class="row">
         <button id="backTo2Top" class="back-top" aria-label="Назад">‹</button>
         <div class="muted">Шаг 3 — Работа с блоками</div>
       </div>
 
       <div class="block-previews">
-        <div id="prevPreview" class="preview">
-          <span class="label">…</span>
-        </div>
-        <div id="nextPreview" class="preview">
-          <span class="label">…</span>
-        </div>
+        <div id="prevPreview" class="preview"><span class="label">…</span></div>
+        <div id="nextPreview" class="preview"><span class="label">…</span></div>
       </div>
 
       <div class="mt8 current-block" id="currentBlock">Блок не выбран</div>
 
-      <div class="chat" id="chat"></div>
+      <div id="chat" class="chat"></div>
       <button id="jumpToBottom" class="jump">К последнему сообщению</button>
 
       <div class="thinking" id="thinking">
@@ -359,10 +512,10 @@
         <button id="blockInterpretBtn" class="btn">Толкование блока</button>
         <button id="finalInterpretBtn" class="btn">Общее толкование</button>
       </div>
-    </div>
+    </section>
   </div>
 
-  <!-- Auth modal -->
+  <!-- Модал авторизации -->
   <div id="auth" class="auth">
     <div class="auth-card">
       <h3>Доступ</h3>
@@ -374,6 +527,7 @@
     </div>
   </div>
 
+  <!-- Скрипт -->
   <script src="src/main.js" type="module"></script>
 </body>
 </html>
