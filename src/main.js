@@ -356,17 +356,38 @@ async function apiRequest(url, data) {
 
 /* ====== LLM ====== */
 function parseAIResponse(text) {
-  const quickMatch = text.match(/\[([^\]]+)\]\s*$/);
+  let cleanText = (text || '').trim();
   let quickReplies = [];
-  let cleanText = text;
-  let isFinal = false;
 
-  if (quickMatch) {
-    quickReplies = quickMatch[1].split(/\s*\|\s*/).slice(0, 3);
-    cleanText = text.substring(0, quickMatch.index).trim();
+  // Находим все группы в квадратных скобках
+  const bracketGroups = [...cleanText.matchAll(/\[([^\]]+)\]/g)];
+
+  for (const m of bracketGroups) {
+    const inside = (m[1] || '').trim();
+
+    let parts = [];
+    if (/\|/.test(inside)) {
+      // Основной формат: [A | B | C]
+      parts = inside.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
+    } else if (/ и /i.test(inside)) {
+      // Доп. формат для пары: [X и Y]
+      const two = inside.split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
+      if (two.length === 2) parts = two; // принимаем только ровно две части
+    }
+
+    if (parts.length >= 2) {
+      quickReplies.push(...parts);
+      // Удаляем скобочную группу из текста, чтобы не дублировать
+      cleanText = cleanText.replace(m[0], ' ').replace(/\s{2,}/g, ' ').trim();
+    }
   }
+
+  // Ограничиваем число быстрых ответов, чтобы не перегружать UI
+  quickReplies = quickReplies.slice(0, 4);
+
   const finalKeywords = ['итог','заключение','интерпретация','вывод','давай закончим','заканчиваем','завершай','финал','конец'];
-  isFinal = finalKeywords.some(k => cleanText.toLowerCase().includes(k));
+  const isFinal = finalKeywords.some(k => cleanText.toLowerCase().includes(k));
+
   return { question: cleanText, quickReplies, isFinal };
 }
 
