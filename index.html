@@ -19,13 +19,12 @@
       --warning: #f59e0b;
       --error: #ef4444;
       --border: rgba(0, 0, 0, 0.1);
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
 
-      --chat-bg: rgba(255,255,255,0.8);
+      --chat-bg: rgba(255,255,255,0.82);
       --menu-bg: rgba(255,255,255,0.98);
       --menu-text: #111827;
 
-      /* Единые размеры основных полей */
       --panel-max-width: 640px;
       --surface-height-desktop: 320px;
       --surface-height-mobile: 48vh;
@@ -64,10 +63,9 @@
       border-radius: 16px; padding: 24px; box-shadow: var(--shadow);
       backdrop-filter: blur(10px); border: 1px solid var(--border); animation: fadeIn 0.3s ease-out;
       overflow: visible;
-      scrollbar-gutter: stable both-edges; /* убирает скачок ширины при появлении вертикального скролла */
+      scrollbar-gutter: stable both-edges; /* без рывков при появлении вертикального скролла */
     }
 
-    /* Верхняя стрелка Назад */
     .card .top-back {
       position: absolute; top: 12px; left: 12px;
       width: 32px; height: 32px; border-radius: 10px;
@@ -79,11 +77,11 @@
 
     .header-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding-left: 36px; /* место под стрелку */
+      padding-left: 36px;
       margin-bottom: 16px;
     }
 
-    /* Единые поверхности — одинаковая высота оболочки */
+    /* Единые поверхности */
     .surface {
       background: rgba(255,255,255,0.8);
       border: 1px solid var(--border);
@@ -93,10 +91,9 @@
       height: var(--surface-height-desktop);
       max-height: var(--surface-height-desktop);
       min-height: var(--surface-height-desktop);
-      overflow: hidden; /* скролл задаём на внутреннем контенте */
+      overflow: hidden;
     }
 
-    /* Мобайл */
     @media (max-width: 900px) {
       .center-wrap { justify-content: center; padding: 16px 4vw 24px; }
       .card { padding: 20px; border-radius: 12px; }
@@ -109,14 +106,14 @@
 
     textarea, input, button { font: inherit; border: none; outline: none; }
 
-    /* Поле сна (шаг 1) */
+    /* Шаг 1 */
     #dream {
       padding: 16px; font-size: 16px; line-height: 1.5; resize: none; white-space: pre-wrap;
-      overflow: auto; /* textarea скроллится внутри */
+      overflow: auto;
       scrollbar-gutter: stable;
     }
 
-    /* DreamView (шаг 2) */
+    /* Шаг 2 */
     .dream-view {
       padding: 16px; font-size: 16px; line-height: 1.6; border: 1px dashed var(--border);
       border-radius: 12px; background: rgba(255,255,255,0.8); white-space: pre-wrap;
@@ -145,23 +142,22 @@
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
     .chip.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
 
-    /* Чат — фикс. высота контейнера, скролл только внутри .chat, ширина стабильна */
+    /* Шаг 3 — чат */
     .chat-wrap { position: relative; height: var(--surface-height-desktop); overflow: hidden; }
     @media (max-width: 900px) { .chat-wrap { height: var(--surface-height-mobile); } }
 
     .chat {
       display: flex; flex-direction: column; gap: 12px;
       height: 100%;
-      padding: 16px 20px 16px 16px; /* справа запас под кнопку "В конец" */
+      padding: 20px 24px 28px 20px; /* больше воздуха + снизу запас под быстрые ответы */
       border-radius: 12px;
       background: var(--chat-bg);
-      /* рамку даёт .surface — второй не нужен, чтобы визуально ширина не менялась */
       overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-      scrollbar-gutter: stable; /* исключаем горизонтальный «рывок» при появлении скролла */
-      contain: paint; /* стабильная компоновка внутри */
+      scrollbar-gutter: stable;
+      contain: paint;
     }
 
-    /* Пузырьки — не шире 85% и не шире 560px, корректные переносы */
+    /* Пузырьки */
     .msg {
       max-width: min(85%, 560px);
       padding: 12px 16px;
@@ -170,13 +166,29 @@
       line-height: 1.5;
       word-wrap: break-word;
       overflow-wrap: anywhere;
-      white-space: pre-wrap; /* сохраняем абзацы и переносим строки */
+      white-space: pre-wrap;
     }
     .bot  { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
     .user { background: var(--primary);  color: #fff;               align-self: flex-end;   border: none; }
 
     .msg.bot.final { background: #e0f2fe; color: #0c4a6e; border: 1px solid #bae6fd; }
     .msg.final-global { background: linear-gradient(135deg, #fef3c7, #fed7aa); border-left: 4px solid #f59e0b; color: #78350f; }
+
+    /* «Думаю…» как системное сообщение внутри чата */
+    .msg.thinking {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+      padding: 4px 8px;
+      font-size: 13px;
+      align-self: flex-start;
+    }
+
+    /* Стабилизатор внизу: резервирует немного места, чтобы появление/скрытие "Думаю…" не дёргало прокрутку */
+    .chat-stabilizer {
+      height: 6px;
+      flex: 0 0 auto;
+    }
 
     .muted { color: var(--text-secondary); font-size: 14px; margin: 8px 0; }
 
@@ -219,7 +231,6 @@
       position: absolute;
       bottom: 10px;
       top: auto;
-      transform: none;
       width: 36px; height: 36px; border-radius: 18px;
       display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; box-shadow: none; transition: background-color 0.15s ease;
@@ -230,7 +241,7 @@
     .send-icon-btn:hover   { background: var(--primary-hover); }
 
     .attach-menu {
-      position: absolute; right: 20px; bottom: 56px; transform: none;
+      position: absolute; right: 20px; bottom: 56px;
       background: var(--menu-bg); color: var(--menu-text);
       border-radius: 12px; padding: 8px 0; box-shadow: 0 12px 32px rgba(0,0,0,0.15);
       min-width: 220px; z-index: 10; animation: fadeIn 0.15s ease-out; border: 1px solid var(--border);
@@ -267,23 +278,19 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    .thinking { margin-top: 8px; font-size: 12px; color: var(--text-secondary); display: none; align-items: center; gap: 8px; justify-content: flex-start; }
-    .dots::after { content: '...'; animation: dots 1.2s steps(4, end) infinite; }
-    @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } 100% { content: ''; } }
+    .thinking { display: none; } /* больше не используем внешний thinking */
 
-    /* Скроллбар под общий стиль */
+    /* Стили скроллбара */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
     ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
 
     /* Быстрые ответы */
-    .quick {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;
-    }
+    .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
     .quick button {
       appearance: none; -webkit-appearance: none; background: #fff; color: var(--text-primary);
-      border: 1px solid rgba(0,0,0,0.08); border-radius: 6px; padding: 8px 12px;
+      border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 10px 14px;
       font-size: 14px; line-height: 1.2; cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.06);
       transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, transform 0.06s ease;
@@ -313,7 +320,7 @@
       <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
         <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
         <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s ease;text-align:center;">
-        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s.ease;width:100%;max-width:280px;">Войти</button>
+        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease;width:100%;max-width:280px;">Войти</button>
         <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
       </div>
     </div>
@@ -383,12 +390,11 @@
 
           <div class="chat-wrap surface" style="padding:0;">
             <div class="chat" id="chat">
+              <!-- Системное сообщение «Думаю…» — скрыто по умолчанию, логика может переключать display -->
+              <div id="thinking" class="msg thinking" style="display:none;">Думаю<span class="dots">...</span></div>
+              <div class="chat-stabilizer"></div>
               <button id="jumpToBottom" class="jump-bottom-btn" title="В конец">▼</button>
             </div>
-          </div>
-
-          <div id="thinking" class="thinking">
-            <span>Думаю</span><span class="dots"></span>
           </div>
 
           <div class="footer">
