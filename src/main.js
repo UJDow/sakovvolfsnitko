@@ -45,7 +45,6 @@ function checkAuth() {
 
 /* ====== Вспомогательные ====== */
 function showStep(step) {
-  // Сохраняем подход, который у тебя уже используется: управляем display напрямую
   for (let i = 1; i <= 3; i++) {
     const el = byId('step' + i);
     if (!el) continue;
@@ -639,7 +638,7 @@ function initHandlers() {
     if (b && !b.done) startOrContinue();
   });
 
-  // Назад — только привязки (стили не меняем)
+  // Назад
   onClick('backTo1Top', () => showStep(1)); // Шаг 2 -> Шаг 1
   onClick('backTo1', () => showStep(1));
   onClick('backTo2Header', () => showStep(2));
@@ -667,6 +666,13 @@ function initHandlers() {
 
   // Обновить (inline-иконка ↻ в инструкции шага 2)
   onClick('refreshInline', refreshSelectedBlocks);
+
+  // Доп. лог, чтобы увидеть в консоли, что элемент найден и клик доходит
+  const refreshBtn = byId('refreshInline');
+  console.log('[init] refreshInline exists?', !!refreshBtn);
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => console.log('[click] refreshInline clicked'));
+  }
 
   onClick('blockInterpretBtn', blockInterpretation);
   onClick('finalInterpretBtn', finalInterpretation);
@@ -741,7 +747,10 @@ function initHandlers() {
 
 function hideAttachMenu() {
   const menu = byId('attachMenu');
-  if (menu) menu.style.display = 'none';
+  if (menu) styleDisplay(menu, 'none');
+}
+function styleDisplay(el, value) {
+  if (el) el.style.display = value;
 }
 
 /* ====== Boot ====== */
