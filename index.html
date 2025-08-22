@@ -250,6 +250,51 @@
     ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
 
+    /* Контейнер быстрых ответов под сообщением бота */
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* Кнопки быстрых ответов */
+.quick button {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fff;                     /* белые, как окна диалога */
+  color: var(--text-primary);
+  border: 1px solid rgba(0,0,0,0.08);   /* приятный ободок */
+  border-radius: 6px;                   /* можно 4px — см. вариант ниже */
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06); /* лёгкая тень */
+  transition: background-color 0.15s ease, color 0.15s ease,
+              box-shadow 0.15s ease, border-color 0.15s ease,
+              transform 0.06s ease;
+  white-space: nowrap;
+}
+
+/* Ховер/фокус — более заметно, но деликатно */
+.quick button:hover {
+  border-color: rgba(0,0,0,0.16);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+.quick button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.18), 0 4px 10px rgba(0,0,0,0.08);
+  border-color: var(--primary);
+}
+
+/* Активное нажатие — лёгкий отклик */
+.quick button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+    
     /* Подсказка над dreamView и inline-иконка обновления */
 .hint-inline {
   margin: 6px 0 10px;
