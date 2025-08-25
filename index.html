@@ -456,6 +456,54 @@
       border: none; 
       font-size: 16px; 
     }
+
+    /* Луна вместо скрепки */
+#moonBtn {
+  position: absolute;
+  right: 60px;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: box-shadow 0.2s, background 0.2s;
+  z-index: 2;
+  outline: none;
+  padding: 0;
+  overflow: visible;
+}
+
+#moonBtn:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary);
+}
+
+.moon-svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+  transition: filter 0.4s, transform 0.4s;
+}
+
+.moon-flash {
+  filter: drop-shadow(0 0 16px #fff9c4) brightness(1.7);
+  transform: scale(1.18);
+  transition: filter 0.4s, transform 0.4s;
+  animation: moonFlashAnim 2s cubic-bezier(.4,2,.4,1) 1;
+}
+
+@keyframes moonFlashAnim {
+  0%   { filter: drop-shadow(0 0 0px #fff9c4) brightness(1); transform: scale(1);}
+  20%  { filter: drop-shadow(0 0 24px #fffde4) brightness(2.2); transform: scale(1.22);}
+  60%  { filter: drop-shadow(0 0 16px #fff9c4) brightness(1.7); transform: scale(1.18);}
+  100% { filter: drop-shadow(0 0 0px #fff9c4) brightness(1); transform: scale(1);}
+}
     
     .attach-icon-btn:hover { background: rgba(0,0,0,0.04); }
     .send-icon-btn:hover { background: var(--primary-hover); }
@@ -906,7 +954,7 @@
           <div class="footer">
             <div id="chatInputBar" class="chat-input-bar" style="width:100%;">
               <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
-              <button id="attachBtn" class="attach-icon-btn" title="Действия">📎</button>
+              <div id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны">
               <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
               <div id="attachMenu" class="attach-menu">
                 <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
