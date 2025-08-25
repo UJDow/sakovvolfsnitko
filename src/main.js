@@ -21,8 +21,6 @@ let currentSelectionColor = null;
 function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
 function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
-
-/* Мягкий вызов в следующий кадр */
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
 /* ====== Auth ====== */
@@ -31,7 +29,7 @@ function showAuth() {
   if (!authDiv) return;
   authDiv.style.display = 'block';
   document.body.style.overflow = 'hidden';
-  document.body.classList.add('pre-auth'); // скрыть задний контент
+  document.body.classList.add('pre-auth');
   setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
 }
 function hideAuth() {
@@ -39,7 +37,7 @@ function hideAuth() {
   if (!authDiv) return;
   authDiv.style.display = 'none';
   document.body.style.overflow = '';
-  document.body.classList.remove('pre-auth'); // показать контент
+  document.body.classList.remove('pre-auth');
 }
 function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
 function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
@@ -216,7 +214,7 @@ function setThinking(on) {
   renderThinking();
 }
 function renderThinking() {
-  const t = byId('thinking'); // внутри .chat
+  const t = byId('thinking');
   if (!t) return;
   const wasAtBottom = isChatAtBottom();
   t.style.display = state.isThinking ? 'inline-block' : 'none';
@@ -736,14 +734,20 @@ function initHandlers() {
     userInputEl.addEventListener('click', hideAttachMenu);
   }
 
-  // Jump-to-bottom
+  // Jump-to-bottom и scrollend (2025)
   const chatEl = byId('chat');
   if (chatEl) {
-    chatEl.addEventListener('scroll', () => {
-      const jumpBtn = byId('jumpToBottom');
-      if (!jumpBtn) return;
-      jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
-    });
+    if ('onscrollend' in window) {
+      chatEl.addEventListener('scrollend', () => {
+        const jumpBtn = byId('jumpToBottom');
+        if (jumpBtn) jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+      });
+    } else {
+      chatEl.addEventListener('scroll', () => {
+        const jumpBtn = byId('jumpToBottom');
+        if (jumpBtn) jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+      });
+    }
     chatEl.addEventListener('click', hideAttachMenu);
   }
   onClick('jumpToBottom', scrollChatToBottom);
@@ -793,7 +797,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Если токен валиден — сразу показываем контент без вспышек
   if (getToken() === AUTH_TOKEN) {
-    hideAuth(); // снимет pre-auth и вернёт скролл
+    hideAuth();
   } else {
     showAuth();
     const authBtn = byId('authBtn');
@@ -817,4 +821,20 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   initHandlers();
+
+  // ====== 2025: Поддержка виртуальной клавиатуры ======
+  if ('virtualKeyboard' in navigator) {
+    try {
+      navigator.virtualKeyboard.overlaysContent = true;
+      navigator.virtualKeyboard.addEventListener('geometrychange', (event) => {
+        const keyboardHeight = event.target.boundingRect.height;
+        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+      });
+    } catch (e) {}
+  }
+
+  // ====== 2025: Поддержка foldables и новых форм-факторов ======
+  if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
+    document.documentElement.classList.add('foldable-vertical');
+  }
 });
