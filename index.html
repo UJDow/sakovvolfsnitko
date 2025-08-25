@@ -183,14 +183,14 @@
     padding: 16px !important;
     border-left: none !important;
     border-right: none !important;
-    border-radius: 16px !important; /* Сохраняем закругление */
+    border-radius: 16px !important;
   }
   
   .auth-card > div {
     min-width: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    border-radius: 16px !important; /* Сохраняем закругление */
+    border-radius: 16px !important;
     padding: 24px 16px !important;
   }
   
@@ -199,6 +199,16 @@
     right: max(12px, env(safe-area-inset-right, 12px));
     padding: 6px 12px;
     font-size: 14px;
+  }
+
+  /* На мобильных сохраняем минимальную высоту для удобства касания */
+  .chip {
+    min-height: 32px;
+    padding: 5px 10px;
+  }
+  
+  .block-preview {
+    min-height: 36px;
   }
 }
 
@@ -278,10 +288,10 @@
 
     .card .top-back {
       position: absolute; 
-      top: 12px; 
-      left: 12px;
-      width: 44px; 
-      height: 44px; 
+      top: 8px; 
+      left: 8px;
+      width: 28px; 
+      height: 28px; 
       border-radius: 12px;
       border: 1px solid var(--border); 
       background: var(--card-bg); 
@@ -291,7 +301,7 @@
       justify-content: center;
       cursor: pointer; 
       box-shadow: var(--shadow); 
-      font-size: 18px; 
+      font-size: 14px; 
       line-height: 1;
       transition: transform 0.1s ease;
     }
@@ -329,19 +339,19 @@
     .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn.secondary:hover { background: rgba(0,0,0,0.05); }
 
-    .blocks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
     
     .chip {
-      padding: 10px 16px; 
-      border-radius: 20px; 
+      padding: 6px 12px; 
+      border-radius: 14px; 
       background: #e0f2fe; 
       color: #0369a1; 
       cursor: pointer; 
       border: none; 
-      font-size: 13.5px; 
+      font-size: 12px; 
       font-weight: 500;
       transition: all 0.2s ease;
-      min-height: 40px;
+      min-height: 28px;
     }
     
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
@@ -350,7 +360,7 @@
     .chat-wrap { 
       position: relative; 
       flex: 1 1 auto; 
-      min-height: 220px; 
+      min-height: 2600px; 
       overflow: hidden; 
       padding-bottom: env(keyboard-inset-height, 0px); 
     }
@@ -526,18 +536,18 @@
     .nav-previews { 
       display: grid; 
       grid-template-columns: 1fr 1fr; 
-      gap: 10px; 
-      margin-top: 14px; 
+      gap: 8px; 
+      margin-top: 12px; 
       align-items: stretch; 
     }
     
     .block-preview {
-      min-height: 52px; 
-      border-radius: 12px; 
+      min-height: 40px; 
+      border-radius: 10px; 
       border: 1px dashed var(--border); 
       box-shadow: var(--shadow);
-      padding: 10px; 
-      font-size: 11.5px; 
+      padding: 6px 10px; 
+      font-size: 11px; 
       color: var(--text-primary); 
       opacity: 0.95; 
       cursor: pointer;
