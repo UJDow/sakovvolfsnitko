@@ -29,12 +29,7 @@ function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); }
 function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
   const moonBtn = byId('moonBtn');
   if (!moonBtn) return;
-
-  // Фаза луны: от 0 (новолуние) до 1 (полная)
   const phase = Math.min(userAnswersCount / max, 1);
-
-  // SVG: луна с маской (серп -> полная)
-  // Фаза реализована через clipPath
   const svg = `
     <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 32 32" fill="none">
       <defs>
@@ -819,13 +814,13 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
   }
   onClick('jumpToBottom', scrollChatToBottom);
 
-  // Скрепка и меню
+  // Скрепка и меню (ЛУНА)
   onClick('moonBtn', (e) => {
-  e.stopPropagation();
-  const menu = byId('attachMenu');
-  if (!menu) return;
-  menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
-});
+    e.stopPropagation();
+    const menu = byId('attachMenu');
+    if (!menu) return;
+    menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
+  });
 
   // Клик вне меню — закрыть
   document.addEventListener('click', (e) => {
@@ -852,7 +847,7 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
 function hideAttachMenu() {
   const menu = byId('attachMenu');
-  if (menu) styleDisplay(menu, 'none');
+  if (menu) menu.style.display = 'none';
 }
 function styleDisplay(el, value) {
   if (el) el.style.display = value;
