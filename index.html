@@ -80,6 +80,9 @@
   font-size: inherit;
 }
 
+/* Скрываем окно авторизации по умолчанию */
+#auth { display: none; }
+
     .theme-toggle {
       position: fixed;
       top: max(18px, env(safe-area-inset-top, 18px));
@@ -809,7 +812,7 @@
 </head>
 <body class="pre-auth">
   <button class="theme-toggle" id="themeToggle" title="Сменить тему">🌙 Тема</button>
-  <div id="auth" style="display:block;">
+  <div id="auth" style="display:none;">
   <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
   <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
     <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
