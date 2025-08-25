@@ -940,9 +940,7 @@
           <div class="dialog-header">
             <h3>Диалог по вашему сновидению</h3>
           </div>
-
           <div id="currentBlock" class="muted" style="margin: 0 0 8px;">Блок не выбран</div>
-
           <div class="chat-wrap surface">
             <div class="chat" id="chat">
               <div id="thinking" class="msg thinking" style="display:none;">Думаю<span class="dots">...</span></div>
@@ -950,21 +948,17 @@
             </div>
             <button id="jumpToBottom" class="jump-bottom-btn" title="В конец">▼</button>
           </div>
-
           <div class="footer">
-            <div id="chatInputBar" class="chat-input-bar" style="width:100%;">
-  <textarea id="userInput" ...></textarea>
-  <div id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны">
-    <!-- SVG луны будет вставляться JS-ом -->
-    <div id="attachMenu" class="attach-menu">
-      <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
-      <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
+            <div id="chatInputBar" class="chat-input-bar" style="width:100%; position:relative;">
+              <textarea id="userInput" placeholder="Введите ваш ответ..." rows="1"></textarea>
+              <button id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны"></button>
+              <div id="attachMenu" class="attach-menu">
+                <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
+                <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
               </div>
-  </div>
-  <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
-</div>
+              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
+            </div>
           </div>
-
           <div class="nav-previews">
             <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
             <div id="nextPreview" class="block-preview"><span class="label"></span></div>
