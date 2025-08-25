@@ -506,15 +506,26 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
 
-  // Лунная вспышка и сообщение
+  // Обновляем луну после каждого ответа
+  renderMoonProgress(b.userAnswersCount, 10, false);
+
+  // Если достигли 10 ответов и еще не показывали уведомление
   if (b.userAnswersCount === 10 && !b._moonFlashShown) {
     b._moonFlashShown = true;
     renderMoonProgress(b.userAnswersCount, 10, true);
     setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    appendBot('Я уже готов дать интерпретацию, но мы можем продолжить дальше.');
+    appendBot(
+      'Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока, нажав на кнопку "Толкование" (луна). Хотите продолжить диалог или перейти к толкованию?',
+      [],
+      false
+    );
+    renderChat();
+    renderBlocksChips();
+    return; // Не продолжаем диалог автоматически!
   }
 
   renderChat();
+  renderBlocksChips();
 }
 function appendBot(text, quickReplies = [], isFinal = false) {
   const b = getCurrentBlock(); if (!b) return;
@@ -535,6 +546,12 @@ function sendAnswer(ans) {
 async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
+
+  // Если пользователь уже дал 10 ответов — не продолжаем диалог автоматически
+  if (b.userAnswersCount >= 10) {
+    // Только уведомление, никакого запроса к LLM
+    return;
+  }
 
   setThinking(true);
   try {
