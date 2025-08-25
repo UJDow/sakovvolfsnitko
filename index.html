@@ -26,7 +26,7 @@
       --menu-bg: rgba(255,255,255,0.98);
       --menu-text: #111827;
 
-      --panel-max-width: 640px;
+      --panel-max-width: 768px; /* изменено с 640px на 768px */
       --surface-height-desktop: 320px;
       --surface-height-mobile: 48vh;
       --surface-height: var(--surface-height-desktop);
@@ -126,9 +126,7 @@
     }
 
     .step1-card {
-      transform: scale(1.2);
-      transform-origin: center;
-      margin: 40px auto;
+      margin: 40px auto; /* убрано transform: scale(1.2) */
     }
 
     .auth-bg {
@@ -608,8 +606,16 @@
     .hint-refresh:hover { opacity: 1; color: var(--primary-hover); transform: scale(1.06); background: rgba(37, 99, 235, 0.06); }
     .hint-refresh:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
     
+    /* Увеличение только textarea на первом шаге */
+    .step1-card #dream {
+      min-height: 384px !important;
+      height: 384px !important;
+      max-height: 384px !important;
+      font-size: 16px !important;
+    }
+    
     /* Медиа-запросы для мобильных устройств */
-    @media (max-width: 700px) {
+    @media (max-width: 800px) {
       html, body {
         width: 100vw !important;
         max-width: 100vw !important;
@@ -635,9 +641,10 @@
         border-radius: 16px !important;
       }
       
-      .step1-card {
-        transform: scale(1.1);
-        margin: 20px auto;
+      .step1-card #dream {
+        min-height: 320px !important;
+        height: 320px !important;
+        max-height: 320px !important;
       }
       
       .auth-card > div {
