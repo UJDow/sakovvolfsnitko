@@ -370,6 +370,61 @@
       color: #f1f5f9 !important;
       border: 1px solid #334155 !important;
     }
+
+    /* --- Фиксы консистентности и выравнивания для мобильных и всех шагов --- */
+
+/* 1. Унификация размеров surface, textarea, dream-view */
+.surface, textarea#dream, .dream-view {
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0;
+  display: block;
+  min-height: 160px;
+  font-size: 16px;
+}
+
+/* 2. Safe-area и паддинги для карточек */
+.center-wrap, .card {
+  padding-left: env(safe-area-inset-left, 8px);
+  padding-right: env(safe-area-inset-right, 8px);
+}
+
+/* 3. Одинаковая высота для surface/chat на всех шагах */
+@media (max-width: 900px) {
+  .surface, .chat-wrap, .dream-view {
+    min-height: 180px;
+    max-height: 48vh;
+    height: 48vh;
+  }
+}
+
+/* 4. Выровнять кнопки в input-баре */
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 56px;
+  padding: 8px 0;
+}
+#userInput {
+  padding: 12px 52px 12px 16px;
+}
+.send-icon-btn, .attach-icon-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  bottom: auto;
+}
+.send-icon-btn { right: 12px; }
+.attach-icon-btn { right: 60px; }
+
+/* 5. Больше паддинга снизу для чата */
+.chat {
+  padding-bottom: 48px;
+}
+    
   </style>
 </head>
 <body class="pre-auth">
