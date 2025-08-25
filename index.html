@@ -26,12 +26,16 @@
       --menu-bg: rgba(255,255,255,0.98);
       --menu-text: #111827;
 
-      --panel-max-width: 768px; /* изменено с 640px на 768px */
-      --surface-height-desktop: 320px;
-      --surface-height-mobile: 48vh;
+      --panel-max-width: 768px;
+      --surface-height-desktop: 380px;
+      --surface-height-mobile: 50vh;
       --surface-height: var(--surface-height-desktop);
       --keyboard-height: 0px;
       --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      
+      --progress-active: #2563eb;
+      --progress-inactive: #e2e8f0;
+      --progress-completed: #10b981;
     }
 
     [data-theme="dark"] {
@@ -43,6 +47,7 @@
       --chat-bg: rgba(30, 41, 59, 0.82);
       --menu-bg: rgba(30, 41, 59, 0.98);
       --menu-text: #f1f5f9;
+      --progress-inactive: #334155;
     }
 
     html, body {
@@ -120,56 +125,72 @@
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
-      animation: fadeIn 0.3s ease-out;
+      animation: fadeIn 0.4s ease-out;
       overflow: visible;
       scrollbar-gutter: stable both-edges;
     }
 
-    .step1-card {
-      margin: 40px auto; /* убрано transform: scale(1.2) */
+    /* Progress indicator */
+    .progress-indicator {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 auto 24px auto;
+      max-width: 300px;
+      width: 100%;
+      position: relative;
     }
 
-    .auth-bg {
-      position: fixed;
-      inset: 0;
-      background: var(--background);
-      opacity: 1;
-      z-index: 1;
-    }
-    
-    .auth-card {
-      position: fixed;
-      inset: 0;
+    .progress-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      background: var(--progress-inactive);
+      color: var(--text-secondary);
+      position: relative;
       z-index: 2;
-      padding: 0;
-    }
-    
-    .auth-card > div {
-      background: var(--card-bg);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-      border-radius: 24px;
-      padding: 40px 32px;
-      min-width: 320px;
-      max-width: 90vw;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      box-sizing: border-box;
+      transition: all 0.3s ease;
     }
 
-    @media (max-height: 700px) {
-      :root {
-        --surface-height: var(--surface-height-mobile);
-      }
+    .progress-step.active {
+      background: var(--progress-active);
+      color: white;
+      transform: scale(1.1);
     }
 
-    /* Общие стили для всех рабочих областей */
+    .progress-step.completed {
+      background: var(--progress-completed);
+      color: white;
+    }
+
+    .progress-line {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      right: 16px;
+      height: 3px;
+      background: var(--progress-inactive);
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+
+    .progress-line-filled {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      height: 3px;
+      background: var(--progress-active);
+      transform: translateY(-50%);
+      transition: width 0.4s ease;
+      z-index: 1;
+    }
+
+    /* Единый размер для всех рабочих областей */
     .surface, .dream-view, textarea#dream, .chat-wrap.surface {
       box-sizing: border-box;
       width: 100%;
@@ -181,6 +202,7 @@
       height: var(--surface-height);
       max-height: var(--surface-height);
       font-size: 16px;
+      transition: height 0.3s ease, min-height 0.3s ease;
     }
 
     .surface {
@@ -205,11 +227,14 @@
       overflow: auto;
       overflow-x: hidden;
       scrollbar-gutter: stable;
+      font-family: inherit;
     }
 
     .chat-wrap.surface {
       padding: 0 !important;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .header-row, .dialog-header {
@@ -330,6 +355,7 @@
       word-wrap: break-word;
       overflow-wrap: anywhere;
       white-space: pre-wrap;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
     
     .bot  { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
@@ -345,7 +371,12 @@
       align-self: flex-start;
     }
     
-    .chat-stabilizer { height: 6px; flex: 0 0 auto; }
+    .chat-stabilizer { 
+      height: 6px; 
+      flex: 0 0 auto; 
+      transition: height 0.3s ease;
+    }
+    
     .muted { color: var(--text-secondary); font-size: 14px; margin: 8px 0; }
     .footer { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     
@@ -529,9 +560,28 @@
     
     .back-link:hover { background: rgba(0,0,0,0.04); }
     
+    /* Анимации */
     @keyframes fadeIn { 
       from { opacity: 0; transform: translateY(8px); } 
       to { opacity: 1; transform: translateY(0); } 
+    }
+    
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .slide-in-right {
+      animation: slideInRight 0.4s ease-out;
+    }
+    
+    .slide-in-left {
+      animation: slideInLeft 0.4s ease-out;
     }
     
     .thinking { display: none; }
@@ -606,14 +656,6 @@
     .hint-refresh:hover { opacity: 1; color: var(--primary-hover); transform: scale(1.06); background: rgba(37, 99, 235, 0.06); }
     .hint-refresh:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
     
-    /* Увеличение только textarea на первом шаге */
-    .step1-card #dream {
-      min-height: 384px !important;
-      height: 384px !important;
-      max-height: 384px !important;
-      font-size: 16px !important;
-    }
-    
     /* Медиа-запросы для мобильных устройств */
     @media (max-width: 800px) {
       html, body {
@@ -641,12 +683,6 @@
         border-radius: 16px !important;
       }
       
-      .step1-card #dream {
-        min-height: 320px !important;
-        height: 320px !important;
-        max-height: 320px !important;
-      }
-      
       .auth-card > div {
         min-width: 0 !important;
         width: 100% !important;
@@ -670,6 +706,35 @@
       .block-preview {
         min-height: 36px;
       }
+      
+      /* Оптимизация для очень маленьких экранов */
+      @media (max-height: 600px) {
+        :root {
+          --surface-height-mobile: 45vh;
+        }
+        
+        .progress-indicator {
+          margin-bottom: 16px;
+        }
+        
+        .header-row, .dialog-header {
+          margin-bottom: 10px;
+        }
+      }
+      
+      @media (max-height: 500px) {
+        :root {
+          --surface-height-mobile: 40vh;
+        }
+        
+        .card {
+          padding: 12px !important;
+        }
+        
+        .surface, .dream-view, textarea#dream, .chat-wrap.surface {
+          padding: 12px;
+        }
+      }
     }
 
     /* Адаптация для очень маленьких экранов */
@@ -683,6 +748,18 @@
       
       .card {
         padding: 12px !important;
+      }
+      
+      .progress-step {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+      
+      .progress-line,
+      .progress-line-filled {
+        left: 14px;
+        right: 14px;
       }
     }
 
@@ -742,10 +819,19 @@
   <div class="center-wrap">
     <h1>Saviora</h1>
 
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div class="progress-step active" id="step1-indicator">1</div>
+      <div class="progress-step" id="step2-indicator">2</div>
+      <div class="progress-step" id="step3-indicator">3</div>
+      <div class="progress-line"></div>
+      <div class="progress-line-filled" id="progress-line-filled"></div>
+    </div>
+
     <!-- Шаг 1 -->
     <div id="step1">
       <div class="row">
-        <div class="card step1-card">
+        <div class="card">
           <div class="header-row">
             <h3>Мы всегда рады новым историям</h3>
           </div>
