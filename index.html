@@ -125,6 +125,12 @@
       scrollbar-gutter: stable both-edges;
     }
 
+    .step1-card {
+      transform: scale(1.2);
+      transform-origin: center;
+      margin: 40px auto;
+    }
+
     .auth-bg {
       position: fixed;
       inset: 0;
@@ -542,7 +548,7 @@
       flex-wrap: wrap; 
       gap: 8px; 
       margin-top: 6px; 
-    }
+      }
     
     .quick button {
       appearance: none; 
@@ -627,6 +633,11 @@
         border-left: none !important;
         border-right: none !important;
         border-radius: 16px !important;
+      }
+      
+      .step1-card {
+        transform: scale(1.1);
+        margin: 20px auto;
       }
       
       .auth-card > div {
@@ -727,7 +738,7 @@
     <!-- Шаг 1 -->
     <div id="step1">
       <div class="row">
-        <div class="card">
+        <div class="card step1-card">
           <div class="header-row">
             <h3>Мы всегда рады новым историям</h3>
           </div>
