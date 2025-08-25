@@ -492,16 +492,15 @@
 }
 
 .moon-flash {
-  filter: drop-shadow(0 0 16px #fff9c4) brightness(1.7);
-  transform: scale(1.18);
-  transition: filter 0.4s, transform 0.4s;
-  animation: moonFlashAnim 2s cubic-bezier(.4,2,.4,1) 1;
+  filter: drop-shadow(0 0 32px #fff9c4) brightness(2.2);
+  transform: scale(1.22);
+  animation: moonFlashAnim 1.6s cubic-bezier(.4,2,.4,1) 1;
 }
 
 @keyframes moonFlashAnim {
   0%   { filter: drop-shadow(0 0 0px #fff9c4) brightness(1); transform: scale(1);}
-  20%  { filter: drop-shadow(0 0 24px #fffde4) brightness(2.2); transform: scale(1.22);}
-  60%  { filter: drop-shadow(0 0 16px #fff9c4) brightness(1.7); transform: scale(1.18);}
+  20%  { filter: drop-shadow(0 0 48px #fffde4) brightness(2.7); transform: scale(1.28);}
+  60%  { filter: drop-shadow(0 0 32px #fff9c4) brightness(2.2); transform: scale(1.22);}
   100% { filter: drop-shadow(0 0 0px #fff9c4) brightness(1); transform: scale(1);}
 }
     
