@@ -5,6 +5,8 @@ const AUTH_TOKEN = 'volfisthebest-secret';
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
 
+const MOON_MAX_ANSWERS = 10;
+
 /* ====== Глобальное состояние ====== */
 const state = {
   dreamText: '',
@@ -22,6 +24,31 @@ function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
 function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
+
+/* ====== Луна-прогресс ====== */
+function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
+  const moonBtn = byId('moonBtn');
+  if (!moonBtn) return;
+
+  // Фаза луны: от 0 (новолуние) до 1 (полная)
+  const phase = Math.min(userAnswersCount / max, 1);
+
+  // SVG: луна с маской (серп -> полная)
+  // Фаза реализована через clipPath
+  const svg = `
+    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 32 32" fill="none">
+      <defs>
+        <clipPath id="moonPhase">
+          <rect x="0" y="0" width="${32 * phase}" height="32" />
+        </clipPath>
+      </defs>
+      <circle cx="16" cy="16" r="14" fill="#fffde4" stroke="#facc15" stroke-width="2"/>
+      <circle cx="16" cy="16" r="14" fill="#fbbf24" clip-path="url(#moonPhase)" />
+      <circle cx="16" cy="16" r="14" fill="rgba(0,0,0,0.08)" />
+    </svg>
+  `;
+  moonBtn.innerHTML = svg;
+}
 
 /* ====== Auth ====== */
 function showAuth() {
@@ -173,6 +200,9 @@ function renderBlocksChips() {
   const cb = byId('currentBlock');
   const b = getCurrentBlock();
   if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
+  
+  // Рендерим луну
+renderMoonProgress(b ? b.userAnswersCount : 0, 10);
 
   renderDreamView();
   renderChat();
@@ -360,11 +390,12 @@ function importJSON(file) {
       const data = JSON.parse(reader.result);
       state.dreamText = data.dreamText || '';
       state.blocks = (data.blocks || []).map(b => ({
-        ...b,
-        chat: Array.isArray(b.chat) ? b.chat : [],
-        finalInterpretation: b.finalInterpretation ?? null,
-        userAnswersCount: b.userAnswersCount ?? 0
-      }));
+  ...b,
+  chat: Array.isArray(b.chat) ? b.chat : [],
+  finalInterpretation: b.finalInterpretation ?? null,
+  userAnswersCount: b.userAnswersCount ?? 0,
+  _moonFlashShown: false // всегда сбрасываем при импорте
+}));
       const maxId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0);
       state.nextBlockId = Math.max(1, maxId + 1);
       state.currentBlockId = state.blocks[0]?.id || null;
@@ -479,6 +510,15 @@ function appendUser(text) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
+
+  // Лунная вспышка и сообщение
+  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    appendBot('Я уже готов дать интерпретацию, но мы можем продолжить дальше.');
+  }
+
   renderChat();
 }
 function appendBot(text, quickReplies = [], isFinal = false) {
@@ -631,7 +671,7 @@ function addBlockFromSelection() {
 
   const id = state.nextBlockId++;
   const text = state.dreamText.slice(start, end);
-  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0, _moonFlashShown: false });
   state.currentBlockId = id;
 
   selected.forEach(s => {
@@ -651,6 +691,8 @@ function refreshSelectedBlocks() {
   state.blocks = [];
   state.currentBlockId = null;
   state.nextBlockId = 1;
+  // (Если вдруг где-то останутся старые блоки — сбрасываем флаги)
+state.blocks.forEach(b => b._moonFlashShown = false);
 
   const dv = byId('dreamView');
   if (dv) {
@@ -717,7 +759,7 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
     const start = 0;
     const end = state.dreamText.length;
     const text = state.dreamText;
-    state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0 });
+    state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0, _moonFlashShown: false });
     state.currentBlockId = id;
     showStep(2);
     renderBlocksChips();
@@ -778,12 +820,12 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
   onClick('jumpToBottom', scrollChatToBottom);
 
   // Скрепка и меню
-  onClick('attachBtn', (e) => {
-    e.stopPropagation();
-    const menu = byId('attachMenu');
-    if (!menu) return;
-    menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
-  });
+  onClick('moonBtn', (e) => {
+  e.stopPropagation();
+  const menu = byId('attachMenu');
+  if (!menu) return;
+  menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
+});
 
   // Клик вне меню — закрыть
   document.addEventListener('click', (e) => {
