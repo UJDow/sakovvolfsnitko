@@ -805,16 +805,16 @@
 <body class="pre-auth">
   <button class="theme-toggle" id="themeToggle" title="Сменить тему">🌙 Тема</button>
   <div id="auth" style="display:block;">
-    <div class="auth-bg"></div>
-    <div class="auth-card">
-      <div>
-        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
-        <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s ease;text-align:center;">
-        <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease;width:100%;max-width:280px;">Войти</button>
-        <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
-      </div>
+  <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
+  <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
+    <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
+      <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px;padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;width:100%;max-width:280px;background:rgba(255,255,255,0.8);transition:all 0.2s ease;text-align:center;">
+      <button id="authBtn" style="font-size:16px;padding:16px 32px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease;width:100%;max-width:280px;">Войти</button>
+      <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
     </div>
   </div>
+</div>
 
   <div class="center-wrap">
     <h1>Saviora</h1>
