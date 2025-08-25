@@ -54,6 +54,7 @@ function showStep(step) {
     el.style.display = (i === step) ? '' : 'none';
   }
   state.currentStep = step;
+  updateProgressIndicator();
 }
 function getCurrentBlock() {
   return state.blocks.find(b => b.id === state.currentBlockId) || null;
@@ -69,6 +70,28 @@ function hexToRgba(hex, alpha) {
 function clampPreviewText(s, max = 100) {
   const text = (s || '').trim().replace(/\s+/g, ' ');
   return text.length > max ? text.slice(0, max) + '…' : text;
+}
+
+/* ====== Обновление индикатора прогресса ====== */
+function updateProgressIndicator() {
+  // Обновляем шаги
+  for (let i = 1; i <= 3; i++) {
+    const stepIndicator = byId(`step${i}-indicator`);
+    if (stepIndicator) {
+      stepIndicator.classList.remove('active', 'completed');
+      if (i < state.currentStep) {
+        stepIndicator.classList.add('completed');
+      } else if (i === state.currentStep) {
+        stepIndicator.classList.add('active');
+      }
+    }
+  }
+  // Обновляем линию прогресса
+  const progressLine = byId('progress-line-filled');
+  if (progressLine) {
+    const progressPercentage = ((state.currentStep - 1) / 2) * 100;
+    progressLine.style.width = `${progressPercentage}%`;
+  }
 }
 
 /* ====== Рендер сна ====== */
@@ -662,6 +685,7 @@ function initHandlers() {
     showStep(2);
     renderDreamView();
     resetSelectionColor();
+    updateProgressIndicator();
   });
 
   onClick('toStep3', () => {
@@ -669,15 +693,16 @@ function initHandlers() {
     state.currentBlockId = sortedBlocks()[0]?.id || null;
     showStep(3);
     renderBlocksChips();
+    updateProgressIndicator();
     const b = getCurrentBlock();
     if (b && !b.done) startOrContinue();
   });
 
   // Назад
-  onClick('backTo1Top', () => showStep(1));
-  onClick('backTo1', () => showStep(1));
-  onClick('backTo2Header', () => showStep(2));
-  onClick('backTo2Top', () => showStep(2));
+  onClick('backTo1Top', () => { showStep(1); updateProgressIndicator(); });
+onClick('backTo1', () => { showStep(1); updateProgressIndicator(); });
+onClick('backTo2Header', () => { showStep(2); updateProgressIndicator(); });
+onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   // Добавление блоков (шаг 2)
   onClick('addBlock', addBlockFromSelection);
@@ -794,6 +819,7 @@ function styleDisplay(el, value) {
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
+  updateProgressIndicator();
 
   // Если токен валиден — сразу показываем контент без вспышек
   if (getToken() === AUTH_TOKEN) {
