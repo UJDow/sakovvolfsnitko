@@ -356,7 +356,7 @@ function updateButtonsState() {
   if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
   if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
 
-  const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 5;
+  const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 10;
   if (blockBtn) { blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn'); blockBtn.disabled = !enoughForBlock || !b || b.done; }
 
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
