@@ -953,14 +953,16 @@
 
           <div class="footer">
             <div id="chatInputBar" class="chat-input-bar" style="width:100%;">
-              <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
-              <div id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны">
-              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
-              <div id="attachMenu" class="attach-menu">
-                <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
-                <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
+  <textarea id="userInput" ...></textarea>
+  <div id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны">
+    <!-- SVG луны будет вставляться JS-ом -->
+    <div id="attachMenu" class="attach-menu">
+      <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
+      <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
               </div>
-            </div>
+  </div>
+  <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
+</div>
           </div>
 
           <div class="nav-previews">
