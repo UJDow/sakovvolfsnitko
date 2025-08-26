@@ -151,14 +151,29 @@ function clampPreviewText(s, max = 100) {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
-function showMoonNotice(text, ms = 3500) {
+function showMoonNotice(text, ms = 4500) {
   const notice = document.getElementById('moonNotice');
-  if (!notice) return;
+  const moonBtn = document.getElementById('moonBtn');
+  if (!notice || !moonBtn) return;
   notice.textContent = text;
-  notice.classList.add('show');
+  notice.style.display = 'block';
+  notice.style.visibility = 'hidden'; // чтобы не мигало
+
+  // Даем браузеру отрисовать notice с новым текстом
+  setTimeout(() => {
+    const rect = moonBtn.getBoundingClientRect();
+    notice.style.position = 'fixed';
+    notice.style.left = (rect.left + rect.width / 2 - notice.offsetWidth / 2) + 'px';
+    notice.style.top = (rect.top - notice.offsetHeight - 12) + 'px';
+    notice.style.zIndex = 2000;
+    notice.style.visibility = 'visible';
+    notice.classList.add('show');
+  }, 10);
+
   clearTimeout(notice._hideTimer);
   notice._hideTimer = setTimeout(() => {
     notice.classList.remove('show');
+    notice.style.display = 'none';
   }, ms);
 }
 
@@ -689,10 +704,13 @@ async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
 
-  // Если пользователь уже дал 10 ответов — не продолжаем диалог автоматически
-  if (b.userAnswersCount >= 10) {
-    // Только уведомление, никакого запроса к LLM
-    return;
+  // Если пользователь уже дал 10 ответов — показываем уведомление, но не блокируем диалог
+  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    showMoonNotice('Теперь вы можете запросить Толкование Блока в Луне или продолжить диалог.');
+    // Не делаем return!
   }
 
   setThinking(true);
