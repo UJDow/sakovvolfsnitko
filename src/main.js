@@ -15,7 +15,7 @@ const state = {
   nextBlockId: 1,
   currentStep: 1,
   isThinking: false,
-  finalGlobalInterpretation: null // <--- добавлено!
+  globalFinalInterpretation: null // <--- добавлено!
 };
 
 let currentSelectionColor = null;
@@ -600,9 +600,27 @@ async function llmNextStep(blockText, history) {
           const prev = getPrevBlocksSummary(b.id, 3);
           return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : [];
         })(),
-        ...b.chat.map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text }))
+        ...b.chat
+          .filter(m => !m.isSystemNotice)
+          .map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text }))
       ]
     });
+    const aiRaw = (data.choices?.[0]?.message?.content || '');
+    function stripNoiseLite(s) {
+      if (!s) return s;
+      s = s.replace(/```[\s\S]*?```/g, ' ');
+      s = s.replace(/<[^>]+>/g, ' ');
+      s = s.replace(/[\u2502\uFF5C]/g, ' ');
+      s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
+      s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
+      return s.replace(/\s+/g, ' ').trim();
+    }
+    const aiResponse = stripNoiseLite(aiRaw);
+    return parseAIResponse(aiResponse);
+  } catch (error) {
+    return { question: `Ошибка API: ${error.message || 'Проверьте подключение'}`, quickReplies: ['Повторить запрос'], isFinal: false };
+  }
+}
 
     const aiRaw = (data.choices?.[0]?.message?.content || '');
     function stripNoiseLite(s) {
@@ -659,9 +677,31 @@ function appendUser(text) {
   renderChat();
   renderBlocksChips();
 }
-function appendBot(text, quickReplies = [], isFinal = false) {
+function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = false) {
   const b = getCurrentBlock(); if (!b) return;
-  b.chat.push({ role: 'bot', text, quickReplies, isFinal });
+  b.chat.push({ role: 'bot', text, quickReplies, isFinal, isSystemNotice });
+
+  // Проверяем, нужно ли показать уведомление о 10 ответах (после ответа ассистента)
+  if (
+    b.userAnswersCount >= 10 &&
+    !b._moonFlashShown &&
+    !isSystemNotice
+  ) {
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    b.chat.push({
+      role: 'bot',
+      text: 'Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока, нажав на кнопку "Толкование" (луна). Хотите продолжить диалог или перейти к толкованию?',
+      quickReplies: [],
+      isFinal: false,
+      isSystemNotice: true
+    });
+    renderChat();
+    renderBlocksChips();
+    return;
+  }
+
   renderChat();
 }
 function appendFinalGlobal(text) {
@@ -726,7 +766,9 @@ async function blockInterpretation() {
     const history = [
       { role: 'user', content: 'Контекст блока сна:\n' + b.text },
       ...(() => { const prev = getPrevBlocksSummary(b.id, 3); return prev ? [{ role: 'user', content: 'Краткие итоги предыдущих блоков:\n' + prev }] : []; })(),
-      ...b.chat.map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text })),
+      ...b.chat
+        .filter(m => !m.isSystemNotice)
+        .map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text })),
       { role: 'user', content: 'Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.' }
     ];
     const data = await apiRequest(PROXY_URL, { blockText: b.text, history });
@@ -760,11 +802,9 @@ async function finalInterpretation() {
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
   if (interpreted.length === 0) return alert('Нет ни одного толкования блока.');
 
-  // Если итог уже есть — просто показать окно
-  if (state.finalGlobalInterpretation) {
-    showFinalDialog();
-    return;
-  }
+  const btn = byId('finalInterpretBtn');
+  let prevText2 = '';
+  if (btn) { btn.disabled = true; prevText2 = btn.textContent; btn.textContent = 'Формируем итог...'; }
 
   setThinking(true);
   try {
@@ -786,15 +826,17 @@ async function finalInterpretation() {
       .trim();
     if (!content) content = 'Не удалось получить итоговое толкование';
 
-    // Сохраняем только для финального окна
-    state.finalGlobalInterpretation = content;
+    state.globalFinalInterpretation = content;
 
+    const b = getCurrentBlock();
+    if (b) appendFinalGlobal(content);
     showFinalDialog();
   } catch (e) {
     console.error(e);
-    alert('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'));
+    appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     setThinking(false);
+    if (btn) { btn.disabled = false; btn.textContent = prevText2; }
   }
 }
 
@@ -805,11 +847,9 @@ function showFinalDialog() {
   const blocks = byId('finalDialogBlocks');
   if (!dialog || !main || !blocks) return;
 
-  // Итоговое толкование из глобального состояния
-  let final = state.finalGlobalInterpretation || 'Итоговое толкование не найдено.';
+  let final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
   main.textContent = final;
 
-  // Итоги по блокам (по порядку)
   blocks.innerHTML = '';
   sortedBlocks().forEach(b => {
     if (b.finalInterpretation) {
@@ -822,6 +862,26 @@ function showFinalDialog() {
 
   dialog.style.display = 'block';
 }
+
+onClick('exportFinalDialogBtn', () => {
+  const final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
+  const blocksText = sortedBlocks()
+    .filter(b => b.finalInterpretation)
+    .map(b => `Блок #${b.id}: ${b.finalInterpretation}`)
+    .join('\n\n');
+  const text = `Итоговое толкование:\n${final}\n\nТолкования блоков:\n${blocksText}`;
+  const blob = new Blob([text], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'saviora_final.txt';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+});
 
 // ====== Экспорт итогового толкования и блоков ======
 onClick('menuExportFinal', () => {
