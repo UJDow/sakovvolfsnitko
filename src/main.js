@@ -26,28 +26,47 @@ function onChange(id, handler) { const el = byId(id); if (el) el.onchange = hand
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
 /* ====== Луна-прогресс ====== */
-function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
-  const moonBtn = byId('moonBtn');
+function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, theme = 'light') {
+  const moonBtn = document.getElementById('moonBtn');
   if (!moonBtn) return;
   const phase = Math.min(userAnswersCount / max, 1);
 
-  // Больше и ярче кратеров
+  // Цвета ободка по теме
+  const goldGlow = {
+    stop85: theme === 'dark' ? '#a5b4fc' : '#f6e27a', // сиреневый или золотой
+    stop100: theme === 'dark' ? '#6366f1' : '#eab308', // насыщенный сиреневый или насыщенный золотой
+    opacity: theme === 'dark' ? 0.32 : 0.22
+  };
+
+  // Массив кратеров — много, разных размеров и opacity
   const craters = [
-    {cx: 10, cy: 12, r: 2.2, opacity: 0.22},
-    {cx: 18, cy: 18, r: 1.7, opacity: 0.18},
-    {cx: 22, cy: 14, r: 1.2, opacity: 0.16},
-    {cx: 14, cy: 22, r: 1.5, opacity: 0.19},
-    {cx: 20, cy: 10, r: 1.1, opacity: 0.15},
-    {cx: 24, cy: 20, r: 0.9, opacity: 0.13},
-    {cx: 16, cy: 16, r: 0.7, opacity: 0.12},
-    {cx: 12, cy: 20, r: 1.3, opacity: 0.17},
-    {cx: 22, cy: 22, r: 1.6, opacity: 0.20},
-    {cx: 18, cy: 12, r: 0.8, opacity: 0.14}
+    // Крупные
+    {cx: 8, cy: 10, r: 2.6, opacity: 0.22},
+    {cx: 20, cy: 8, r: 2.1, opacity: 0.19},
+    {cx: 15, cy: 20, r: 2.3, opacity: 0.21},
+    // Средние
+    {cx: 12, cy: 16, r: 1.3, opacity: 0.16},
+    {cx: 18, cy: 14, r: 1.1, opacity: 0.15},
+    {cx: 22, cy: 18, r: 1.4, opacity: 0.17},
+    {cx: 10, cy: 22, r: 1.2, opacity: 0.14},
+    // Мелкие
+    {cx: 16, cy: 10, r: 0.7, opacity: 0.12},
+    {cx: 24, cy: 12, r: 0.6, opacity: 0.11},
+    {cx: 19, cy: 22, r: 0.8, opacity: 0.13},
+    {cx: 13, cy: 19, r: 0.5, opacity: 0.10},
+    {cx: 21, cy: 16, r: 0.6, opacity: 0.11},
+    // Группировка мелких
+    {cx: 17, cy: 18, r: 0.4, opacity: 0.09},
+    {cx: 18, cy: 19, r: 0.3, opacity: 0.08},
+    {cx: 19, cy: 18, r: 0.4, opacity: 0.09},
+    // Еще несколько для "шума"
+    {cx: 14, cy: 13, r: 0.5, opacity: 0.10},
+    {cx: 22, cy: 21, r: 0.5, opacity: 0.10},
+    {cx: 12, cy: 21, r: 0.4, opacity: 0.09},
+    {cx: 20, cy: 20, r: 0.3, opacity: 0.08}
   ];
 
-  // Ореол становится ярче
-  const goldGlowOpacity = 0.25 + 0.35 * phase; // от 0.25 до 0.6
-
+  // SVG: внешний ободок теперь строго по радиусу луны (r=20)
   const svg = `
     <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 54 54" fill="none">
       <defs>
@@ -56,8 +75,8 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
         </clipPath>
         <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
           <stop offset="60%" stop-color="#fffbe6" stop-opacity="0"/>
-          <stop offset="85%" stop-color="#f6e27a" stop-opacity="${goldGlowOpacity}"/>
-          <stop offset="100%" stop-color="#eab308" stop-opacity="0.32"/>
+          <stop offset="85%" stop-color="${goldGlow.stop85}" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="${goldGlow.stop100}" stop-opacity="${goldGlow.opacity}"/>
         </radialGradient>
         <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
@@ -65,18 +84,24 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
           <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <!-- Gold Glow (шире луны) -->
-      <circle cx="27" cy="27" r="25" fill="url(#goldGlow)" />
+      <!-- Внешний ободок (цвет зависит от темы, радиус не больше луны) -->
+      <circle cx="27" cy="27" r="20" fill="url(#goldGlow)" />
       <!-- Серебристый glow -->
-      <circle cx="27" cy="27" r="22" fill="url(#moonGlow)" opacity="0.7"/>
+      <circle cx="27" cy="27" r="19" fill="url(#moonGlow)" opacity="0.7"/>
       <!-- Main moon (серебристый) -->
-      <circle cx="27" cy="27" r="19" fill="#e0e7ef"/>
+      <circle cx="27" cy="27" r="17" fill="#e0e7ef"/>
       <!-- Phase (полупрозрачная) -->
-      <circle cx="27" cy="27" r="19" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
-      <!-- Craters -->
-      ${craters.map(c => `<circle cx="${c.cx + 15}" cy="${c.cy + 15}" r="${c.r}" fill="#b6bbc7" opacity="${c.opacity}" />`).join('')}
-      <!-- Subtle shadow (можно убрать или сделать светлее) -->
-      <!--<ellipse cx="34" cy="39" rx="10" ry="3.5" fill="#a3aab7" opacity="0.07"/>-->
+      <circle cx="27" cy="27" r="17" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
+      <!-- Кратеры -->
+      ${craters.map(c => `
+        <circle 
+          cx="${c.cx + 10}" 
+          cy="${c.cy + 10}" 
+          r="${c.r}" 
+          fill="#b6bbc7" 
+          opacity="${c.opacity}" 
+        />
+      `).join('')}
     </svg>
   `;
   moonBtn.innerHTML = svg;
