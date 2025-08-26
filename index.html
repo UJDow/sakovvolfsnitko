@@ -725,6 +725,34 @@
     .quick button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.18), 0 4px 10px rgba(0,0,0,0.08); border-color: var(--primary); }
     .quick button:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(0,0,0,0.06); top: 2px; }
 
+.moon-notice {
+  position: absolute;
+  right: 60px; /* рядом с луной */
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fffbe6;
+  color: #222;
+  border: 1px solid #f6e27a;
+  border-radius: 12px;
+  padding: 14px 22px;
+  font-size: 15px;
+  box-shadow: 0 4px 24px rgba(246, 226, 122, 0.18);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  min-width: 220px;
+  max-width: 320px;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.moon-notice.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-60%);
+}
+
 #finalDialogMain {
   margin-bottom: 28px;
   font-size: 17px;
@@ -1129,5 +1157,6 @@
       <button id="exportFinalDialogBtn" class="btn primary" style="margin-top:18px;">⬇️ Экспорт итога</button>
       </div>
   </div>
+  <div id="moonNotice" class="moon-notice"></div>
 </body>
 </html>
