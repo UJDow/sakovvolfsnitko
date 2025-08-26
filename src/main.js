@@ -495,11 +495,10 @@ function parseAIResponse(text) {
   let cleanText = (text || '').trim();
   let quickReplies = [];
 
+  // 1. Старый парсер: варианты в [ ... ]
   const bracketGroups = [...cleanText.matchAll(/\[([^\]]+)\]/g)];
-
   for (const m of bracketGroups) {
     const inside = (m[1] || '').trim();
-
     let parts = [];
     if (/\|/.test(inside)) {
       parts = inside.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
@@ -507,19 +506,59 @@ function parseAIResponse(text) {
       const two = inside.split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
       if (two.length === 2) parts = two;
     }
-
     if (parts.length >= 2) {
       quickReplies.push(...parts);
       cleanText = cleanText.replace(m[0], ' ').replace(/\s{2,}/g, ' ').trim();
     }
   }
 
+  // 2. Новый парсер: ищем варианты прямо в тексте (если quickReplies всё ещё пуст)
+  if (quickReplies.length === 0) {
+    // 2.1. Паттерн: 1. ... 2. ... 3. ...
+    const numbered = [...cleanText.matchAll(/(\d+)\.\s*([^\d]+)/g)];
+    if (numbered.length >= 2) {
+      quickReplies = numbered.map(m => m[2].trim());
+      cleanText = cleanText.replace(/(\d+\.\s*[^\d]+)/g, '').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+  if (quickReplies.length === 0) {
+    // 2.2. Паттерн: — ... (тире)
+    const dashOpts = [...cleanText.matchAll(/—\s*([^\n]+)/g)];
+    if (dashOpts.length >= 2) {
+      quickReplies = dashOpts.map(m => m[1].trim());
+      cleanText = cleanText.replace(/—\s*[^\n]+/g, '').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+  if (quickReplies.length === 0) {
+    // 2.3. Паттерн: • ... (маркер)
+    const bulletOpts = [...cleanText.matchAll(/•\s*([^\n]+)/g)];
+    if (bulletOpts.length >= 2) {
+      quickReplies = bulletOpts.map(m => m[1].trim());
+      cleanText = cleanText.replace(/•\s*[^\n]+/g, '').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+  if (quickReplies.length === 0) {
+    // 2.4. Паттерн: а) ... б) ... в) ...
+    const letterOpts = [...cleanText.matchAll(/[а-яa-z]\)\s*([^\n]+)/gi)];
+    if (letterOpts.length >= 2) {
+      quickReplies = letterOpts.map(m => m[1].trim());
+      cleanText = cleanText.replace(/[а-яa-z]\)\s*[^\n]+/gi, '').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+  if (quickReplies.length === 0) {
+    // 2.5. Паттерн: Варианты: ...; ...; ...
+    const semicolon = cleanText.match(/Варианты: (.+)/i);
+    if (semicolon) {
+      quickReplies = semicolon[1].split(';').map(s => s.trim()).filter(Boolean);
+      cleanText = cleanText.replace(/Варианты: .+/i, '').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+
+  // Ограничиваем количество вариантов
   quickReplies = quickReplies.slice(0, 4);
 
-  const finalKeywords = ['итог','заключение','интерпретация','вывод','давай закончим','заканчиваем','завершай','финал','конец'];
-  const isFinal = finalKeywords.some(k => cleanText.toLowerCase().includes(k));
-
-  return { question: cleanText, quickReplies, isFinal };
+  // Возвращаем только вопрос и варианты, без финальных ключевых слов
+  return { question: cleanText, quickReplies, isFinal: false };
 }
 
 async function llmNextStep(blockText, history) {
