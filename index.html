@@ -724,7 +724,20 @@
     .quick button:hover { border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.08); transform: translateY(-1px); }
     .quick button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.18), 0 4px 10px rgba(0,0,0,0.08); border-color: var(--primary); }
     .quick button:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(0,0,0,0.06); top: 2px; }
-  
+
+#finalDialogMain {
+  margin-bottom: 28px;
+  font-size: 17px;
+  line-height: 1.7;
+  max-height: 300px;
+  overflow-y: auto;
+}
+@media (max-width: 600px) {
+  #finalDialogMain {
+    max-height: 160px;
+  }
+}
+    
     .hint-inline { 
       margin: 6px 0 10px; 
       color: var(--text-secondary); 
@@ -1110,7 +1123,7 @@
     <div style="max-width:540px; margin:40px auto; background:var(--card-bg); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 24px; position:relative;">
       <button id="closeFinalDialog" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;">×</button>
       <h2 style="margin-top:0;">Итоговое толкование</h2>
-      <div id="finalDialogMain" style="margin-bottom:28px; font-size:17px; line-height:1.7; max-height:300px; overflow-y:auto;"></div>
+      <div id="finalDialogMain"></div>
       <h3 style="margin-bottom:10px;">Толкования блоков</h3>
       <div id="finalDialogBlocks"></div>
       <button id="exportFinalDialogBtn" class="btn primary" style="margin-top:18px;">⬇️ Экспорт итога</button>
