@@ -1100,5 +1100,15 @@
     };
     setTheme(getPreferredTheme());
   </script>
+  <!-- Итоговое окно -->
+<div id="finalDialog" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45);">
+  <div style="max-width:540px; margin:40px auto; background:var(--card-bg); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 24px; position:relative;">
+    <button id="closeFinalDialog" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;">×</button>
+    <h2 style="margin-top:0;">Итоговое толкование</h2>
+    <div id="finalDialogMain" style="margin-bottom:28px; font-size:17px; line-height:1.7;"></div>
+    <h3 style="margin-bottom:10px;">Толкования блоков</h3>
+    <div id="finalDialogBlocks"></div>
+  </div>
+</div>
 </body>
 </html>
