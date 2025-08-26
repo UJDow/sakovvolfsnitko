@@ -151,6 +151,17 @@ function clampPreviewText(s, max = 100) {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
+function showMoonNotice(text, ms = 3500) {
+  const notice = document.getElementById('moonNotice');
+  if (!notice) return;
+  notice.textContent = text;
+  notice.classList.add('show');
+  clearTimeout(notice._hideTimer);
+  notice._hideTimer = setTimeout(() => {
+    notice.classList.remove('show');
+  }, ms);
+}
+
 /* ====== Обновление индикатора прогресса ====== */
 function updateProgressIndicator() {
   // Обновляем шаги
@@ -645,19 +656,14 @@ function appendUser(text) {
 
   // Если достигли лимита — сразу показываем уведомление
   if (b.userAnswersCount === 10 && !b._moonFlashShown) {
-    b._moonFlashShown = true;
-    renderMoonProgress(b.userAnswersCount, 10, true);
-    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    appendBot(
-      'Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока, нажав на кнопку "Толкование" (луна). Хотите продолжить диалог или перейти к толкованию?',
-      [],
-      false,
-      true // <-- isSystemNotice
-    );
-    renderChat();
-    renderBlocksChips();
-    return;
-  }
+  b._moonFlashShown = true;
+  renderMoonProgress(b.userAnswersCount, 10, true);
+  setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+  showMoonNotice('Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+  renderChat();
+  renderBlocksChips();
+  return;
+}
 
   renderChat();
   renderBlocksChips();
@@ -665,27 +671,6 @@ function appendUser(text) {
 function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = false) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies, isFinal, isSystemNotice });
-
-  // Показываем уведомление только после ответа ассистента на 10-й вопрос пользователя
-  if (
-    b.userAnswersCount === 10 &&
-    !b._moonFlashShown &&
-    !isSystemNotice
-  ) {
-    b._moonFlashShown = true;
-    renderMoonProgress(b.userAnswersCount, 10, true);
-    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    b.chat.push({
-      role: 'bot',
-      text: 'Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока, нажав на кнопку "Толкование" (луна). Хотите продолжить диалог или перейти к толкованию?',
-      quickReplies: [],
-      isFinal: false,
-      isSystemNotice: true
-    });
-    renderChat();
-    renderBlocksChips();
-    return;
-  }
 
   renderChat();
 }
