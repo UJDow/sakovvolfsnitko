@@ -1051,7 +1051,27 @@
   word-wrap: break-word;
   line-height: 1.6;
 }
-  
+
+/* Упрощаем стили для dream-view */
+.dream-view {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+  padding: 16px;
+  background: rgba(255,255,255,0.8);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  min-height: var(--surface-height);
+  max-height: var(--surface-height);
+  overflow: auto;
+}
+
+/* Убираем все сложные стили для span и tile */
+.dream-view span,
+.dream-view .tile {
+  all: unset !important;
+}
+    
   </style>
 </head>
 <body class="pre-auth">
