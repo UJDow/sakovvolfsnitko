@@ -1029,6 +1029,21 @@
   color: #0f172a;
   border-color: #7dd3fc;
 }
+
+/* Fix for dream textarea and view */
+#dream, .dream-view {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Mobile guarantee */
+@media (max-width: 800px) {
+  #dream, .dream-view {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
   
   </style>
 </head>
