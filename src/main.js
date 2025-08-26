@@ -785,6 +785,7 @@ async function finalInterpretation() {
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
     else alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
+    showFinalDialog();
   } catch (e) {
     console.error(e);
     appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
@@ -981,8 +982,10 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
   });
 
   onClick('menuBlockInterpret', () => { hideAttachMenu(); blockInterpretation(); });
-  onClick('menuFinalInterpret', () => { hideAttachMenu(); finalInterpretation(); });
-
+  onClick('menuFinalInterpret', () => { 
+  hideAttachMenu(); 
+  showFinalDialog(); 
+});
   // Старые стрелки — если присутствуют в HTML
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
   onClick('prevBlockBtn', () => { const id = prevUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
@@ -1050,4 +1053,42 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
+});
+
+function showFinalDialog() {
+  const dialog = byId('finalDialog');
+  const main = byId('finalDialogMain');
+  const blocks = byId('finalDialogBlocks');
+  if (!dialog || !main || !blocks) return;
+
+  // Найти итоговое толкование (глобальное)
+  let final = null;
+  for (const b of state.blocks) {
+    if (b.chat && b.chat.some(m => m.isGlobalFinal)) {
+      final = b.chat.find(m => m.isGlobalFinal).text;
+      break;
+    }
+  }
+  if (!final) final = 'Итоговое толкование не найдено.';
+
+  main.textContent = final;
+
+  // Итоги по блокам (по порядку)
+  blocks.innerHTML = '';
+  sortedBlocks().forEach(b => {
+    if (b.finalInterpretation) {
+      const div = document.createElement('div');
+      div.style.marginBottom = '18px';
+      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${b.finalInterpretation}</span>`;
+      blocks.appendChild(div);
+    }
+  });
+
+  dialog.style.display = 'block';
+}
+
+// Закрытие окна
+onClick('closeFinalDialog', () => {
+  const dialog = byId('finalDialog');
+  if (dialog) dialog.style.display = 'none';
 });
