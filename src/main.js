@@ -31,7 +31,7 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
   if (!moonBtn) return;
   const phase = Math.min(userAnswersCount / max, 1);
 
-  // Кратеры (рандомно, но фиксировано)
+  // Кратеры
   const craters = [
     {cx: 12, cy: 10, r: 2, opacity: 0.18},
     {cx: 20, cy: 18, r: 1.5, opacity: 0.13},
@@ -41,29 +41,29 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
   ];
 
   const svg = `
-    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 32 32" fill="none" style="filter: drop-shadow(0 0 8px #fef9c3);">
+    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 32 32" fill="none" style="filter: drop-shadow(0 0 8px #e0e7ef);">
       <defs>
         <clipPath id="moonPhase">
           <rect x="0" y="0" width="${32 * phase}" height="32" />
         </clipPath>
         <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fffde4" stop-opacity="1"/>
-          <stop offset="80%" stop-color="#fbbf24" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+          <stop offset="80%" stop-color="#e0e7ef" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
         </radialGradient>
       </defs>
       <!-- Glow -->
       <circle cx="16" cy="16" r="15" fill="url(#moonGlow)" opacity="0.7"/>
-      <!-- Main moon -->
-      <circle cx="16" cy="16" r="14" fill="#fffde4" stroke="#facc15" stroke-width="2" filter="url(#moonShadow)"/>
-      <!-- Phase -->
-      <circle cx="16" cy="16" r="14" fill="#fbbf24" clip-path="url(#moonPhase)" />
+      <!-- Main moon (серебристый) -->
+      <circle cx="16" cy="16" r="14" fill="#e0e7ef" stroke="#a5b4fc" stroke-width="2"/>
+      <!-- Phase (полупрозрачная) -->
+      <circle cx="16" cy="16" r="14" fill="#dbeafe" fill-opacity="0.55" clip-path="url(#moonPhase)" />
       <!-- Craters -->
-      ${craters.map(c => `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="#eab308" opacity="${c.opacity}"/>`).join('')}
+      ${craters.map(c => `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="#b6bbc7" opacity="${c.opacity}"/>`).join('')}
       <!-- Subtle shadow -->
-      <ellipse cx="20" cy="22" rx="7" ry="2.5" fill="#fbbf24" opacity="0.13"/>
+      <ellipse cx="20" cy="22" rx="7" ry="2.5" fill="#a3aab7" opacity="0.10"/>
       <!-- Overlay for dark side -->
-      <circle cx="16" cy="16" r="14" fill="rgba(0,0,0,0.08)" />
+      <circle cx="16" cy="16" r="14" fill="rgba(0,0,0,0.07)" />
     </svg>
   `;
   moonBtn.innerHTML = svg;
