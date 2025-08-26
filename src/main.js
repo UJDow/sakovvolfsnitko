@@ -643,21 +643,6 @@ function appendUser(text) {
   // Обновляем луну после каждого ответа
   renderMoonProgress(b.userAnswersCount, 10, false);
 
-  // Если достигли 10 ответов и еще не показывали уведомление
-  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
-    b._moonFlashShown = true;
-    renderMoonProgress(b.userAnswersCount, 10, true);
-    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    appendBot(
-      'Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока, нажав на кнопку "Толкование" (луна). Хотите продолжить диалог или перейти к толкованию?',
-      [],
-      false
-    );
-    renderChat();
-    renderBlocksChips();
-    return; // Не продолжаем диалог автоматически!
-  }
-
   renderChat();
   renderBlocksChips();
 }
@@ -665,9 +650,9 @@ function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = fa
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies, isFinal, isSystemNotice });
 
-  // Проверяем, нужно ли показать уведомление о 10 ответах (после ответа ассистента)
+  // Показываем уведомление только после ответа ассистента на 10-й вопрос пользователя
   if (
-    b.userAnswersCount >= 10 &&
+    b.userAnswersCount === 10 &&
     !b._moonFlashShown &&
     !isSystemNotice
   ) {
@@ -869,7 +854,7 @@ onClick('exportFinalDialogBtn', () => {
 
 // ====== Экспорт итогового толкования и блоков ======
 onClick('menuExportFinal', () => {
-  let final = state.finalGlobalInterpretation || 'Итоговое толкование не найдено.';
+  let final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
   let blocksText = sortedBlocks()
     .filter(b => b.finalInterpretation)
     .map(b => `Блок #${b.id}: ${b.finalInterpretation}`)
