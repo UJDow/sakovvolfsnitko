@@ -495,7 +495,7 @@ function parseAIResponse(text) {
   let cleanText = (text || '').trim();
   let quickReplies = [];
 
-  // 1. Старый парсер: варианты в [ ... ]
+  // 1. Варианты в [ ... ]: [Вариант 1 | Вариант 2] или [Вариант 1 и Вариант 2]
   const bracketGroups = [...cleanText.matchAll(/\[([^\]]+)\]/g)];
   for (const m of bracketGroups) {
     const inside = (m[1] || '').trim();
@@ -512,41 +512,40 @@ function parseAIResponse(text) {
     }
   }
 
-  // 2. Новый парсер: ищем варианты прямо в тексте (если quickReplies всё ещё пуст)
+  // 2. Списки: 1. ... 2. ... 3. ...
   if (quickReplies.length === 0) {
-    // 2.1. Паттерн: 1. ... 2. ... 3. ...
     const numbered = [...cleanText.matchAll(/(\d+)\.\s*([^\d]+)/g)];
     if (numbered.length >= 2) {
       quickReplies = numbered.map(m => m[2].trim());
       cleanText = cleanText.replace(/(\d+\.\s*[^\d]+)/g, '').replace(/\s{2,}/g, ' ').trim();
     }
   }
+  // 3. Списки: — ... (тире)
   if (quickReplies.length === 0) {
-    // 2.2. Паттерн: — ... (тире)
     const dashOpts = [...cleanText.matchAll(/—\s*([^\n]+)/g)];
     if (dashOpts.length >= 2) {
       quickReplies = dashOpts.map(m => m[1].trim());
       cleanText = cleanText.replace(/—\s*[^\n]+/g, '').replace(/\s{2,}/g, ' ').trim();
     }
   }
+  // 4. Списки: • ... (маркер)
   if (quickReplies.length === 0) {
-    // 2.3. Паттерн: • ... (маркер)
     const bulletOpts = [...cleanText.matchAll(/•\s*([^\n]+)/g)];
     if (bulletOpts.length >= 2) {
       quickReplies = bulletOpts.map(m => m[1].trim());
       cleanText = cleanText.replace(/•\s*[^\n]+/g, '').replace(/\s{2,}/g, ' ').trim();
     }
   }
+  // 5. Списки: а) ... б) ... в) ...
   if (quickReplies.length === 0) {
-    // 2.4. Паттерн: а) ... б) ... в) ...
     const letterOpts = [...cleanText.matchAll(/[а-яa-z]\)\s*([^\n]+)/gi)];
     if (letterOpts.length >= 2) {
       quickReplies = letterOpts.map(m => m[1].trim());
       cleanText = cleanText.replace(/[а-яa-z]\)\s*[^\n]+/gi, '').replace(/\s{2,}/g, ' ').trim();
     }
   }
+  // 6. Списки: Варианты: ...; ...; ...
   if (quickReplies.length === 0) {
-    // 2.5. Паттерн: Варианты: ...; ...; ...
     const semicolon = cleanText.match(/Варианты: (.+)/i);
     if (semicolon) {
       quickReplies = semicolon[1].split(';').map(s => s.trim()).filter(Boolean);
@@ -554,10 +553,21 @@ function parseAIResponse(text) {
     }
   }
 
+  // 7. Эвристика: "например, ... и ..."
+  if (quickReplies.length === 0) {
+    const example = cleanText.match(/например[:,]?\s*([^\n]+? и [^\n]+?)(\.|\?|!|$)/i);
+    if (example) {
+      const parts = example[1].split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
+      if (parts.length === 2) {
+        quickReplies = parts;
+        // cleanText = cleanText.replace(example[0], '').replace(/\s{2,}/g, ' ').trim();
+      }
+    }
+  }
+
   // Ограничиваем количество вариантов
   quickReplies = quickReplies.slice(0, 4);
 
-  // Возвращаем только вопрос и варианты, без финальных ключевых слов
   return { question: cleanText, quickReplies, isFinal: false };
 }
 
