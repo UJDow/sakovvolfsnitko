@@ -875,27 +875,27 @@
       }
     }
 
-.block-selected {
+.chip.active {
   outline: 3px solid var(--primary);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(37,99,235,0.10);
-  border-radius: 6px;
-  z-index: 2;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.13);
   position: relative;
+  z-index: 2;
   transition: outline 0.15s, box-shadow 0.15s;
-  animation: blockSelectPulse 0.5s;
+  /* Можно добавить анимацию, если хочешь */
+  animation: chipSelectPulse 0.5s;
 }
-[data-theme="dark"] .block-selected {
+[data-theme="dark"] .chip.active {
   outline: 3px solid #f6e27a;
   box-shadow: 0 0 0 4px rgba(246,226,122,0.13);
-  animation: blockSelectPulseDark 0.5s;
+  animation: chipSelectPulseDark 0.5s;
 }
-@keyframes blockSelectPulse {
+@keyframes chipSelectPulse {
   0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.18); }
-  70%  { box-shadow: 0 0 0 8px rgba(37,99,235,0.10); }
-  100% { box-shadow: 0 0 0 4px rgba(37,99,235,0.10); }
+  70%  { box-shadow: 0 0 0 8px rgba(37,99,235,0.13); }
+  100% { box-shadow: 0 0 0 4px rgba(37,99,235,0.13); }
 }
-@keyframes blockSelectPulseDark {
+@keyframes chipSelectPulseDark {
   0%   { box-shadow: 0 0 0 0 rgba(246,226,122,0.18); }
   70%  { box-shadow: 0 0 0 8px rgba(246,226,122,0.13); }
   100% { box-shadow: 0 0 0 4px rgba(246,226,122,0.13); }
