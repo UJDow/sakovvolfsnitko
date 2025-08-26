@@ -651,19 +651,8 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
 
-  // Обновляем луну после каждого ответа
+  // Просто обновляем луну, никаких уведомлений!
   renderMoonProgress(b.userAnswersCount, 10, false);
-
-  // Если достигли лимита — сразу показываем уведомление
-  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
-  b._moonFlashShown = true;
-  renderMoonProgress(b.userAnswersCount, 10, true);
-  setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-  showMoonNotice('Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
-  renderChat();
-  renderBlocksChips();
-  return;
-}
 
   renderChat();
   renderBlocksChips();
@@ -672,8 +661,21 @@ function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = fa
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies, isFinal, isSystemNotice });
 
+  // Показываем уведомление только после ответа ассистента на 10-й вопрос пользователя
+  if (
+    b.userAnswersCount === 10 &&
+    !b._moonFlashShown &&
+    !isSystemNotice
+  ) {
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    showMoonNotice('Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+  }
+
   renderChat();
 }
+
 function appendFinalGlobal(text) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies: [], isFinal: true, isGlobalFinal: true });
