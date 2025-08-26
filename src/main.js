@@ -14,7 +14,8 @@ const state = {
   currentBlockId: null,
   nextBlockId: 1,
   currentStep: 1,
-  isThinking: false
+  isThinking: false,
+  finalGlobalInterpretation: null // <--- добавлено!
 };
 
 let currentSelectionColor = null;
@@ -754,13 +755,16 @@ async function blockInterpretation() {
   }
 }
 
+// ====== Итоговое толкование только для финального окна ======
 async function finalInterpretation() {
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
   if (interpreted.length === 0) return alert('Нет ни одного толкования блока.');
 
-  const btn = byId('finalInterpretBtn');
-  let prevText2 = '';
-  if (btn) { btn.disabled = true; prevText2 = btn.textContent; btn.textContent = 'Формируем итог...'; }
+  // Если итог уже есть — просто показать окно
+  if (state.finalGlobalInterpretation) {
+    showFinalDialog();
+    return;
+  }
 
   setThinking(true);
   try {
@@ -782,18 +786,70 @@ async function finalInterpretation() {
       .trim();
     if (!content) content = 'Не удалось получить итоговое толкование';
 
-    const b = getCurrentBlock();
-    if (b) appendFinalGlobal(content);
-    else alert('Готово: итоговое толкование сформировано. Откройте любой блок, чтобы увидеть сообщение.');
+    // Сохраняем только для финального окна
+    state.finalGlobalInterpretation = content;
+
     showFinalDialog();
   } catch (e) {
     console.error(e);
-    appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
+    alert('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'));
   } finally {
     setThinking(false);
-    if (btn) { btn.disabled = false; btn.textContent = prevText2; }
   }
 }
+
+// ====== Показ финального окна ======
+function showFinalDialog() {
+  const dialog = byId('finalDialog');
+  const main = byId('finalDialogMain');
+  const blocks = byId('finalDialogBlocks');
+  if (!dialog || !main || !blocks) return;
+
+  // Итоговое толкование из глобального состояния
+  let final = state.finalGlobalInterpretation || 'Итоговое толкование не найдено.';
+  main.textContent = final;
+
+  // Итоги по блокам (по порядку)
+  blocks.innerHTML = '';
+  sortedBlocks().forEach(b => {
+    if (b.finalInterpretation) {
+      const div = document.createElement('div');
+      div.style.marginBottom = '18px';
+      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${b.finalInterpretation}</span>`;
+      blocks.appendChild(div);
+    }
+  });
+
+  dialog.style.display = 'block';
+}
+
+// ====== Экспорт итогового толкования и блоков ======
+onClick('menuExportFinal', () => {
+  let final = state.finalGlobalInterpretation || 'Итоговое толкование не найдено.';
+  let blocksText = sortedBlocks()
+    .filter(b => b.finalInterpretation)
+    .map(b => `Блок #${b.id}: ${b.finalInterpretation}`)
+    .join('\n\n');
+  const exportText = `Итоговое толкование:\n${final}\n\nТолкования блоков:\n${blocksText}`;
+  const blob = new Blob([exportText], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'saviora_final.txt';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+  hideAttachMenu();
+});
+
+// ====== Закрытие финального окна ======
+onClick('closeFinalDialog', () => {
+  const dialog = byId('finalDialog');
+  if (dialog) dialog.style.display = 'none';
+});
 
 /* ====== Добавление блоков ====== */
 function addBlockFromSelection() {
@@ -1080,42 +1136,4 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
-});
-
-function showFinalDialog() {
-  const dialog = byId('finalDialog');
-  const main = byId('finalDialogMain');
-  const blocks = byId('finalDialogBlocks');
-  if (!dialog || !main || !blocks) return;
-
-  // Найти итоговое толкование (глобальное)
-  let final = null;
-  for (const b of state.blocks) {
-    if (b.chat && b.chat.some(m => m.isGlobalFinal)) {
-      final = b.chat.find(m => m.isGlobalFinal).text;
-      break;
-    }
-  }
-  if (!final) final = 'Итоговое толкование не найдено.';
-
-  main.textContent = final;
-
-  // Итоги по блокам (по порядку)
-  blocks.innerHTML = '';
-  sortedBlocks().forEach(b => {
-    if (b.finalInterpretation) {
-      const div = document.createElement('div');
-      div.style.marginBottom = '18px';
-      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${b.finalInterpretation}</span>`;
-      blocks.appendChild(div);
-    }
-  });
-
-  dialog.style.display = 'block';
-}
-
-// Закрытие окна
-onClick('closeFinalDialog', () => {
-  const dialog = byId('finalDialog');
-  if (dialog) dialog.style.display = 'none';
 });
