@@ -160,19 +160,16 @@ function showMoonNotice(text, ms = 4500) {
   notice.style.display = 'block';
   notice.classList.remove('show'); // сбрасываем анимацию
 
-  // Ждём, чтобы DOM обновился и размеры были актуальны
   setTimeout(() => {
     const btnRect = moonBtn.getBoundingClientRect();
     const noticeRect = notice.getBoundingClientRect();
-    // Центрируем над луной, чуть выше
     notice.style.position = 'fixed';
-    notice.style.left = (btnRect.left + btnRect.width / 2 - noticeRect.width / 2) + 'px';
-    notice.style.top = (btnRect.top - noticeRect.height - 14) + 'px';
+    notice.style.left = (btnRect.left + btnRect.width / 2 - noticeRect.width / 2 + window.scrollX) + 'px';
+    notice.style.top = (btnRect.top - noticeRect.height - 14 + window.scrollY) + 'px';
     notice.style.zIndex = 2000;
     notice.classList.add('show');
   }, 10);
 
-  // Автоматически скрываем через ms миллисекунд
   clearTimeout(notice._hideTimer);
   notice._hideTimer = setTimeout(() => {
     notice.classList.remove('show');
