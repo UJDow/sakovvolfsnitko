@@ -1029,7 +1029,39 @@
   color: #0f172a;
   border-color: #7dd3fc;
 }
-  
+
+.card,
+.surface,
+.dream-view,
+.chat,
+.msg,
+#finalDialog .modal-content,
+#finalDialogContent {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.msg {
+  max-width: min(85%, 560px);
+  width: fit-content;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.dream-view,
+#finalDialogMain,
+#finalDialogBlocks {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+    
   </style>
 </head>
 <body class="pre-auth">
