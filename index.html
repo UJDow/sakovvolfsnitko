@@ -876,28 +876,28 @@
     }
 
 .chip.active {
-  outline: 3px solid #22d3ee; /* бирюзовый */
+  outline: 3px solid #fff;
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(34,211,238,0.13);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.13);
   position: relative;
   z-index: 2;
   transition: outline 0.15s, box-shadow 0.15s;
   animation: chipSelectPulse 0.5s;
 }
 [data-theme="dark"] .chip.active {
-  outline: 3px solid #4ade80; /* светло-зелёный */
-  box-shadow: 0 0 0 4px rgba(74,222,128,0.13);
+  outline: 3px solid #fff;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.13);
   animation: chipSelectPulseDark 0.5s;
 }
 @keyframes chipSelectPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(34,211,238,0.18); }
-  70%  { box-shadow: 0 0 0 8px rgba(34,211,238,0.13); }
-  100% { box-shadow: 0 0 0 4px rgba(34,211,238,0.13); }
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.18); }
+  70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0.13); }
+  100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.13); }
 }
 @keyframes chipSelectPulseDark {
-  0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.18); }
-  70%  { box-shadow: 0 0 0 8px rgba(74,222,128,0.13); }
-  100% { box-shadow: 0 0 0 4px rgba(74,222,128,0.13); }
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.18); }
+  70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0.13); }
+  100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.13); }
 }
     
   </style>
