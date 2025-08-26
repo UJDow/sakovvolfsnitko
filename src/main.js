@@ -68,37 +68,25 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
 
   // SVG: внешний ободок теперь строго по радиусу луны (r=20)
  const svg = `
-    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 44 44" fill="none">
-      <defs>
-        <clipPath id="moonPhase">
-          <rect x="0" y="0" width="${44 * phase}" height="44" />
-        </clipPath>
-        <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="60%" stop-color="#fffbe6" stop-opacity="0"/>
-          <stop offset="85%" stop-color="${goldGlow.stop85}" stop-opacity="0.5"/>
-          <stop offset="100%" stop-color="${goldGlow.stop100}" stop-opacity="${goldGlow.opacity}"/>
-        </radialGradient>
-        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
-          <stop offset="80%" stop-color="#e0e7ef" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <circle cx="22" cy="22" r="16" fill="url(#goldGlow)" />
-      <circle cx="22" cy="22" r="15" fill="url(#moonGlow)" opacity="0.7"/>
-      <circle cx="22" cy="22" r="13" fill="#e0e7ef"/>
-      <circle cx="22" cy="22" r="13" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
-      ${craters.map(c => `
-        <circle 
-          cx="${c.cx + 7}" 
-          cy="${c.cy + 7}" 
-          r="${c.r}" 
-          fill="#b6bbc7" 
-          opacity="${c.opacity}" 
-        />
-      `).join('')}
-    </svg>
-  `;
+  <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 44 44" fill="none">
+    <defs>
+      ...
+    </defs>
+    <circle cx="22" cy="22" r="21" fill="url(#goldGlow)" />
+    <circle cx="22" cy="22" r="20" fill="url(#moonGlow)" opacity="0.7"/>
+    <circle cx="22" cy="22" r="19" fill="#e0e7ef"/>
+    <circle cx="22" cy="22" r="19" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
+    ${craters.map(c => `
+      <circle 
+        cx="${c.cx + 3}" 
+        cy="${c.cy + 3}" 
+        r="${c.r}" 
+        fill="#b6bbc7" 
+        opacity="${c.opacity}" 
+      />
+    `).join('')}
+  </svg>
+`;
   moonBtn.innerHTML = svg;
 }
 
