@@ -605,22 +605,6 @@ async function llmNextStep(blockText, history) {
           .map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text }))
       ]
     });
-    const aiRaw = (data.choices?.[0]?.message?.content || '');
-    function stripNoiseLite(s) {
-      if (!s) return s;
-      s = s.replace(/```[\s\S]*?```/g, ' ');
-      s = s.replace(/<[^>]+>/g, ' ');
-      s = s.replace(/[\u2502\uFF5C]/g, ' ');
-      s = s.replace(/[\u4e00-\u9fff]+/g, ' ');
-      s = s.replace(/\b[a-zA-Z]{2,}\b/g, ' ');
-      return s.replace(/\s+/g, ' ').trim();
-    }
-    const aiResponse = stripNoiseLite(aiRaw);
-    return parseAIResponse(aiResponse);
-  } catch (error) {
-    return { question: `Ошибка API: ${error.message || 'Проверьте подключение'}`, quickReplies: ['Повторить запрос'], isFinal: false };
-  }
-}
 
     const aiRaw = (data.choices?.[0]?.message?.content || '');
     function stripNoiseLite(s) {
