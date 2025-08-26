@@ -40,30 +40,40 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
     {cx: 10, cy: 20, r: 1.2, opacity: 0.12}
   ];
 
+  // Ореол становится чуть ярче по мере заполнения
+  const goldGlowOpacity = 0.18 + 0.32 * phase; // от 0.18 до 0.5
+
   const svg = `
-    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 32 32" fill="none" style="filter: drop-shadow(0 0 8px #e0e7ef);">
+    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 54 54" fill="none">
       <defs>
         <clipPath id="moonPhase">
-          <rect x="0" y="0" width="${32 * phase}" height="32" />
+          <rect x="0" y="0" width="${54 * phase}" height="54" />
         </clipPath>
+        <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="60%" stop-color="#fffbe6" stop-opacity="0"/>
+          <stop offset="85%" stop-color="#f6e27a" stop-opacity="${goldGlowOpacity}"/>
+          <stop offset="100%" stop-color="#eab308" stop-opacity="0.22"/>
+        </radialGradient>
         <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
           <stop offset="80%" stop-color="#e0e7ef" stop-opacity="0.7"/>
           <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <!-- Glow -->
-      <circle cx="16" cy="16" r="15" fill="url(#moonGlow)" opacity="0.7"/>
+      <!-- Gold Glow (шире луны) -->
+      <circle cx="27" cy="27" r="26" fill="url(#goldGlow)" />
+      <!-- Серебристый glow -->
+      <circle cx="27" cy="27" r="23" fill="url(#moonGlow)" opacity="0.7"/>
       <!-- Main moon (серебристый) -->
-      <circle cx="16" cy="16" r="14" fill="#e0e7ef" stroke="#a5b4fc" stroke-width="2"/>
+      <circle cx="27" cy="27" r="20" fill="#e0e7ef"/>
       <!-- Phase (полупрозрачная) -->
-      <circle cx="16" cy="16" r="14" fill="#dbeafe" fill-opacity="0.55" clip-path="url(#moonPhase)" />
+      <circle cx="27" cy="27" r="20" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
       <!-- Craters -->
-      ${craters.map(c => `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="#b6bbc7" opacity="${c.opacity}"/>`).join('')}
+      ${craters.map(c => `<circle cx="${c.cx + 15}" cy="${c.cy + 15}" r="${c.r}" fill="#b6bbc7" opacity="${c.opacity}"/>`).join('')}
       <!-- Subtle shadow -->
-      <ellipse cx="20" cy="22" rx="7" ry="2.5" fill="#a3aab7" opacity="0.10"/>
+      <ellipse cx="34" cy="39" rx="10" ry="3.5" fill="#a3aab7" opacity="0.10"/>
       <!-- Overlay for dark side -->
-      <circle cx="16" cy="16" r="14" fill="rgba(0,0,0,0.07)" />
+      <circle cx="27" cy="27" r="20" fill="rgba(0,0,0,0.07)" />
     </svg>
   `;
   moonBtn.innerHTML = svg;
