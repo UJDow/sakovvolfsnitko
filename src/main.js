@@ -848,35 +848,29 @@ function showFinalDialog() {
   dialog.style.display = 'block';
 }
 
-onClick('exportFinalDialogBtn', () => {
-  const final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
-  const blocksText = sortedBlocks()
-    .filter(b => b.finalInterpretation)
-    .map(b => `Блок #${b.id}: ${b.finalInterpretation}`)
-    .join('\n\n');
-  const text = `Итоговое толкование:\n${final}\n\nТолкования блоков:\n${blocksText}`;
-  const blob = new Blob([text], {type: 'text/plain'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'saviora_final.txt';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 0);
-});
-
 // ====== Экспорт итогового толкования и блоков ======
-onClick('menuExportFinal', () => {
-  let final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
-  let blocksText = sortedBlocks()
-    .filter(b => b.finalInterpretation)
-    .map(b => `Блок #${b.id}: ${b.finalInterpretation}`)
-    .join('\n\n');
-  const exportText = `Итоговое толкование:\n${final}\n\nТолкования блоков:\n${blocksText}`;
-  const blob = new Blob([exportText], {type: 'text/plain'});
+function exportFinalTXT() {
+  const title = 'Saviora — Толкование сна';
+  const date = new Date().toLocaleString('ru-RU', { dateStyle: 'long', timeStyle: 'short' });
+  const dream = state.dreamText || '(нет текста)';
+  const final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
+  const blocks = sortedBlocks().filter(b => b.finalInterpretation);
+
+  let txt = `${title}\n\n`;
+  txt += `Оригинальный текст сна:\n${dream}\n\n`;
+  txt += `Итоговое толкование:\n${final}\n\n`;
+
+  if (blocks.length) {
+    txt += `Список блоков с пояснениями:\n`;
+    blocks.forEach(b => {
+      txt += `Блок #${b.id}: ${b.finalInterpretation}\n`;
+    });
+    txt += '\n';
+  }
+
+  txt += `Дата: ${date}\n`;
+
+  const blob = new Blob([txt], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -887,8 +881,7 @@ onClick('menuExportFinal', () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 0);
-  hideAttachMenu();
-});
+}
 
 // ====== Закрытие финального окна ======
 onClick('closeFinalDialog', () => {
@@ -1075,30 +1068,12 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 });
 
   onClick('menuExportFinal', () => {
-  // Найти итоговое толкование (глобальное)
-  let final = null;
-  for (const b of state.blocks) {
-    if (b.chat && b.chat.some(m => m.isGlobalFinal)) {
-      final = b.chat.find(m => m.isGlobalFinal).text;
-      break;
-    }
-  }
-  if (!final) final = 'Итоговое толкование не найдено.';
+  exportFinalTXT();
+  hideAttachMenu();
+});
 
-  // Сохраняем в файл
-  const blob = new Blob([final], {type: 'text/plain'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'saviora_final.txt';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 0);
-
-  hideAttachMenu(); // чтобы меню закрывалось после экспорта
+onClick('exportFinalDialogBtn', () => {
+  exportFinalTXT();
 });
 
   // Клик вне меню — закрыть
