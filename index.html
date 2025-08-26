@@ -368,8 +368,19 @@
   
     .bot  { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
     .user { background: var(--primary);  color: #fff; align-self: flex-end; border: none; }
-    .msg.bot.final { background: #e0f2fe; color: #0c4a6e; border: 1px solid #bae6fd; }
-    .msg.final-global { background: linear-gradient(135deg, #fef3c7, #fed7aa); border-left: 4px solid #f59e0b; color: #78350f; }
+    [data-theme="dark"] .msg.bot.final {
+  background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
+  color: #e0f2fe !important;
+  border: 1px solid #3b82f6 !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+[data-theme="dark"] .msg.final-global {
+  background: linear-gradient(135deg, #78350f, #92400e) !important;
+  border-left: 4px solid #f59e0b !important;
+  color: #fef3c7 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
     .msg.thinking {
       background: transparent;
       color: var(--text-secondary);
