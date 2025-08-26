@@ -670,7 +670,6 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
 
-  // Обновляем прогресс луны
   renderMoonProgress(b.userAnswersCount, 10, false);
 
   // Показываем уведомление ровно на 10-м ответе (и только один раз)
@@ -678,7 +677,7 @@ function appendUser(text) {
     b._moonFlashShown = true;
     renderMoonProgress(b.userAnswersCount, 10, true);
     setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    showMoonNotice('Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+    showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
   }
 
   renderChat();
@@ -1076,12 +1075,6 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
   const menu = byId('attachMenu');
   if (!menu) return;
   menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
-
-  // Показываем подсказку, если можно толковать, но ещё не толковали
-  const b = getCurrentBlock();
-  if (b && b.userAnswersCount >= 10 && !b.finalInterpretation) {
-    showMoonNotice('Вы можете запросить итоговое толкование блока!');
-  }
 });
 
   onClick('menuExportFinal', () => {
