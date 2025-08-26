@@ -29,44 +29,69 @@ function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); }
 function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, theme = 'light') {
   const moonBtn = document.getElementById('moonBtn');
   if (!moonBtn) return;
+  const phase = Math.min(userAnswersCount / max, 1);
 
-  // Цвета
-  const moonColor = theme === 'dark' ? '#cfd8e3' : '#e0e7ef';
-  const borderColor = theme === 'dark' ? '#f6e27a' : '#e0e7ef'; // В светлой теме ободок почти не виден
+  // Цвета ободка по теме
+  const goldGlow = {
+    stop85: theme === 'dark' ? '#a5b4fc' : '#f6e27a',
+    stop100: theme === 'dark' ? '#6366f1' : '#eab308',
+    opacity: theme === 'dark' ? 0.32 : 0.22
+  };
 
-  // Размеры
-  const size = 44; // или 40, если у тебя кнопка send 40x40
-  const moonRadius = 18; // для 40x40, или 20 для 44x44
-  const borderWidth = 2;
-
-  // Кратеры (оставь свои)
+  // Массив кратеров — много, разных размеров и opacity
   const craters = [
+    // Крупные
+    {cx: 8, cy: 10, r: 2.6, opacity: 0.22},
+    {cx: 20, cy: 8, r: 2.1, opacity: 0.19},
+    {cx: 15, cy: 20, r: 2.3, opacity: 0.21},
+    // Средние
     {cx: 12, cy: 16, r: 1.3, opacity: 0.16},
     {cx: 18, cy: 14, r: 1.1, opacity: 0.15},
     {cx: 22, cy: 18, r: 1.4, opacity: 0.17},
     {cx: 10, cy: 22, r: 1.2, opacity: 0.14},
+    // Мелкие
     {cx: 16, cy: 10, r: 0.7, opacity: 0.12},
     {cx: 24, cy: 12, r: 0.6, opacity: 0.11},
     {cx: 19, cy: 22, r: 0.8, opacity: 0.13},
     {cx: 13, cy: 19, r: 0.5, opacity: 0.10},
     {cx: 21, cy: 16, r: 0.6, opacity: 0.11},
+    // Группировка мелких
     {cx: 17, cy: 18, r: 0.4, opacity: 0.09},
     {cx: 18, cy: 19, r: 0.3, opacity: 0.08},
     {cx: 19, cy: 18, r: 0.4, opacity: 0.09},
+    // Еще несколько для "шума"
     {cx: 14, cy: 13, r: 0.5, opacity: 0.10},
     {cx: 22, cy: 21, r: 0.5, opacity: 0.10},
     {cx: 12, cy: 21, r: 0.4, opacity: 0.09},
     {cx: 20, cy: 20, r: 0.3, opacity: 0.08}
   ];
 
-  // SVG
-  const svg = `
-    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" fill="none">
-      <circle cx="${size/2}" cy="${size/2}" r="${moonRadius}" fill="${moonColor}" stroke="${borderColor}" stroke-width="${borderWidth}" />
+  // SVG: внешний ободок теперь строго по радиусу луны (r=20)
+ const svg = `
+    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 44 44" fill="none">
+      <defs>
+        <clipPath id="moonPhase">
+          <rect x="0" y="0" width="${44 * phase}" height="44" />
+        </clipPath>
+        <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="60%" stop-color="#fffbe6" stop-opacity="0"/>
+          <stop offset="85%" stop-color="${goldGlow.stop85}" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="${goldGlow.stop100}" stop-opacity="${goldGlow.opacity}"/>
+        </radialGradient>
+        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+          <stop offset="80%" stop-color="#e0e7ef" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="22" cy="22" r="16" fill="url(#goldGlow)" />
+      <circle cx="22" cy="22" r="15" fill="url(#moonGlow)" opacity="0.7"/>
+      <circle cx="22" cy="22" r="13" fill="#e0e7ef"/>
+      <circle cx="22" cy="22" r="13" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
       ${craters.map(c => `
         <circle 
-          cx="${c.cx + (size/2 - 10)}" 
-          cy="${c.cy + (size/2 - 10)}" 
+          cx="${c.cx + 7}" 
+          cy="${c.cy + 7}" 
           r="${c.r}" 
           fill="#b6bbc7" 
           opacity="${c.opacity}" 
@@ -76,7 +101,6 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
   `;
   moonBtn.innerHTML = svg;
 }
-
 /* ====== Auth ====== */
 function showAuth() {
   const authDiv = byId('auth');
