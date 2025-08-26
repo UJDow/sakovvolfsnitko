@@ -84,10 +84,10 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
           <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <circle cx="22" cy="22" r="20" fill="url(#goldGlow)" />
-      <circle cx="22" cy="22" r="19" fill="url(#moonGlow)" opacity="0.7"/>
-      <circle cx="22" cy="22" r="17" fill="#e0e7ef"/>
-      <circle cx="22" cy="22" r="17" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
+      <circle cx="22" cy="22" r="21" fill="url(#goldGlow)" />
+      <circle cx="22" cy="22" r="20" fill="url(#moonGlow)" opacity="0.7"/>
+      <circle cx="22" cy="22" r="18" fill="#e0e7ef"/>
+      <circle cx="22" cy="22" r="18" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
       ${craters.map(c => `
         <circle 
           cx="${c.cx + 7}" 
