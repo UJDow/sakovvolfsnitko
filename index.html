@@ -461,9 +461,9 @@
 #moonBtn {
   position: absolute;
   right: 60px;
-  width: 54px;
-  height: 54px;
-  border-radius: 27px;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -485,23 +485,23 @@
 }
 
 .moon-svg {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   display: block;
   transition: filter 0.4s, transform 0.4s;
 }
 
 .moon-flash {
-  filter: drop-shadow(0 0 32px #fff9c4) brightness(2.2);
+  filter: drop-shadow(0 0 32px #e0e7ef) brightness(2.1);
   transform: scale(1.22);
   animation: moonFlashAnim 1.6s cubic-bezier(.4,2,.4,1) 1;
 }
 
 @keyframes moonFlashAnim {
-  0%   { filter: drop-shadow(0 0 0px #fff9c4) brightness(1); transform: scale(1);}
-  20%  { filter: drop-shadow(0 0 48px #fffde4) brightness(2.7); transform: scale(1.28);}
-  60%  { filter: drop-shadow(0 0 32px #fff9c4) brightness(2.2); transform: scale(1.22);}
-  100% { filter: drop-shadow(0 0 0px #fff9c4) brightness(1); transform: scale(1);}
+  0%   { filter: drop-shadow(0 0 0px #e0e7ef) brightness(1); transform: scale(1);}
+  20%  { filter: drop-shadow(0 0 48px #fff) brightness(2.7); transform: scale(1.28);}
+  60%  { filter: drop-shadow(0 0 32px #e0e7ef) brightness(2.1); transform: scale(1.22);}
+  100% { filter: drop-shadow(0 0 0px #e0e7ef) brightness(1); transform: scale(1);}
 }
     
     .attach-icon-btn:hover { background: rgba(0,0,0,0.04); }
