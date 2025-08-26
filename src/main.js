@@ -315,7 +315,16 @@ function renderChat() {
       m.quickReplies.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
-        btn.addEventListener('click', () => sendAnswer(opt));
+        btn.addEventListener('click', function() {
+  const input = document.getElementById('userInput');
+  if (input) {
+    input.value = this.textContent;
+    input.focus();
+  }
+  // Визуально выделить выбранную плитку (по желанию)
+  q.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+  this.classList.add('selected');
+});
         q.appendChild(btn);
       });
       chat.insertBefore(q, thinking || chat.firstChild);
