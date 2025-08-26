@@ -255,7 +255,21 @@ function renderBlocksChips() {
   const cb = byId('currentBlock');
   const b = getCurrentBlock();
   if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
-  
+
+  function renderQuickReplies(quickReplies) {
+  const quickDiv = document.querySelector('.quick');
+  quickDiv.innerHTML = quickReplies.map(q => `<button>${q}</button>`).join('');
+
+  // Вот здесь вешаем обработчики!
+  document.querySelectorAll('.quick button').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = document.querySelector('#inputField'); // id твоего input
+      input.value = this.textContent;
+      input.focus();
+    });
+  });
+}
+
   // Рендерим луну
 renderMoonProgress(b ? b.userAnswersCount : 0, 10);
 
@@ -301,16 +315,7 @@ function renderChat() {
       m.quickReplies.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
-        btn.addEventListener('click', function() {
-  const input = document.getElementById('userInput');
-  if (input) {
-    input.value = this.textContent;
-    input.focus();
-  }
-  // Визуально выделить выбранную плитку (по желанию)
-  q.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
-  this.classList.add('selected');
-});
+        btn.addEventListener('click', () => sendAnswer(opt));
         q.appendChild(btn);
       });
       chat.insertBefore(q, thinking || chat.firstChild);
