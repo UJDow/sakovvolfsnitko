@@ -797,14 +797,17 @@ function initHandlers() {
   });
 
   onClick('toStep3', () => {
-    if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
+  if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
+  // Если пользователь не выбрал блок — по умолчанию первый
+  if (!state.currentBlockId) {
     state.currentBlockId = sortedBlocks()[0]?.id || null;
-    showStep(3);
-    renderBlocksChips();
-    updateProgressIndicator();
-    const b = getCurrentBlock();
-    if (b && !b.done) startOrContinue();
-  });
+  }
+  showStep(3);
+  renderBlocksChips();
+  updateProgressIndicator();
+  const b = getCurrentBlock();
+  if (b && !b.done) startOrContinue(); // анализируем выбранный блок!
+});
 
   // Назад
   onClick('backTo1Top', () => { showStep(1); updateProgressIndicator(); });
