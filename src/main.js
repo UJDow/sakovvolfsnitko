@@ -643,6 +643,22 @@ function appendUser(text) {
   // Обновляем луну после каждого ответа
   renderMoonProgress(b.userAnswersCount, 10, false);
 
+  // Если достигли лимита — сразу показываем уведомление
+  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    appendBot(
+      'Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока, нажав на кнопку "Толкование" (луна). Хотите продолжить диалог или перейти к толкованию?',
+      [],
+      false,
+      true // <-- isSystemNotice
+    );
+    renderChat();
+    renderBlocksChips();
+    return;
+  }
+
   renderChat();
   renderBlocksChips();
 }
@@ -1095,8 +1111,12 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   onClick('menuBlockInterpret', () => { hideAttachMenu(); blockInterpretation(); });
   onClick('menuFinalInterpret', () => { 
-  hideAttachMenu(); 
-  showFinalDialog(); 
+  hideAttachMenu();
+  if (state.globalFinalInterpretation) {
+    showFinalDialog();
+  } else {
+    finalInterpretation();
+  }
 });
   // Старые стрелки — если присутствуют в HTML
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
