@@ -753,16 +753,38 @@
   transform: translateY(-60%);
 }
 
-#finalDialogMain {
-  margin-bottom: 28px;
-  font-size: 17px;
-  line-height: 1.7;
-  max-height: 300px;
+#finalDialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.45);
   overflow-y: auto;
 }
+#finalDialog .modal-content {
+  max-width: 540px;
+  margin: 40px auto;
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 32px 24px;
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+#finalDialogMain, #finalDialogBlocks {
+  overflow-y: auto;
+  max-height: 32vh;
+}
 @media (max-width: 600px) {
-  #finalDialogMain {
-    max-height: 160px;
+  #finalDialog .modal-content {
+    max-height: 92vh;
+    padding: 16px 6px;
+  }
+  #finalDialogMain, #finalDialogBlocks {
+    max-height: 28vh;
+    font-size: 15px;
   }
 }
     
@@ -1147,14 +1169,27 @@
     setTheme(getPreferredTheme());
   </script>
   <!-- Итоговое окно -->
-  <div id="finalDialog" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45);">
-    <div style="max-width:540px; margin:40px auto; background:var(--card-bg); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 24px; position:relative;">
-      <button id="closeFinalDialog" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;">×</button>
-      <h2 style="margin-top:0;">Итоговое толкование</h2>
-      <div id="finalDialogMain"></div>
-      <h3 style="margin-bottom:10px;">Толкования блоков</h3>
-      <div id="finalDialogBlocks"></div>
-      <button id="exportFinalDialogBtn" class="btn primary" style="margin-top:18px;">⬇️ Экспорт итога</button>
+  <div id="finalDialog" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); overflow-y:auto;">
+  <div id="finalDialogContent"
+    style="
+      max-width:540px;
+      margin:40px auto;
+      background:var(--card-bg);
+      border-radius:18px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.18);
+      padding:32px 24px;
+      position:relative;
+      max-height: 80vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    ">
+    <button id="closeFinalDialog" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;">×</button>
+    <h2 style="margin-top:0;">Итоговое толкование</h2>
+    <div id="finalDialogMain" style="overflow-y:auto; max-height: 32vh; margin-bottom: 18px;"></div>
+    <h3 style="margin-bottom:10px;">Толкования блоков</h3>
+    <div id="finalDialogBlocks" style="overflow-y:auto; max-height: 32vh;"></div>
+    <button id="exportFinalDialogBtn" class="btn primary" style="margin-top:18px;">⬇️ Экспорт итога</button>
       </div>
   </div>
   <div id="moonNotice" class="moon-notice"></div>
