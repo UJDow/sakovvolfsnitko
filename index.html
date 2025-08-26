@@ -381,6 +381,22 @@
   color: #fef3c7 !important;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
 }
+    /* Светлая тема: акцент для итоговых/блоковых толкований */
+.msg.bot.final {
+  background: linear-gradient(135deg, #e6f7ff 0%, #d0e8ff 100%); /* мягкий голубой градиент */
+  color: #06213a; /* тёмный текст для контраста */
+  border: 1px solid rgba(34, 139, 230, 0.10); /* лёгкая голубая рамка */
+  box-shadow: 0 6px 18px rgba(34, 139, 230, 0.06);
+  border-left: 4px solid rgba(34, 139, 230, 0.18); /* акцент слева */
+}
+
+/* Глобальное итоговое толкование чуть насыщеннее */
+.msg.final-global {
+  background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+  color: #042c52;
+  border-left: 4px solid #60a5fa;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
+}
     .msg.thinking {
       background: transparent;
       color: var(--text-secondary);
