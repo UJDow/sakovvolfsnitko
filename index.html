@@ -368,29 +368,14 @@
   
     .bot  { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
     .user { background: var(--primary);  color: #fff; align-self: flex-end; border: none; }
-    [data-theme="dark"] .msg.bot.final {
-  background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
-  color: #e0f2fe !important;
-  border: 1px solid #3b82f6 !important;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-[data-theme="dark"] .msg.final-global {
-  background: linear-gradient(135deg, #78350f, #92400e) !important;
-  border-left: 4px solid #f59e0b !important;
-  color: #fef3c7 !important;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-}
-    /* Светлая тема: акцент для итоговых/блоковых толкований */
-.msg.bot.final {
-  background: linear-gradient(135deg, #e6f7ff 0%, #d0e8ff 100%); /* мягкий голубой градиент */
-  color: #06213a; /* тёмный текст для контраста */
-  border: 1px solid rgba(34, 139, 230, 0.10); /* лёгкая голубая рамка */
+ .msg.bot.final {
+  background: linear-gradient(135deg, #e6f7ff 0%, #d0e8ff 100%);
+  color: #06213a;
+  border: 1px solid rgba(34, 139, 230, 0.10);
   box-shadow: 0 6px 18px rgba(34, 139, 230, 0.06);
-  border-left: 4px solid rgba(34, 139, 230, 0.18); /* акцент слева */
+  border-left: 4px solid rgba(34, 139, 230, 0.18);
 }
 
-/* Глобальное итоговое толкование чуть насыщеннее */
 .msg.final-global {
   background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
   color: #042c52;
