@@ -899,6 +899,40 @@
   70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0.13); }
   100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.13); }
 }
+
+    .inline-option {
+  display: inline-block;
+  background: transparent;
+  color: var(--primary);
+  border: 1px dashed var(--primary);
+  border-radius: 10px;
+  padding: 2px 8px;
+  margin: 0 2px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  vertical-align: baseline;
+  user-select: none;
+  opacity: 0.85;
+}
+.inline-option:active,
+.inline-option.selected {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  opacity: 1;
+}
+[data-theme="dark"] .inline-option {
+  color: #7dd3fc; /* светло-бирюзовый */
+  border-color: #7dd3fc;
+  background: transparent;
+}
+[data-theme="dark"] .inline-option:active,
+[data-theme="dark"] .inline-option.selected {
+  background: #7dd3fc;
+  color: #0f172a;
+  border-color: #7dd3fc;
+}
     
   </style>
 </head>
