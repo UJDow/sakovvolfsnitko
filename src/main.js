@@ -385,7 +385,11 @@ function renderBlockPreviews() {
     nextEl.style.cssText += previewStyleForBlock(nb.id, false);
     const label = nextEl.querySelector('.label');
     if (label) label.textContent = `#${nb.id} ${clampPreviewText(nb.text, 80)}`;
-    nextEl.onclick = () => { selectBlock(nextId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
+    nextEl.onclick = () => { 
+  selectBlock(nextId); 
+  const cb = getCurrentBlock(); 
+  if (cb && !cb.done && (!cb.chat || cb.chat.length === 0)) startOrContinue(); 
+};
   } else {
     nextEl.classList.add('disabled');
     const label = nextEl.querySelector('.label'); if (label) label.textContent = 'Нет следующего блока';
@@ -399,7 +403,11 @@ function renderBlockPreviews() {
     prevEl.style.cssText += previewStyleForBlock(pb.id, false);
     const label = prevEl.querySelector('.label');
     if (label) label.textContent = `#${pb.id} ${clampPreviewText(pb.text, 80)}`;
-    prevEl.onclick = () => { selectBlock(prevId); const cb = getCurrentBlock(); if (cb && !cb.done) startOrContinue(); };
+    prevEl.onclick = () => { 
+  selectBlock(prevId); 
+  const cb = getCurrentBlock(); 
+  if (cb && !cb.done && (!cb.chat || cb.chat.length === 0)) startOrContinue(); 
+};
   } else {
     prevEl.classList.add('disabled');
     const label = prevEl.querySelector('.label'); if (label) label.textContent = '…';
@@ -810,7 +818,8 @@ function initHandlers() {
   renderBlocksChips();
   updateProgressIndicator();
   const b = getCurrentBlock();
-  if (b && !b.done) startOrContinue(); // анализируем выбранный блок!
+  // Новый блок: только если чат пустой, иначе не дублируем вопрос
+  if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
 });
 
   // Назад
