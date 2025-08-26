@@ -192,9 +192,26 @@ function renderDreamView() {
   const t = state.dreamText || '';
   if (!t) return;
 
+  // === ДОБАВЛЕНО: Ограничение для больших текстов ===
+  const MAX_TOKENS = 500; // Лимит токенов
+  if (t.length > 2000) { // Или по количеству символов
+    dv.textContent = t;
+    return;
+  }
+  // === КОНЕЦ ДОБАВЛЕНИЯ ===
+
   const tokens = t.match(/\S+|\s+/g) || [];
+  
+  // === ДОБАВЛЕНО: Проверка количества токенов ===
+  if (tokens.length > MAX_TOKENS) {
+    dv.textContent = t;
+    return;
+  }
+  // === КОНЕЦ ДОБАВЛЕНИЯ ===
+
   let pos = 0;
   tokens.forEach(token => {
+    // ... остальной код без изменений ...
     const isWord = /\S/.test(token);
     if (isWord) {
       const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
@@ -212,7 +229,6 @@ function renderDreamView() {
         span.setAttribute('data-block', String(block.id));
         span.title = `Блок #${block.id}`;
         span.addEventListener('click', () => selectBlock(block.id));
-        // === Вот здесь добавляем класс для выделенного блока ===
         if (block.id === state.currentBlockId) {
           span.classList.add('block-selected');
         }
