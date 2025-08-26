@@ -255,20 +255,6 @@ function renderBlocksChips() {
   const cb = byId('currentBlock');
   const b = getCurrentBlock();
   if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
-
-  function renderQuickReplies(quickReplies) {
-  const quickDiv = document.querySelector('.quick');
-  quickDiv.innerHTML = quickReplies.map(q => `<button>${q}</button>`).join('');
-  
-  // Вот здесь вешаем обработчики!
-  document.querySelectorAll('.quick button').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const input = document.querySelector('#inputField'); // id твоего input
-      input.value = this.textContent;
-      input.focus();
-    });
-  });
-}
   
   // Рендерим луну
 renderMoonProgress(b ? b.userAnswersCount : 0, 10);
