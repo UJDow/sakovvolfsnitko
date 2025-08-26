@@ -8,49 +8,35 @@
   <meta name="theme-color" content="#2563eb">
   <style>
     :root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary: #64748b;
-  --accent: #06b6d4;
-  --background: #bdcff1;
-  --card-bg: rgba(255, 255, 255, 0.92);
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --border: rgba(0, 0, 0, 0.1);
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  --chat-bg: rgba(255,255,255,0.82);
-  --menu-bg: rgba(255,255,255,0.98);
-  --menu-text: #111827;
-  --panel-max-width: 768px;
-  --surface-height-desktop: 440px;
-  --surface-height-mobile: 60vh;
-  --surface-height: var(--surface-height-desktop);
-  --keyboard-height: 0px;
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  --progress-active: #2563eb;
-  --progress-inactive: #e2e8f0;
-  --progress-completed: #10b981;
-}
-@media (max-width: 800px) {
-  :root {
-    --surface-height: var(--surface-height-mobile);
-  }
-}
-  
-@media (max-width: 600px) {
-  #finalDialog .modal-content, .card {
-    max-height: 96vh;
-    padding: 16px 6px;
-  }
-  #finalDialogMain, #finalDialogBlocks, .dream-view, .chat {
-    overflow-y: auto;
-    max-height: calc(var(--surface-height) - 48px);
-    -webkit-overflow-scrolling: touch;
-  }
-}
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #64748b;
+      --accent: #06b6d4;
+      --background: #bdcff1;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --border: rgba(0, 0, 0, 0.1);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+
+      --chat-bg: rgba(255,255,255,0.82);
+      --menu-bg: rgba(255,255,255,0.98);
+      --menu-text: #111827;
+
+      --panel-max-width: 768px;
+      --surface-height-desktop: 380px;
+      --surface-height-mobile: 50vh;
+      --surface-height: var(--surface-height-desktop);
+      --keyboard-height: 0px;
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    
+      --progress-active: #2563eb;
+      --progress-inactive: #e2e8f0;
+      --progress-completed: #10b981;
+    }
 
     [data-theme="dark"] {
       --background: #0f172a;
@@ -214,17 +200,19 @@
 
     /* Единый размер для всех рабочих областей */
     .surface, .dream-view, textarea#dream, .chat-wrap.surface {
-  min-height: var(--surface-height);
-  height: var(--surface-height);
-  max-height: var(--surface-height);
-}
-.card,
-#finalDialog .modal-content {
-  max-width: 540px;
-  max-height: 92vh;
-  overflow-y: auto;
-  border-radius: 18px;
-}
+      box-sizing: border-box;
+      width: 100%;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 0;
+      display: block;
+      min-height: var(--surface-height);
+      height: var(--surface-height);
+      max-height: var(--surface-height);
+      font-size: 16px;
+      transition: height 0.3s ease, min-height 0.3s ease;
+    }
+
     .surface {
       background: rgba(255,255,255,0.8);
       border: 1px solid var(--border);
@@ -772,7 +760,7 @@
   background: rgba(0,0,0,0.45);
   overflow-y: auto;
 }
-  #finalDialog .modal-content {
+#finalDialog .modal-content {
   max-width: 540px;
   margin: 40px auto;
   background: var(--card-bg);
@@ -780,15 +768,14 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   padding: 32px 24px;
   position: relative;
-  max-height: 92vh;
+  max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 #finalDialogMain, #finalDialogBlocks {
   overflow-y: auto;
-  max-height: calc(var(--surface-height) - 48px); /* чуть меньше, чтобы не вылезало за пределы */
-  -webkit-overflow-scrolling: touch;
+  max-height: 32vh;
 }
     #finalDialogContent, #finalDialogMain, #finalDialogBlocks {
   -webkit-overflow-scrolling: touch;
@@ -951,10 +938,9 @@
         transition: transform 0.1s ease, opacity 0.1s ease;
       }
       .btn:active, .chip:active, .block-preview:active, .quick button:active {
-        max-width: 95vw;
-  white-space: normal;
-  word-break: break-word;
-}
+        transform: scale(0.97);
+        opacity: 0.8;
+      }
     }
   
     @media (spanning: single-fold-vertical) {
