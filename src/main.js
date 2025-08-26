@@ -33,8 +33,8 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
 
   // Цвета ободка по теме
   const goldGlow = {
-    stop85: theme === 'dark' ? '#a5b4fc' : '#f6e27a', // сиреневый или золотой
-    stop100: theme === 'dark' ? '#6366f1' : '#eab308', // насыщенный сиреневый или насыщенный золотой
+    stop85: theme === 'dark' ? '#a5b4fc' : '#f6e27a',
+    stop100: theme === 'dark' ? '#6366f1' : '#eab308',
     opacity: theme === 'dark' ? 0.32 : 0.22
   };
 
@@ -67,11 +67,11 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
   ];
 
   // SVG: внешний ободок теперь строго по радиусу луны (r=20)
-  const svg = `
-    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 54 54" fill="none">
+ const svg = `
+    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 44 44" fill="none">
       <defs>
         <clipPath id="moonPhase">
-          <rect x="0" y="0" width="${54 * phase}" height="54" />
+          <rect x="0" y="0" width="${44 * phase}" height="44" />
         </clipPath>
         <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
           <stop offset="60%" stop-color="#fffbe6" stop-opacity="0"/>
@@ -84,19 +84,14 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
           <stop offset="100%" stop-color="#a5b4fc" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <!-- Внешний ободок (цвет зависит от темы, радиус не больше луны) -->
-      <circle cx="27" cy="27" r="20" fill="url(#goldGlow)" />
-      <!-- Серебристый glow -->
-      <circle cx="27" cy="27" r="19" fill="url(#moonGlow)" opacity="0.7"/>
-      <!-- Main moon (серебристый) -->
-      <circle cx="27" cy="27" r="17" fill="#e0e7ef"/>
-      <!-- Phase (полупрозрачная) -->
-      <circle cx="27" cy="27" r="17" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
-      <!-- Кратеры -->
+      <circle cx="22" cy="22" r="16" fill="url(#goldGlow)" />
+      <circle cx="22" cy="22" r="15" fill="url(#moonGlow)" opacity="0.7"/>
+      <circle cx="22" cy="22" r="13" fill="#e0e7ef"/>
+      <circle cx="22" cy="22" r="13" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
       ${craters.map(c => `
         <circle 
-          cx="${c.cx + 10}" 
-          cy="${c.cy + 10}" 
+          cx="${c.cx + 7}" 
+          cy="${c.cy + 7}" 
           r="${c.r}" 
           fill="#b6bbc7" 
           opacity="${c.opacity}" 
