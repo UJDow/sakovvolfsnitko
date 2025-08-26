@@ -188,19 +188,65 @@ function updateProgressIndicator() {
 function renderDreamView() {
   const dv = byId('dreamView');
   if (!dv) return;
-  
-  // Полностью упрощенный рендеринг
-  dv.textContent = state.dreamText || '';
-  
-  // Просто добавляем подсветку для блоков через CSS классы
-  dv.innerHTML = state.dreamText || '';
-  
-  // Минимальная обработка только для существующих блоков
-  const blocks = state.blocks || [];
-  if (blocks.length > 0) {
-    // Просто добавляем информацию о блоках в data-атрибуты контейнера
-    dv.setAttribute('data-blocks', JSON.stringify(blocks));
-  }
+  dv.innerHTML = '';
+  const t = state.dreamText || '';
+  if (!t) return;
+
+  const tokens = t.match(/\S+|\s+/g) || [];
+  let pos = 0;
+  tokens.forEach(token => {
+    const isWord = /\S/.test(token);
+    if (isWord) {
+      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
+      const span = document.createElement('span');
+      span.textContent = token;
+      span.dataset.start = String(pos);
+      span.dataset.end = String(pos + token.length);
+
+      if (block) {
+        const color = BLOCK_COLORS[(block.id - 1) % BLOCK_COLORS.length];
+        span.style.background = color;
+        span.style.color = '#222';
+        span.style.borderRadius = '4px';
+        span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
+        span.setAttribute('data-block', String(block.id));
+        span.title = `Блок #${block.id}`;
+        span.addEventListener('click', () => selectBlock(block.id));
+        // === Вот здесь добавляем класс для выделенного блока ===
+        if (block.id === state.currentBlockId) {
+          span.classList.add('block-selected');
+        }
+      } else {
+        span.style.background = '#f0f0f0';
+        span.style.color = '#888';
+        span.style.borderRadius = '4px';
+        span.classList.add('tile');
+        span.addEventListener('click', (e) => {
+          e.preventDefault();
+          span.classList.toggle('selected');
+          if (span.classList.contains('selected')) {
+            span.style.background = hexToRgba(currentSelectionColor, 0.32);
+            span.style.color = '#222';
+            span.style.borderRadius = '4px';
+            span.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)';
+            span.style.margin = '0px';
+            span.style.padding = '0 4px';
+          } else {
+            span.style.background = '#f0f0f0';
+            span.style.color = '#888';
+            span.style.borderRadius = '';
+            span.style.boxShadow = '';
+            span.style.margin = '';
+            span.style.padding = '';
+          }
+        });
+      }
+      dv.appendChild(span);
+    } else {
+      dv.appendChild(document.createTextNode(token));
+    }
+    pos += token.length;
+  });
 }
 
 /* ====== Chips, чат, индикатор «думаю», превью ====== */
@@ -837,39 +883,33 @@ onClick('closeFinalDialog', () => {
 
 /* ====== Добавление блоков ====== */
 function addBlockFromSelection() {
-  const dreamEl = byId('dream');
-  if (!dreamEl) return;
-  
-  const selectedText = window.getSelection().toString();
-  if (!selectedText.trim()) return alert('Выделите текст для блока.');
-  
-  const fullText = state.dreamText;
-  const start = fullText.indexOf(selectedText);
-  if (start === -1) return alert('Не удалось найти выделенный текст.');
-  
-  const end = start + selectedText.length;
-  
-  // Проверяем пересечения
+  const dv = byId('dreamView');
+  if (!dv) return;
+  const selected = Array.from(dv.querySelectorAll('.tile.selected'));
+  if (!selected.length) return alert('Выделите плиточки для блока.');
+
+  const starts = selected.map(s => parseInt(s.dataset.start || '0', 10));
+  const ends = selected.map(s => parseInt(s.dataset.end || '0', 10));
+  const start = Math.min(...starts);
+  const end = Math.max(...ends);
+
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
     }
   }
-  
+
   const id = state.nextBlockId++;
-  state.blocks.push({ 
-    id, 
-    start, 
-    end, 
-    text: selectedText, 
-    done: false, 
-    chat: [], 
-    finalInterpretation: null, 
-    userAnswersCount: 0, 
-    _moonFlashShown: false 
-  });
-  
+  const text = state.dreamText.slice(start, end);
+  state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0, _moonFlashShown: false });
   state.currentBlockId = id;
+
+  selected.forEach(s => {
+    s.classList.remove('selected');
+    s.style.background = '#f0f0f0';
+    s.style.color = '#888';
+  });
+
   renderBlocksChips();
   resetSelectionColor();
 }
@@ -907,14 +947,16 @@ function selectBlock(id) {
 }
 
 /* ====== Handlers ====== */
-function selectBlock(id) {
-  state.currentBlockId = id;
-  renderBlocksChips();
-  // Просто обновляем интерфейс без сложного рендеринга
-  const cb = byId('currentBlock');
-  const b = getCurrentBlock();
-  if (cb) cb.textContent = b ? `Текущий блок #${b.id}: "${b.text}"` : 'Блок не выбран';
-}
+function initHandlers() {
+  onClick('toStep2', () => {
+    const dreamEl = byId('dream');
+    state.dreamText = dreamEl ? dreamEl.value : '';
+    if (!state.dreamText.trim()) { alert('Введите текст сна!'); return; }
+    showStep(2);
+    renderDreamView();
+    resetSelectionColor();
+    updateProgressIndicator();
+  });
 
   onClick('toStep3', () => {
   if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
