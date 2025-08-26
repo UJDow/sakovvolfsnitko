@@ -973,6 +973,33 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
     menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
   });
 
+  onClick('menuExportFinal', () => {
+  // Найти итоговое толкование (глобальное)
+  let final = null;
+  for (const b of state.blocks) {
+    if (b.chat && b.chat.some(m => m.isGlobalFinal)) {
+      final = b.chat.find(m => m.isGlobalFinal).text;
+      break;
+    }
+  }
+  if (!final) final = 'Итоговое толкование не найдено.';
+
+  // Сохраняем в файл
+  const blob = new Blob([final], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'saviora_final.txt';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+
+  hideAttachMenu(); // чтобы меню закрывалось после экспорта
+});
+
   // Клик вне меню — закрыть
   document.addEventListener('click', (e) => {
     const menu = byId('attachMenu');
