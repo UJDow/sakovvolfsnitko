@@ -315,17 +315,22 @@
     .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
   
     .chip {
-      padding: 6px 12px; 
-      border-radius: 14px; 
-      background: #e0f2fe; 
-      color: #0369a1; 
-      cursor: pointer; 
-      border: none; 
-      font-size: 12px; 
-      font-weight: 500;
-      transition: all 0.2s ease;
-      min-height: 28px;
-    }
+  box-sizing: border-box;
+  display: inline-block;
+  padding: 8px 16px;
+  margin: 4px 4px 0 0;
+  border-radius: 16px;
+  background: #222c3a;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 90vw;
+  line-height: 1.3;
+  text-align: left;
+  vertical-align: top;
+}
   
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
     .chip.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
