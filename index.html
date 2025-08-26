@@ -404,7 +404,7 @@
       height: auto;
       min-height: 44px;
       max-height: 120px;
-      padding: 12px 52px 12px 16px;
+      padding: 12px 44px 12px 16px;
       border-radius: 20px;
       font-size: 16px;
       line-height: 1.4;
@@ -458,9 +458,17 @@
     }
 
     /* Луна вместо скрепки */
-#moonBtn {
-  width: 54px;
-  height: 54px;
+#moonBtn.attach-icon-btn {
+  position: absolute;
+  right: 56px; /* чтобы не налезала на send */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 44px;
+  max-height: 44px;
   border-radius: 50%;
   padding: 0;
   background: none;
@@ -468,10 +476,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: none;   /* Убираем любые тени */
-  outline: none;      /* Убираем outline */
-  position: relative;
-  overflow: hidden;   /* Чтобы SVG не вылезал за границы */
+  box-shadow: none;
+  outline: none;
+  overflow: hidden;
+  z-index: 2;
 }
 
 #moonBtn:focus,
@@ -481,8 +489,8 @@
 }
 
 .moon-svg {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: block;
 }
 
@@ -499,8 +507,24 @@
   100% { filter: drop-shadow(0 0 0px #f6e27a) brightness(1); transform: scale(1);}
 }
     
-    .attach-icon-btn:hover { background: rgba(0,0,0,0.04); }
-    .send-icon-btn:hover { background: var(--primary-hover); }
+    .send-icon-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  z-index: 2;
+}
     
     .attach-menu {
       position: absolute; 
