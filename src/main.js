@@ -671,14 +671,11 @@ function appendUser(text) {
 
   // Если достигли лимита — сразу показываем уведомление
   if (b.userAnswersCount === 10 && !b._moonFlashShown) {
-  b._moonFlashShown = true;
-  renderMoonProgress(b.userAnswersCount, 10, true);
-  setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-  showMoonNotice('Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
-  renderChat();
-  renderBlocksChips();
-  return;
-}
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+  }
 
   renderChat();
   renderBlocksChips();
