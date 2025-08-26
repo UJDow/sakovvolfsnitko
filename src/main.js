@@ -31,17 +31,22 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
   if (!moonBtn) return;
   const phase = Math.min(userAnswersCount / max, 1);
 
-  // Кратеры
+  // Больше и ярче кратеров
   const craters = [
-    {cx: 12, cy: 10, r: 2, opacity: 0.18},
-    {cx: 20, cy: 18, r: 1.5, opacity: 0.13},
-    {cx: 18, cy: 12, r: 1, opacity: 0.10},
-    {cx: 22, cy: 10, r: 0.8, opacity: 0.09},
-    {cx: 10, cy: 20, r: 1.2, opacity: 0.12}
+    {cx: 10, cy: 12, r: 2.2, opacity: 0.22},
+    {cx: 18, cy: 18, r: 1.7, opacity: 0.18},
+    {cx: 22, cy: 14, r: 1.2, opacity: 0.16},
+    {cx: 14, cy: 22, r: 1.5, opacity: 0.19},
+    {cx: 20, cy: 10, r: 1.1, opacity: 0.15},
+    {cx: 24, cy: 20, r: 0.9, opacity: 0.13},
+    {cx: 16, cy: 16, r: 0.7, opacity: 0.12},
+    {cx: 12, cy: 20, r: 1.3, opacity: 0.17},
+    {cx: 22, cy: 22, r: 1.6, opacity: 0.20},
+    {cx: 18, cy: 12, r: 0.8, opacity: 0.14}
   ];
 
-  // Ореол становится чуть ярче по мере заполнения
-  const goldGlowOpacity = 0.18 + 0.32 * phase; // от 0.18 до 0.5
+  // Ореол становится ярче
+  const goldGlowOpacity = 0.25 + 0.35 * phase; // от 0.25 до 0.6
 
   const svg = `
     <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 54 54" fill="none">
@@ -52,7 +57,7 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
         <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
           <stop offset="60%" stop-color="#fffbe6" stop-opacity="0"/>
           <stop offset="85%" stop-color="#f6e27a" stop-opacity="${goldGlowOpacity}"/>
-          <stop offset="100%" stop-color="#eab308" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#eab308" stop-opacity="0.32"/>
         </radialGradient>
         <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
@@ -61,19 +66,17 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false) {
         </radialGradient>
       </defs>
       <!-- Gold Glow (шире луны) -->
-      <circle cx="27" cy="27" r="26" fill="url(#goldGlow)" />
+      <circle cx="27" cy="27" r="25" fill="url(#goldGlow)" />
       <!-- Серебристый glow -->
-      <circle cx="27" cy="27" r="23" fill="url(#moonGlow)" opacity="0.7"/>
+      <circle cx="27" cy="27" r="22" fill="url(#moonGlow)" opacity="0.7"/>
       <!-- Main moon (серебристый) -->
-      <circle cx="27" cy="27" r="20" fill="#e0e7ef"/>
+      <circle cx="27" cy="27" r="19" fill="#e0e7ef"/>
       <!-- Phase (полупрозрачная) -->
-      <circle cx="27" cy="27" r="20" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
+      <circle cx="27" cy="27" r="19" fill="#f6e27a" fill-opacity="0.32" clip-path="url(#moonPhase)" />
       <!-- Craters -->
-      ${craters.map(c => `<circle cx="${c.cx + 15}" cy="${c.cy + 15}" r="${c.r}" fill="#b6bbc7" opacity="${c.opacity}"/>`).join('')}
-      <!-- Subtle shadow -->
-      <ellipse cx="34" cy="39" rx="10" ry="3.5" fill="#a3aab7" opacity="0.10"/>
-      <!-- Overlay for dark side -->
-      <circle cx="27" cy="27" r="20" fill="rgba(0,0,0,0.07)" />
+      ${craters.map(c => `<circle cx="${c.cx + 15}" cy="${c.cy + 15}" r="${c.r}" fill="#b6bbc7" opacity="${c.opacity}" />`).join('')}
+      <!-- Subtle shadow (можно убрать или сделать светлее) -->
+      <!--<ellipse cx="34" cy="39" rx="10" ry="3.5" fill="#a3aab7" opacity="0.07"/>-->
     </svg>
   `;
   moonBtn.innerHTML = svg;
