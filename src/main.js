@@ -155,21 +155,24 @@ function showMoonNotice(text, ms = 4500) {
   const notice = document.getElementById('moonNotice');
   const moonBtn = document.getElementById('moonBtn');
   if (!notice || !moonBtn) return;
+
   notice.textContent = text;
   notice.style.display = 'block';
-  notice.style.visibility = 'hidden'; // чтобы не мигало
+  notice.classList.remove('show'); // сбрасываем анимацию
 
-  // Даем браузеру отрисовать notice с новым текстом
+  // Ждём, чтобы DOM обновился и размеры были актуальны
   setTimeout(() => {
-    const rect = moonBtn.getBoundingClientRect();
+    const btnRect = moonBtn.getBoundingClientRect();
+    const noticeRect = notice.getBoundingClientRect();
+    // Центрируем над луной, чуть выше
     notice.style.position = 'fixed';
-    notice.style.left = (rect.left + rect.width / 2 - notice.offsetWidth / 2) + 'px';
-    notice.style.top = (rect.top - notice.offsetHeight - 12) + 'px';
+    notice.style.left = (btnRect.left + btnRect.width / 2 - noticeRect.width / 2) + 'px';
+    notice.style.top = (btnRect.top - noticeRect.height - 14) + 'px';
     notice.style.zIndex = 2000;
-    notice.style.visibility = 'visible';
     notice.classList.add('show');
   }, 10);
 
+  // Автоматически скрываем через ms миллисекунд
   clearTimeout(notice._hideTimer);
   notice._hideTimer = setTimeout(() => {
     notice.classList.remove('show');
@@ -662,19 +665,20 @@ function getPrevBlocksSummary(currentBlockId, limit = 3) {
 
 /* ====== Диалог ====== */
 function appendUser(text) {
-  const b = getCurrentBlock(); if (!b) return;
+  const b = getCurrentBlock();
+  if (!b) return;
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
 
-  // Обновляем луну после каждого ответа
+  // Обновляем прогресс луны
   renderMoonProgress(b.userAnswersCount, 10, false);
 
-  // Если достигли лимита — сразу показываем уведомление
+  // Показываем уведомление ровно на 10-м ответе (и только один раз)
   if (b.userAnswersCount === 10 && !b._moonFlashShown) {
     b._moonFlashShown = true;
     renderMoonProgress(b.userAnswersCount, 10, true);
     setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+    showMoonNotice('Вы ответили на 10 вопросов. Теперь вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
   }
 
   renderChat();
@@ -1068,11 +1072,17 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   // Скрепка и меню (ЛУНА)
   onClick('moonBtn', (e) => {
-    e.stopPropagation();
-    const menu = byId('attachMenu');
-    if (!menu) return;
-    menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
-  });
+  e.stopPropagation();
+  const menu = byId('attachMenu');
+  if (!menu) return;
+  menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
+
+  // Показываем подсказку, если можно толковать, но ещё не толковали
+  const b = getCurrentBlock();
+  if (b && b.userAnswersCount >= 10 && !b.finalInterpretation) {
+    showMoonNotice('Вы можете запросить итоговое толкование блока!');
+  }
+});
 
   onClick('menuExportFinal', () => {
   // Найти итоговое толкование (глобальное)
