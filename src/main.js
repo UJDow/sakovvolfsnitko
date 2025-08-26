@@ -200,6 +200,10 @@ function renderDreamView() {
         span.setAttribute('data-block', String(block.id));
         span.title = `Блок #${block.id}`;
         span.addEventListener('click', () => selectBlock(block.id));
+        // === Вот здесь добавляем класс для выделенного блока ===
+        if (block.id === state.currentBlockId) {
+          span.classList.add('block-selected');
+        }
       } else {
         span.style.background = '#f0f0f0';
         span.style.color = '#888';
