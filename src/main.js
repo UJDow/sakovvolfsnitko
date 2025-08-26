@@ -782,8 +782,6 @@ state.blocks.forEach(b => b._moonFlashShown = false);
 function selectBlock(id) {
   state.currentBlockId = id;
   renderBlocksChips();
-  const b = getCurrentBlock();
-  if (b && !b.done && b.chat.length === 0) startOrContinue();
 }
 
 /* ====== Handlers ====== */
