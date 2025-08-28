@@ -481,6 +481,14 @@ function updateButtonsState() {
   const miFinal = byId('menuFinalInterpret');
   if (miBlock) { miBlock.disabled = blockBtn ? blockBtn.disabled : false; miBlock.style.opacity = miBlock.disabled ? 0.5 : 1; }
   if (miFinal) { miFinal.disabled = finalBtn ? finalBtn.disabled : false; miFinal.style.opacity = miFinal.disabled ? 0.5 : 1; }
+
+  // --- Добавлено: управление кнопкой экспорта толкования блока ---
+  const exportBtn = byId('menuExportFinal');
+  if (exportBtn) {
+    const canExport = !!(b && b.finalInterpretation);
+    exportBtn.disabled = !canExport;
+    exportBtn.style.opacity = canExport ? 1 : 0.5;
+  }
 }
 
 /* ====== Экспорт/импорт ====== */
