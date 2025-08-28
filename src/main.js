@@ -1155,20 +1155,57 @@ function addToCabinet(entry) {
   const arr = loadCabinet();
   arr.unshift(entry); // новые сверху
   saveCabinet(arr);
+  updateStorageIndicator();
 }
 function removeFromCabinet(idx) {
   const arr = loadCabinet();
   arr.splice(idx, 1);
   saveCabinet(arr);
+  updateStorageIndicator(); // <--- и сюда
 }
 function clearCabinet() {
   localStorage.removeItem(CABINET_KEY);
+  updateStorageIndicator(); // <--- и сюда
+}
+
+// ====== Индикатор заполненности localStorage ======
+const SAFE_LS_LIMIT = 2 * 1024 * 1024; // 2 МБ
+const AVG_DREAM_SIZE = 1200; // символов
+const WAR_AND_PEACE_TOM_SIZE = 650000; // символов
+
+function getBarColor(percent) {
+  if (percent < 60) return '#22c55e'; // зелёный
+  if (percent < 90) return '#facc15'; // жёлтый
+  return '#ef4444'; // красный
+}
+
+function updateStorageIndicator() {
+  let used = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    const v = localStorage.getItem(k);
+    used += k.length + (v ? v.length : 0);
+  }
+  const percent = Math.min(100, Math.round(used / SAFE_LS_LIMIT * 100));
+  const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
+  const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
+  const bar = document.getElementById('storageBar');
+  const text = document.getElementById('storageText');
+
+  if (bar) bar.style.width = percent + '%';
+  if (text) {
+    text.style.color = getBarColor(percent);
+    text.textContent =
+      `Заполнено: ${percent}% (осталось: ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»)`;
+    if (percent >= 100) text.textContent += ' — лимит заполнен!';
+  }
 }
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
   updateProgressIndicator();
+  updateStorageIndicator();
 
   // Если токен валиден — сразу показываем контент без вспышек
   if (getToken() === AUTH_TOKEN) {
