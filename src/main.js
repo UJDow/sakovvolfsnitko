@@ -162,7 +162,8 @@ function showMoonNotice(text, ms = 4500) {
     const cardRect = card.getBoundingClientRect();
 
     // Центр по горизонтали относительно карточки
-    const left = cardRect.left + (cardRect.width / 2) - (noticeRect.width / 2) + window.scrollX;
+    const left = cardRect.left + (cardRect.width / 2) - (noticeRect.width / 2) + window.scrollX; // по центру карточки
+    notice.style.left = left + 'px';
     // По вертикали — как сейчас (над луной)
     const top = btnRect.top - noticeRect.height - 14 + window.scrollY;
 
