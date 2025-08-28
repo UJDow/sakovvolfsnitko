@@ -391,17 +391,21 @@ function sortedBlocks() {
 function nextUndoneBlockIdStrict() {
   const list = sortedBlocks();
   const curr = getCurrentBlock();
-  const currIdx = curr ? list.findIndex(x => x.id === curr.id) : -1;
-  for (let i = currIdx + 1; i < list.length; i++) if (!list[i].done) return list[i].id;
-  for (let i = 0; i < list.length; i++) if (!list[i].done) return list[i].id;
+  if (!curr) return null;
+  const currIdx = list.findIndex(x => x.id === curr.id);
+  if (currIdx >= 0 && currIdx < list.length - 1) {
+    return list[currIdx + 1].id;
+  }
   return null;
 }
 function prevUndoneBlockIdStrict() {
   const list = sortedBlocks();
   const curr = getCurrentBlock();
-  const currIdx = curr ? list.findIndex(x => x.id === curr.id) : list.length;
-  for (let i = currIdx - 1; i >= 0; i--) if (!list[i].done) return list[i].id;
-  for (let i = list.length - 1; i >= 0; i--) if (!list[i].done) return list[i].id;
+  if (!curr) return null;
+  const currIdx = list.findIndex(x => x.id === curr.id);
+  if (currIdx > 0) {
+    return list[currIdx - 1].id;
+  }
   return null;
 }
 
