@@ -1030,23 +1030,6 @@
   color: #0f172a;
   border-color: #7dd3fc;
 }
-
-.cabinet-btn-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: fit-content;
-}
-.cabinet-indicator {
-  width: 100%;
-  margin-top: 8px;
-}
-.cabinet-btn-wrap button {
-  width: 200px; /* или auto, если хочется по содержимому */
-}
-.cabinet-indicator > div:first-child {
-  width: 100%;
-}
   
   </style>
 </head>
@@ -1064,17 +1047,19 @@
   </div>
 </div>
 
- <div id="cabinetMenu" class="cabinet-center">
-  <div class="cabinet-btn-wrap">
-    <button id="openCabinetBtn" class="btn secondary">Личный кабинет</button>
-    <div id="storageIndicator" class="cabinet-indicator">
-      <div style="height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden;">
-        <div id="storageBar" style="height:12px; width:0; background:linear-gradient(90deg, #22c55e 0%, #facc15 60%, #ef4444 100%); transition:width 0.3s;"></div>
-      </div>
-      <div id="storageText" style="font-size:13px; color:#22c55e; margin-top:4px;">0%</div>
+ <div class="center-wrap">
+  <h1>Saviora</h1>
+  <div id="cabinetMenu" style="margin: 18px 0 0 0; text-align: right;">
+  <button id="openCabinetBtn" class="btn secondary" style="margin-right:8px;">Личный кабинет</button>
+  <!-- Индикатор заполненности localStorage -->
+  <div id="storageIndicator" style="margin-top:10px; text-align:right; max-width:370px;">
+    <div style="height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden;">
+      <div id="storageBar" style="height:12px; width:0; background:linear-gradient(90deg, #22c55e 0%, #facc15 60%, #ef4444 100%); transition:width 0.3s;"></div>
+    </div>
+    <div id="storageText" style="font-size:13px; color:#22c55e; margin-top:4px;">
+      Заполнено: 0% (осталось: 0 снов = 0.0 тома «Войны и мира»)</div>
     </div>
   </div>
-</div>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
@@ -1225,11 +1210,10 @@
       </div>
   </div>
   <div id="moonNotice" class="moon-notice"></div>
-  <div id="cabinetModal" style="display:none; ...">
-  <div style="...">
-    <button id="closeCabinetBtn" ...>×</button>
+  <div id="cabinetModal" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.45); overflow-y:auto;">
+  <div style="max-width:540px; margin:40px auto; background:var(--card-bg); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 24px; position:relative;">
+    <button id="closeCabinetBtn" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;">×</button>
     <h2 style="margin-top:0;">Личный кабинет</h2>
-    <div id="cabinetStorageInfo" style="font-size:14px; color:#64748b; margin-bottom:12px;"></div>
     <div id="cabinetList"></div>
     <button id="clearCabinetBtn" class="btn secondary" style="margin-top:18px;">Очистить всю историю</button>
   </div>
