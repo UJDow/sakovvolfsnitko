@@ -146,29 +146,26 @@ function clampPreviewText(s, max = 100) {
 function showMoonNotice(text, ms = 4500) {
   const notice = document.getElementById('moonNotice');
   const moonBtn = document.getElementById('moonBtn');
-  // Найдём диалоговую карточку (или chat-wrap.surface)
-  const card = document.querySelector('.card');
-  if (!notice || !moonBtn || !card) return;
+  if (!notice || !moonBtn) return;
 
   notice.textContent = text;
   notice.style.display = 'block';
   notice.classList.remove('show');
-  notice.style.opacity = '0'; // временно скрываем для расчёта
+  notice.style.opacity = '0';
 
   setTimeout(() => {
     // Получаем размеры
     const btnRect = moonBtn.getBoundingClientRect();
     const noticeRect = notice.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
 
-    // Центр по горизонтали относительно карточки
-    const left = cardRect.left + (cardRect.width / 2) - (noticeRect.width / 2) + window.scrollX + 8; // по центру карточки
-    notice.style.left = left + 'px';
-    // По вертикали — как сейчас (над луной)
+    // Центрируем по горизонтали относительно окна
+    notice.style.left = '50%';
+    notice.style.transform = 'translateX(-50%)';
+
+    // По вертикали — над луной, как было
     const top = btnRect.top - noticeRect.height - 14 + window.scrollY;
-
-    notice.style.left = left + 'px';
     notice.style.top = top + 'px';
+
     notice.style.zIndex = 2000;
     notice.style.opacity = '';
     notice.classList.add('show');
