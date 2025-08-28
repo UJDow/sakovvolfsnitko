@@ -731,6 +731,54 @@ async function blockInterpretation() {
   }
 }
 
+function renderCabinet() {
+  const list = loadCabinet();
+  const wrap = document.getElementById('cabinetList');
+  if (!wrap) return;
+  if (!list.length) {
+    wrap.innerHTML = '<div class="muted" style="margin:24px 0;">История пуста</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((entry, idx) => {
+    const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const preview = (entry.dreamText || '').split(/\s+/).slice(0, 5).join(' ') + '...';
+    return `
+      <div class="card" style="margin-bottom:14px; padding:18px 16px; position:relative;">
+        <div style="font-size:15px; color:var(--text-secondary); margin-bottom:6px;">${date}</div>
+        <div style="font-size:17px; font-weight:500; margin-bottom:10px;">${preview}</div>
+        <button class="btn primary" data-view="${idx}" style="margin-right:8px;">Посмотреть</button>
+        <button class="btn secondary" data-del="${idx}">Удалить</button>
+      </div>
+    `;
+  }).join('');
+  // Вешаем обработчики
+  wrap.querySelectorAll('button[data-view]').forEach(btn => {
+    btn.onclick = () => showCabinetEntry(+btn.dataset.view);
+  });
+  wrap.querySelectorAll('button[data-del]').forEach(btn => {
+    btn.onclick = () => { if (confirm('Удалить запись?')) { removeFromCabinet(+btn.dataset.del); renderCabinet(); } };
+  });
+}
+
+function showCabinetEntry(idx) {
+  const list = loadCabinet();
+  const entry = list[idx];
+  if (!entry) return;
+  // Используем финальное окно для показа
+  const dialog = byId('finalDialog');
+  const main = byId('finalDialogMain');
+  const blocks = byId('finalDialogBlocks');
+  if (!dialog || !main || !blocks) return;
+
+  main.innerHTML = `<div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px;">${new Date(entry.date).toLocaleString('ru-RU')}</div>
+    <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${entry.dreamText}</div>
+    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.finalInterpretation || '<i>Нет</i>'}</div>`;
+  blocks.innerHTML = (entry.blocks || []).map((b, i) =>
+    `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation || '<i>Нет толкования</i>'}</span></div>`
+  ).join('');
+  dialog.style.display = 'block';
+}
+
 // ====== Итоговое толкование только для финального окна ======
 async function finalInterpretation() {
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
@@ -761,6 +809,7 @@ async function finalInterpretation() {
     if (!content) content = 'Не удалось получить итоговое толкование';
 
     state.globalFinalInterpretation = content;
+    saveCurrentSessionToCabinet();
 
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
@@ -772,6 +821,21 @@ async function finalInterpretation() {
     setThinking(false);
     if (btn) { btn.disabled = false; btn.textContent = prevText2; }
   }
+}
+
+function saveCurrentSessionToCabinet() {
+  if (!state.dreamText?.trim() || !state.blocks?.length) return;
+  const entry = {
+    date: Date.now(),
+    dreamText: state.dreamText,
+    finalInterpretation: state.globalFinalInterpretation || '',
+    blocks: state.blocks.map(b => ({
+      text: b.text,
+      finalInterpretation: b.finalInterpretation || '',
+      chat: b.chat || []
+    }))
+  };
+  addToCabinet(entry);
 }
 
 // ====== Показ финального окна ======
@@ -1054,12 +1118,51 @@ onClick('exportFinalDialogBtn', () => {
   resetSelectionColor();
 }
 
+onClick('openCabinetBtn', () => {
+  renderCabinet();
+  byId('cabinetModal').style.display = 'block';
+});
+onClick('closeCabinetBtn', () => {
+  byId('cabinetModal').style.display = 'none';
+});
+onClick('clearCabinetBtn', () => {
+  if (confirm('Очистить всю историю?')) {
+    clearCabinet();
+    renderCabinet();
+  }
+});
+
 function hideAttachMenu() {
   const menu = byId('attachMenu');
   if (menu) menu.style.display = 'none';
 }
 function styleDisplay(el, value) {
   if (el) el.style.display = value;
+}
+
+// ====== Кабинет: localStorage ======
+const CABINET_KEY = 'saviora_cabinet';
+
+function loadCabinet() {
+  try {
+    return JSON.parse(localStorage.getItem(CABINET_KEY)) || [];
+  } catch { return []; }
+}
+function saveCabinet(arr) {
+  localStorage.setItem(CABINET_KEY, JSON.stringify(arr));
+}
+function addToCabinet(entry) {
+  const arr = loadCabinet();
+  arr.unshift(entry); // новые сверху
+  saveCabinet(arr);
+}
+function removeFromCabinet(idx) {
+  const arr = loadCabinet();
+  arr.splice(idx, 1);
+  saveCabinet(arr);
+}
+function clearCabinet() {
+  localStorage.removeItem(CABINET_KEY);
 }
 
 /* ====== Boot ====== */
