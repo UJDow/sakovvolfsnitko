@@ -146,19 +146,30 @@ function clampPreviewText(s, max = 100) {
 function showMoonNotice(text, ms = 4500) {
   const notice = document.getElementById('moonNotice');
   const moonBtn = document.getElementById('moonBtn');
-  if (!notice || !moonBtn) return;
+  // Найдём диалоговую карточку (или chat-wrap.surface)
+  const card = document.querySelector('.card');
+  if (!notice || !moonBtn || !card) return;
 
   notice.textContent = text;
   notice.style.display = 'block';
-  notice.classList.remove('show'); // сбрасываем анимацию
+  notice.classList.remove('show');
+  notice.style.opacity = '0'; // временно скрываем для расчёта
 
   setTimeout(() => {
+    // Получаем размеры
     const btnRect = moonBtn.getBoundingClientRect();
     const noticeRect = notice.getBoundingClientRect();
-    notice.style.position = 'fixed';
-    notice.style.left = (btnRect.left + btnRect.width / 2 - noticeRect.width / 2 + window.scrollX) + 'px';
-    notice.style.top = (btnRect.top - noticeRect.height - 14 + window.scrollY) + 'px';
+    const cardRect = card.getBoundingClientRect();
+
+    // Центр по горизонтали относительно карточки
+    const left = cardRect.left + (cardRect.width / 2) - (noticeRect.width / 2) + window.scrollX;
+    // По вертикали — как сейчас (над луной)
+    const top = btnRect.top - noticeRect.height - 14 + window.scrollY;
+
+    notice.style.left = left + 'px';
+    notice.style.top = top + 'px';
     notice.style.zIndex = 2000;
+    notice.style.opacity = '';
     notice.classList.add('show');
   }, 10);
 
