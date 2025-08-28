@@ -1194,10 +1194,8 @@ function updateStorageIndicator() {
 
   if (bar) bar.style.width = percent + '%';
   if (text) {
-    text.style.color = getBarColor(percent);
-    text.textContent =
-      `Заполнено: ${percent}% (осталось: ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»)`;
-    if (percent >= 100) text.textContent += ' — лимит заполнен!';
+  text.style.color = getBarColor(percent);
+  text.textContent = percent + '%';
   }
 }
 
@@ -1206,6 +1204,18 @@ window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
   updateProgressIndicator();
   updateStorageIndicator();
+
+  // Синхронизируем ширину индикатора с кнопкой
+  const btn = document.getElementById('openCabinetBtn');
+  const barContainer = document.getElementById('storageBarContainer');
+  if (btn && barContainer) {
+    barContainer.style.width = btn.offsetWidth + 'px';
+  }
+  window.addEventListener('resize', function() {
+    if (btn && barContainer) {
+      barContainer.style.width = btn.offsetWidth + 'px';
+    }
+  });
 
   // Если токен валиден — сразу показываем контент без вспышек
   if (getToken() === AUTH_TOKEN) {
