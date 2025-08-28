@@ -732,6 +732,23 @@ async function blockInterpretation() {
 }
 
 function renderCabinet() {
+  // === Новый блок: строка про "осталось" ===
+  const info = document.getElementById('cabinetStorageInfo');
+  if (info) {
+    let used = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const v = localStorage.getItem(k);
+      used += k.length + (v ? v.length : 0);
+    }
+    const SAFE_LS_LIMIT = 2 * 1024 * 1024; // 2 МБ
+    const AVG_DREAM_SIZE = 1200;
+    const WAR_AND_PEACE_TOM_SIZE = 650000;
+    const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
+    const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
+    info.textContent = `Осталось записать ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
+  }
+
   const list = loadCabinet();
   const wrap = document.getElementById('cabinetList');
   if (!wrap) return;
