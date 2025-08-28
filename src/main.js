@@ -534,82 +534,18 @@ async function apiRequest(url, data) {
 /* ====== LLM ====== */
 function parseAIResponse(text) {
   let cleanText = (text || '').trim();
-  let quickReplies = [];
 
-  // 1. Варианты в [ ... ]: [Вариант 1 | Вариант 2] или [Вариант 1 и Вариант 2]
-  const bracketGroups = [...cleanText.matchAll(/\[([^\]]+)\]/g)];
-  for (const m of bracketGroups) {
-    const inside = (m[1] || '').trim();
-    let parts = [];
-    if (/\|/.test(inside)) {
-      parts = inside.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
-    } else if (/ и /i.test(inside)) {
-      const two = inside.split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
-      if (two.length === 2) parts = two;
-    }
-    if (parts.length >= 2) {
-      quickReplies.push(...parts);
-      cleanText = cleanText.replace(m[0], ' ').replace(/\s{2,}/g, ' ').trim();
-    }
-  }
+  // Очищаем от кода, html, шумовых символов и т.д.
+  cleanText = cleanText
+    .replace(/```[\s\S]*?```/g, ' ')   // убираем блоки кода
+    .replace(/<[^>]+>/g, ' ')          // убираем html-теги
+    .replace(/[\u2502\uFF5C]/g, ' ')   // убираем спецсимволы
+    .replace(/[\u4e00-\u9fff]+/g, ' ') // убираем иероглифы
+    .replace(/\s+/g, ' ')              // убираем лишние пробелы
+    .trim();
 
-  // 2. Списки: 1. ... 2. ... 3. ...
-  if (quickReplies.length === 0) {
-    const numbered = [...cleanText.matchAll(/(\d+)\.\s*([^\d]+)/g)];
-    if (numbered.length >= 2) {
-      quickReplies = numbered.map(m => m[2].trim());
-      cleanText = cleanText.replace(/(\d+\.\s*[^\d]+)/g, '').replace(/\s{2,}/g, ' ').trim();
-    }
-  }
-  // 3. Списки: — ... (тире)
-  if (quickReplies.length === 0) {
-    const dashOpts = [...cleanText.matchAll(/—\s*([^\n]+)/g)];
-    if (dashOpts.length >= 2) {
-      quickReplies = dashOpts.map(m => m[1].trim());
-      cleanText = cleanText.replace(/—\s*[^\n]+/g, '').replace(/\s{2,}/g, ' ').trim();
-    }
-  }
-  // 4. Списки: • ... (маркер)
-  if (quickReplies.length === 0) {
-    const bulletOpts = [...cleanText.matchAll(/•\s*([^\n]+)/g)];
-    if (bulletOpts.length >= 2) {
-      quickReplies = bulletOpts.map(m => m[1].trim());
-      cleanText = cleanText.replace(/•\s*[^\n]+/g, '').replace(/\s{2,}/g, ' ').trim();
-    }
-  }
-  // 5. Списки: а) ... б) ... в) ...
-  if (quickReplies.length === 0) {
-    const letterOpts = [...cleanText.matchAll(/[а-яa-z]\)\s*([^\n]+)/gi)];
-    if (letterOpts.length >= 2) {
-      quickReplies = letterOpts.map(m => m[1].trim());
-      cleanText = cleanText.replace(/[а-яa-z]\)\s*[^\n]+/gi, '').replace(/\s{2,}/g, ' ').trim();
-    }
-  }
-  // 6. Списки: Варианты: ...; ...; ...
-  if (quickReplies.length === 0) {
-    const semicolon = cleanText.match(/Варианты: (.+)/i);
-    if (semicolon) {
-      quickReplies = semicolon[1].split(';').map(s => s.trim()).filter(Boolean);
-      cleanText = cleanText.replace(/Варианты: .+/i, '').replace(/\s{2,}/g, ' ').trim();
-    }
-  }
-
-  // 7. Эвристика: "например, ... и ..."
-  if (quickReplies.length === 0) {
-    const example = cleanText.match(/например[:,]?\s*([^\n]+? и [^\n]+?)(\.|\?|!|$)/i);
-    if (example) {
-      const parts = example[1].split(/\s+и\s+/i).map(s => s.trim()).filter(Boolean);
-      if (parts.length === 2) {
-        quickReplies = parts;
-        // cleanText = cleanText.replace(example[0], '').replace(/\s{2,}/g, ' ').trim();
-      }
-    }
-  }
-
-  // Ограничиваем количество вариантов
-  quickReplies = quickReplies.slice(0, 4);
-
-  return { question: cleanText, quickReplies, isFinal: false };
+  // Не ищем варианты ответов вообще!
+  return { question: cleanText, quickReplies: [], isFinal: false };
 }
 
 async function llmNextStep(blockText, history) {
