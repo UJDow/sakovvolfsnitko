@@ -1240,9 +1240,11 @@ onClick('exportFinalDialogBtn', () => {
 onClick('openCabinetBtn', () => {
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
+  document.body.classList.add('modal-open');
 });
 onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
+  document.body.classList.remove('modal-open');
 });
 onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
