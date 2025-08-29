@@ -1106,6 +1106,17 @@
   opacity: 0.5 !important;
   pointer-events: none;
 }
+
+.cabinet-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
   
   </style>
 </head>
@@ -1291,7 +1302,7 @@
     <button id="closeCabinetBtn" ...>×</button>
     <h2>Личный кабинет</h2>
     <div id="cabinetStorageInfo" class="muted" style="margin-bottom: 10px;"></div>
-    <div id="cabinetList"></div>
+    <div id="cabinetList" class="cabinet-list"></div>
     <button id="clearCabinetBtn" class="btn secondary" style="margin-top:18px;">Очистить всю историю</button>
   </div>
 </div>
