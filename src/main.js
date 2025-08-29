@@ -1,3 +1,5 @@
+let isViewingFromCabinet = false;
+
 /* ====== Константы авторизации ====== */
 const AUTH_PASS = 'volfisthebest';
 const AUTH_TOKEN = 'volfisthebest-secret';
@@ -769,14 +771,15 @@ function renderCabinet() {
     `;
   }).join('');
 
+  console.log('Кнопки глазика:', wrap.querySelectorAll('button[data-view]'));
+
   // Вешаем обработчики — обязательно после innerHTML!
   wrap.querySelectorAll('button[data-view]').forEach(btn => {
-    btn.onclick = function() {
-      // Для отладки:
-      // console.log('Клик по глазку', btn.dataset.view);
-      showCabinetEntry(+btn.dataset.view);
-    };
-  });
+  btn.onclick = function() {
+    console.log('Клик по глазку', btn.dataset.view);
+    showCabinetEntry(+btn.dataset.view);
+  };
+});
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
     btn.onclick = function() {
       if (confirm('Удалить запись?')) {
