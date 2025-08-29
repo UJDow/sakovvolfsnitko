@@ -1038,6 +1038,40 @@
 #openCabinetBtn {
   min-width: 120px;
 }
+
+.cabinet-tile {
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  padding: 10px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  min-height: 0;
+}
+.cabinet-tile .cabinet-date {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-right: 8px;
+  min-width: 70px;
+}
+.cabinet-tile .cabinet-preview {
+  flex: 1 1 auto;
+  font-size: 14px;
+  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cabinet-tile button {
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
   
   </style>
 </head>
