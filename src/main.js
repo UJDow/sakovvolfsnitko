@@ -734,7 +734,6 @@ async function blockInterpretation() {
 }
 
 function renderCabinet() {
-  // === Новый блок: строка про "осталось" ===
   const info = document.getElementById('cabinetStorageInfo');
   if (info) {
     let used = 0;
@@ -743,7 +742,7 @@ function renderCabinet() {
       const v = localStorage.getItem(k);
       used += k.length + (v ? v.length : 0);
     }
-    const SAFE_LS_LIMIT = 2 * 1024 * 1024; // 2 МБ
+    const SAFE_LS_LIMIT = 2 * 1024 * 1024;
     const AVG_DREAM_SIZE = 1200;
     const WAR_AND_PEACE_TOM_SIZE = 650000;
     const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
@@ -760,20 +759,33 @@ function renderCabinet() {
   }
   wrap.innerHTML = list.map((entry, idx) => {
     const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const preview = entry.globalFinalInterpretation
-      ? entry.globalFinalInterpretation
-      : 'Анализ не завершён';
+    const dreamPreview = (entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...';
+
+    // Определяем статус анализа
+    let status = 'none'; // по умолчанию
+    if (entry.globalFinalInterpretation) {
+      status = 'done';
+    } else if (Array.isArray(entry.blocks) && entry.blocks.some(b => b.finalInterpretation)) {
+      status = 'partial';
+    }
+
+    // Цвета для статусов
+    let color = '#ef4444'; // красный
+    if (status === 'done') color = '#22c55e';      // зелёный
+    else if (status === 'partial') color = '#facc15'; // жёлтый
+
     return `
       <div class="cabinet-tile">
         <div class="cabinet-date">${date}</div>
-        <div class="cabinet-preview">${preview}</div>
+        <div class="cabinet-preview" style="color:${color}; font-weight:600;">
+          ${dreamPreview}
+        </div>
         <button class="btn primary" data-view="${idx}">👁</button>
         <button class="btn secondary" data-del="${idx}">🗑</button>
       </div>
     `;
   }).join('');
 
-  // Вешаем обработчики — обязательно после innerHTML!
   wrap.querySelectorAll('button[data-view]').forEach(btn => {
     btn.onclick = function() {
       showCabinetEntry(+btn.dataset.view);
