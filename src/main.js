@@ -986,23 +986,11 @@ function addBlockFromSelection() {
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
   if (!selected.length) return alert('Выделите плиточки для блока.');
 
-  // Проверяем, что выделенные плитки идут подряд
-  selected.sort((a, b) => parseInt(a.dataset.start) - parseInt(b.dataset.start));
-  let isContiguous = true;
-  for (let i = 1; i < selected.length; i++) {
-    if (parseInt(selected[i].dataset.start) !== parseInt(selected[i-1].dataset.end)) {
-      isContiguous = false;
-      break;
-    }
-  }
-  if (!isContiguous) {
-    return alert('Выделяйте только подряд идущие слова для блока!');
-  }
+  const starts = selected.map(s => parseInt(s.dataset.start || '0', 10));
+  const ends = selected.map(s => parseInt(s.dataset.end || '0', 10));
+  const start = Math.min(...starts);
+  const end = Math.max(...ends);
 
-  const start = parseInt(selected[0].dataset.start, 10);
-  const end = parseInt(selected[selected.length - 1].dataset.end, 10);
-
-  // Проверка пересечений
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       return alert('Этот фрагмент пересекается с уже добавленным блоком.');
