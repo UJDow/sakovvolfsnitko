@@ -119,6 +119,25 @@ function checkAuth() {
   showAuth(); return false;
 }
 
+function showToastNotice(text, ms = 3200) {
+  const toast = document.getElementById('toastNotice');
+  if (!toast) return;
+  toast.textContent = text;
+  toast.style.display = 'block';
+  toast.style.opacity = '0.97';
+  toast.style.bottom = '32px';
+  clearTimeout(toast._hideTimer);
+  setTimeout(() => {
+    toast.style.opacity = '0.97';
+    toast.style.bottom = '32px';
+  }, 10);
+  toast._hideTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.bottom = '12px';
+    setTimeout(() => { toast.style.display = 'none'; }, 350);
+  }, ms);
+}
+
 /* ====== Вспомогательные ====== */
 function showStep(step) {
   for (let i = 1; i <= 3; i++) {
@@ -904,7 +923,7 @@ function saveCurrentSessionToCabinet() {
     globalFinalInterpretation: state.globalFinalInterpretation || null
   });
   saveCabinet(list);
-  alert('Сон сохранён в личный кабинет!');
+  showToastNotice('Сон сохранён в личный кабинет!');
 }
 
 // ====== Показ финального окна ======
