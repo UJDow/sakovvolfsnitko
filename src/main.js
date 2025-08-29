@@ -833,9 +833,10 @@ if (saveBtn) {
   saveBtn.classList.add('primary');
   saveBtn.onclick = function() {
   state.dreamText = entry.dreamText || '';
-  state.blocks = entry.blocks || [];
-  state.currentBlockId = state.blocks[0]?.id || null;
-  state.nextBlockId = (state.blocks.reduce((max, b) => Math.max(max, b.id), 0) || 0) + 1;
+  // Очищаем блоки, чтобы пользователь выделял их заново:
+  state.blocks = [];
+  state.currentBlockId = null;
+  state.nextBlockId = 1;
   state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
   showStep(2);
   const dreamEl = byId('dream');
