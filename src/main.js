@@ -486,40 +486,44 @@ function renderBlockPreviews() {
 function updateButtonsState() {
   const b = getCurrentBlock();
   const blockBtn = byId('blockInterpretBtn');
+  const saveBtn = byId('menuSaveToCabinet');
   const finalBtn = byId('finalInterpretBtn');
-
-  if (blockBtn) blockBtn.classList.remove('btn-warn', 'btn-ok');
-  if (finalBtn) finalBtn.classList.remove('btn-warn', 'btn-ok');
-
-  const enoughForBlock = !!b && (b.userAnswersCount || 0) >= 10;
-  if (blockBtn) { blockBtn.classList.add(enoughForBlock ? 'btn-ok' : 'btn-warn'); blockBtn.disabled = !enoughForBlock || !b || b.done; }
-
-  const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
-  const enoughForFinal = finalsCount >= 2;
-  if (finalBtn) { finalBtn.classList.add(enoughForFinal ? 'btn-ok' : 'btn-warn'); finalBtn.disabled = !enoughForFinal; }
-
   const miBlock = byId('menuBlockInterpret');
   const miFinal = byId('menuFinalInterpret');
-  if (miBlock) { miBlock.disabled = blockBtn ? blockBtn.disabled : false; miBlock.style.opacity = miBlock.disabled ? 0.5 : 1; }
-  if (miFinal) { miFinal.disabled = finalBtn ? finalBtn.disabled : false; miFinal.style.opacity = miFinal.disabled ? 0.5 : 1; }
 
-  // --- Управление кнопкой экспорта толкования блока ---
-  const exportBtn = byId('menuExportFinal');
-  if (exportBtn) {
-    const canExport = !!(b && b.finalInterpretation);
-    exportBtn.disabled = !canExport;
-    exportBtn.style.opacity = canExport ? 1 : 0.5;
+  // Считаем количество блоков с толкованием
+  const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
+
+  // 1. Пока не 10 ответов — всё неактивно
+  if (!b || (b.userAnswersCount || 0) < 10) {
+    if (blockBtn) blockBtn.disabled = true;
+    if (saveBtn) saveBtn.disabled = true;
+    if (finalBtn) finalBtn.disabled = true;
+    if (miBlock) miBlock.disabled = true;
+    if (miFinal) miFinal.disabled = true;
+    return;
   }
 
-  // --- Управление кнопкой "Сохранить в кабинет" в attachMenu ---
-  const miSave = byId('menuSaveToCabinet');
-if (miSave) {
-  const b = getCurrentBlock();
-  const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
-  miSave.disabled = !enoughAnswers;
-  miSave.style.opacity = enoughAnswers ? 1 : 0.5;
-  miSave.style.pointerEvents = enoughAnswers ? 'auto' : 'none'; // чтобы не кликалась
-}
+  // 2. Есть 10 ответов, но нет толкования блока — только "Толкование" активна
+  if (!b.finalInterpretation) {
+    if (blockBtn) blockBtn.disabled = false;
+    if (saveBtn) saveBtn.disabled = true;
+    if (finalBtn) finalBtn.disabled = true;
+    if (miBlock) miBlock.disabled = false;
+    if (miFinal) miFinal.disabled = true;
+    return;
+  }
+
+  // 3. Есть толкование блока — "Сохранить" активна
+  if (b.finalInterpretation) {
+    if (blockBtn) blockBtn.disabled = true;
+    if (saveBtn) saveBtn.disabled = false;
+    // "Итог" активна только если два и более блока истолкованы
+    if (finalBtn) finalBtn.disabled = finalsCount < 2;
+    if (miBlock) miBlock.disabled = true;
+    if (miFinal) miFinal.disabled = finalsCount < 2;
+    return;
+  }
 }
 
 /* ====== Экспорт/импорт ====== */
