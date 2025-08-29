@@ -709,7 +709,7 @@ async function startOrContinue() {
 async function blockInterpretation() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
-  if ((b.userAnswersCount || 0) < 5) return alert('Нужно минимум 5 ответов по этому блоку.');
+  if ((b.userAnswersCount || 0) < 10) return alert('Нужно минимум 10 ответов по этому блоку.');
 
   const btn = byId('blockInterpretBtn');
   let prevText = '';
@@ -743,6 +743,7 @@ async function blockInterpretation() {
     appendBot(content, [], true);
     updateButtonsState();
     renderBlockPreviews();
+    saveCurrentSessionToCabinet(); // <--- вот тут!
   } catch (e) {
     console.error(e);
     appendBot('Ошибка при формировании толкования блока: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
