@@ -751,6 +751,10 @@ function renderCabinet() {
     info.textContent = `Осталось записать ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
   }
 
+  const preview = entry.globalFinalInterpretation
+  ? entry.globalFinalInterpretation
+  : 'Анализ не завершён';
+
   const list = loadCabinet();
   const wrap = document.getElementById('cabinetList');
   if (!wrap) return;
@@ -886,18 +890,15 @@ async function finalInterpretation() {
 }
 
 function saveCurrentSessionToCabinet() {
-  if (!state.dreamText?.trim() || !state.blocks?.length) return;
-  const entry = {
+  const list = loadCabinet();
+  list.unshift({
     date: Date.now(),
     dreamText: state.dreamText,
-    finalInterpretation: state.globalFinalInterpretation || '',
-    blocks: state.blocks.map(b => ({
-      text: b.text,
-      finalInterpretation: b.finalInterpretation || '',
-      chat: b.chat || []
-    }))
-  };
-  addToCabinet(entry);
+    blocks: state.blocks,
+    globalFinalInterpretation: state.globalFinalInterpretation || null
+  });
+  saveCabinet(list);
+  alert('Сон сохранён в личный кабинет!');
 }
 
 // ====== Показ финального окна ======
