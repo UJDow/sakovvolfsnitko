@@ -1337,3 +1337,12 @@ window.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('foldable-vertical');
   }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const overlay = document.querySelector('#cabinetModal .modal-overlay');
+  if (overlay) {
+    overlay.onclick = () => {
+      document.getElementById('cabinetModal').style.display = 'none';
+    };
+  }
+});
