@@ -814,9 +814,11 @@ function showCabinetEntry(idx) {
 
   // Меняем текст и действие кнопки
   const saveBtn = byId('saveToCabinetBtn');
-  if (saveBtn) {
-    saveBtn.textContent = 'Загрузить для толкования';
-    saveBtn.onclick = function() {
+if (saveBtn) {
+  saveBtn.textContent = 'Загрузить Сновидение для толкования';
+  saveBtn.classList.remove('secondary');
+  saveBtn.classList.add('primary');
+  saveBtn.onclick = function() {
       // Загружаем только текст сна, сбрасываем всё остальное
       state.dreamText = entry.dreamText || '';
       state.blocks = [];
@@ -922,10 +924,12 @@ function showFinalDialog() {
 
   // Важно: возвращаем кнопке стандартный вид и действие
   const saveBtn = byId('saveToCabinetBtn');
-  if (saveBtn) {
-    saveBtn.textContent = 'Сохранить в кабинет';
-    saveBtn.onclick = saveCurrentSessionToCabinet;
-  }
+if (saveBtn) {
+  saveBtn.textContent = 'Сохранить в кабинет';
+  saveBtn.classList.remove('primary');
+  saveBtn.classList.add('secondary');
+  saveBtn.onclick = saveCurrentSessionToCabinet;
+}
 }
 
 // ====== Экспорт итогового толкования и блоков ======
