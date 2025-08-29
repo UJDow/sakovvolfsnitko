@@ -912,7 +912,6 @@ async function finalInterpretation() {
     if (!content) content = 'Не удалось получить итоговое толкование';
 
     state.globalFinalInterpretation = content;
-    saveCurrentSessionToCabinet();
 
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
