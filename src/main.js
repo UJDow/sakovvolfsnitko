@@ -761,38 +761,40 @@ function renderCabinet() {
     const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const dreamPreview = (entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...';
 
-    // Определяем статус анализа
-    let status = 'none'; // по умолчанию
+    let status = 'none';
     if (entry.globalFinalInterpretation) {
       status = 'done';
     } else if (Array.isArray(entry.blocks) && entry.blocks.some(b => b.finalInterpretation)) {
       status = 'partial';
     }
 
-    // Цвета для статусов
-    let color = '#ef4444'; // красный
-    if (status === 'done') color = '#22c55e';      // зелёный
-    else if (status === 'partial') color = '#facc15'; // жёлтый
+    let color = '#ef4444';
+    if (status === 'done') color = '#22c55e';
+    else if (status === 'partial') color = '#facc15';
 
     return `
-      <div class="cabinet-tile">
+      <div class="cabinet-tile" data-view="${idx}" style="cursor:pointer;">
         <div class="cabinet-date">${date}</div>
         <div class="cabinet-preview" style="color:${color}; font-weight:600;">
           ${dreamPreview}
         </div>
-        <button class="btn primary" data-view="${idx}">👁</button>
         <button class="btn secondary" data-del="${idx}">🗑</button>
       </div>
     `;
   }).join('');
 
-  wrap.querySelectorAll('button[data-view]').forEach(btn => {
-    btn.onclick = function() {
-      showCabinetEntry(+btn.dataset.view);
+  // Клик по всей плитке для просмотра
+  wrap.querySelectorAll('.cabinet-tile[data-view]').forEach(tile => {
+    tile.onclick = function(e) {
+      if (e.target.closest('button[data-del]')) return;
+      showCabinetEntry(+tile.dataset.view);
     };
   });
+
+  // Кнопка удаления
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
-    btn.onclick = function() {
+    btn.onclick = function(e) {
+      e.stopPropagation();
       if (confirm('Удалить запись?')) {
         removeFromCabinet(+btn.dataset.del);
         renderCabinet();
