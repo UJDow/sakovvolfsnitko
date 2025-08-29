@@ -1377,21 +1377,21 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====== 2025: Поддержка foldables и новых форм-факторов ======
-  document.addEventListener('DOMContentLoaded', function() {
-  // Foldables
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
+});
 
-  // Клик по overlay — закрыть кабинет
+document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.querySelector('#cabinetModal .modal-overlay');
   if (overlay) {
     overlay.onclick = () => {
       document.getElementById('cabinetModal').style.display = 'none';
     };
   }
+});
 
-  // Блокируем скролл фона при открытом кабинете
+document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('cabinetModal');
   if (modal) {
     modal.addEventListener('touchmove', function(e) {
