@@ -781,6 +781,10 @@ function showCabinetEntry(idx) {
   const list = loadCabinet();
   const entry = list[idx];
   if (!entry) return;
+  // Скрываем кабинет!
+  const cabinet = byId('cabinetModal');
+  if (cabinet) cabinet.style.display = 'none';
+
   // Используем финальное окно для показа
   const dialog = byId('finalDialog');
   const main = byId('finalDialogMain');
