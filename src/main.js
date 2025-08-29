@@ -906,6 +906,13 @@ function showFinalDialog() {
   });
 
   dialog.style.display = 'block';
+
+  // Важно: возвращаем кнопке стандартный вид и действие
+  const saveBtn = byId('saveToCabinetBtn');
+  if (saveBtn) {
+    saveBtn.textContent = 'Сохранить в кабинет';
+    saveBtn.onclick = saveCurrentSessionToCabinet;
+  }
 }
 
 // ====== Экспорт итогового толкования и блоков ======
