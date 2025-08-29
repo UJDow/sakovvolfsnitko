@@ -513,11 +513,13 @@ function updateButtonsState() {
 
   // --- Управление кнопкой "Сохранить в кабинет" в attachMenu ---
   const miSave = byId('menuSaveToCabinet');
-  if (miSave) {
-    const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
-    miSave.disabled = !enoughAnswers;
-    miSave.style.opacity = enoughAnswers ? 1 : 0.5;
-  }
+if (miSave) {
+  const b = getCurrentBlock();
+  const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
+  miSave.disabled = !enoughAnswers;
+  miSave.style.opacity = enoughAnswers ? 1 : 0.5;
+  miSave.style.pointerEvents = enoughAnswers ? 'auto' : 'none'; // чтобы не кликалась
+}
 }
 
 /* ====== Экспорт/импорт ====== */
