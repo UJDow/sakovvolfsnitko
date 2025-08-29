@@ -778,14 +778,14 @@ function renderCabinet() {
 }
 
 function showCabinetEntry(idx) {
+  isViewingFromCabinet = true; // <--- добавляем флаг
+
   const list = loadCabinet();
   const entry = list[idx];
   if (!entry) return;
-  // Скрываем кабинет!
   const cabinet = byId('cabinetModal');
   if (cabinet) cabinet.style.display = 'none';
 
-  // Используем финальное окно для показа
   const dialog = byId('finalDialog');
   const main = byId('finalDialogMain');
   const blocks = byId('finalDialogBlocks');
@@ -798,6 +798,32 @@ function showCabinetEntry(idx) {
     `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation || '<i>Нет толкования</i>'}</span></div>`
   ).join('');
   dialog.style.display = 'block';
+
+  // Меняем текст и действие кнопки
+  const saveBtn = byId('saveToCabinetBtn');
+  if (saveBtn) {
+    saveBtn.textContent = 'Загрузить для толкования';
+    saveBtn.onclick = function() {
+      // Загружаем только текст сна, сбрасываем всё остальное
+      state.dreamText = entry.dreamText || '';
+      state.blocks = [];
+      state.currentBlockId = null;
+      state.nextBlockId = 1;
+      state.globalFinalInterpretation = null;
+      // Переходим на шаг 2
+      showStep(2);
+      // Подставляем текст сна в textarea
+      const dreamEl = byId('dream');
+      if (dreamEl) dreamEl.value = state.dreamText;
+      renderDreamView();
+      resetSelectionColor();
+      updateProgressIndicator();
+      // Закрываем итоговое окно
+      const dialog = byId('finalDialog');
+      if (dialog) dialog.style.display = 'none';
+      isViewingFromCabinet = false;
+    };
+  }
 }
 
 // ====== Итоговое толкование только для финального окна ======
