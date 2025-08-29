@@ -1157,8 +1157,8 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
   menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
 });
 
-  onClick('menuExportFinal', () => {
-  exportFinalTXT();
+  onClick('menuSaveToCabinet', () => {
+  saveCurrentSessionToCabinet();
   hideAttachMenu();
 });
 
