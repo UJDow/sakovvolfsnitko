@@ -491,7 +491,7 @@ function updateButtonsState() {
   const miBlock = byId('menuBlockInterpret');
   const miFinal = byId('menuFinalInterpret');
 
-  // Считаем количество блоков с толкованием
+  // Сколько блоков истолковано
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
 
   // 1. Пока не 10 ответов — всё неактивно
@@ -514,18 +514,16 @@ function updateButtonsState() {
     return;
   }
 
-  // 3. Есть толкование блока — "Сохранить" активна
+  // 3. Есть толкование блока — "Сохранить" активна, "Итог" только если два и более блока истолкованы
   if (b.finalInterpretation) {
     if (blockBtn) blockBtn.disabled = true;
     if (saveBtn) saveBtn.disabled = false;
-    // "Итог" активна только если два и более блока истолкованы
     if (finalBtn) finalBtn.disabled = finalsCount < 2;
     if (miBlock) miBlock.disabled = true;
     if (miFinal) miFinal.disabled = finalsCount < 2;
     return;
   }
 }
-
 /* ====== Экспорт/импорт ====== */
 function exportJSON() {
   const data = { dreamText: state.dreamText, blocks: state.blocks };
