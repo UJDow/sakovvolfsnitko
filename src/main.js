@@ -823,25 +823,21 @@ if (saveBtn) {
   saveBtn.classList.remove('secondary');
   saveBtn.classList.add('primary');
   saveBtn.onclick = function() {
-      // Загружаем только текст сна, сбрасываем всё остальное
-      state.dreamText = entry.dreamText || '';
-      state.blocks = [];
-      state.currentBlockId = null;
-      state.nextBlockId = 1;
-      state.globalFinalInterpretation = null;
-      // Переходим на шаг 2
-      showStep(2);
-      // Подставляем текст сна в textarea
-      const dreamEl = byId('dream');
-      if (dreamEl) dreamEl.value = state.dreamText;
-      renderDreamView();
-      resetSelectionColor();
-      updateProgressIndicator();
-      // Закрываем итоговое окно
-      const dialog = byId('finalDialog');
-      if (dialog) dialog.style.display = 'none';
-      isViewingFromCabinet = false;
-    };
+  state.dreamText = entry.dreamText || '';
+  state.blocks = entry.blocks || [];
+  state.currentBlockId = state.blocks[0]?.id || null;
+  state.nextBlockId = (state.blocks.reduce((max, b) => Math.max(max, b.id), 0) || 0) + 1;
+  state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
+  showStep(2);
+  const dreamEl = byId('dream');
+  if (dreamEl) dreamEl.value = state.dreamText;
+  renderDreamView();
+  resetSelectionColor();
+  updateProgressIndicator();
+  const dialog = byId('finalDialog');
+  if (dialog) dialog.style.display = 'none';
+  isViewingFromCabinet = false;
+};
   }
 }
 
