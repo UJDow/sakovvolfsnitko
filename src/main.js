@@ -751,10 +751,6 @@ function renderCabinet() {
     info.textContent = `Осталось записать ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
   }
 
-  const preview = entry.globalFinalInterpretation
-  ? entry.globalFinalInterpretation
-  : 'Анализ не завершён';
-
   const list = loadCabinet();
   const wrap = document.getElementById('cabinetList');
   if (!wrap) return;
@@ -764,7 +760,9 @@ function renderCabinet() {
   }
   wrap.innerHTML = list.map((entry, idx) => {
     const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const preview = (entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...';
+    const preview = entry.globalFinalInterpretation
+      ? entry.globalFinalInterpretation
+      : 'Анализ не завершён';
     return `
       <div class="cabinet-tile">
         <div class="cabinet-date">${date}</div>
@@ -775,15 +773,12 @@ function renderCabinet() {
     `;
   }).join('');
 
-  console.log('Кнопки глазика:', wrap.querySelectorAll('button[data-view]'));
-
   // Вешаем обработчики — обязательно после innerHTML!
   wrap.querySelectorAll('button[data-view]').forEach(btn => {
-  btn.onclick = function() {
-    console.log('Клик по глазку', btn.dataset.view);
-    showCabinetEntry(+btn.dataset.view);
-  };
-});
+    btn.onclick = function() {
+      showCabinetEntry(+btn.dataset.view);
+    };
+  });
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
     btn.onclick = function() {
       if (confirm('Удалить запись?')) {
