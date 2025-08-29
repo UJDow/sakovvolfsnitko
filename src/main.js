@@ -757,17 +757,17 @@ function renderCabinet() {
     return;
   }
   wrap.innerHTML = list.map((entry, idx) => {
-    const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const preview = (entry.dreamText || '').split(/\s+/).slice(0, 5).join(' ') + '...';
-    return `
-      <div class="card" style="margin-bottom:14px; padding:18px 16px; position:relative;">
-        <div style="font-size:15px; color:var(--text-secondary); margin-bottom:6px;">${date}</div>
-        <div style="font-size:17px; font-weight:500; margin-bottom:10px;">${preview}</div>
-        <button class="btn primary" data-view="${idx}" style="margin-right:8px;">Посмотреть</button>
-        <button class="btn secondary" data-del="${idx}">Удалить</button>
-      </div>
-    `;
-  }).join('');
+  const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const preview = (entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...';
+  return `
+    <div class="cabinet-tile">
+      <div class="cabinet-date">${date}</div>
+      <div class="cabinet-preview">${preview}</div>
+      <button class="btn primary" data-view="${idx}">👁</button>
+      <button class="btn secondary" data-del="${idx}">🗑</button>
+    </div>
+  `;
+}).join('');
   // Вешаем обработчики
   wrap.querySelectorAll('button[data-view]').forEach(btn => {
     btn.onclick = () => showCabinetEntry(+btn.dataset.view);
