@@ -755,7 +755,6 @@ async function blockInterpretation() {
     appendBot(content, [], true);
     updateButtonsState();
     renderBlockPreviews();
-    saveCurrentSessionToCabinet(); // <--- вот тут!
   } catch (e) {
     console.error(e);
     appendBot('Ошибка при формировании толкования блока: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
@@ -1107,6 +1106,13 @@ function initHandlers() {
   if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
 });
 
+
+  //Обработчик для созранения сновидения в личный кабинет
+  onClick('menuSaveToCabinet', () => {
+  saveCurrentSessionToCabinet();
+  // Можно добавить showToastNotice('Сон сохранён в личный кабинет!');
+});
+  
   // Назад
   onClick('backTo1Top', () => { showStep(1); updateProgressIndicator(); });
 onClick('backTo1', () => { showStep(1); updateProgressIndicator(); });
