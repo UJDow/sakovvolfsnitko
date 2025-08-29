@@ -1,7 +1,5 @@
-if (isViewingFromCabinet) {
-  alert('Редактирование блоков недоступно. Нажмите ↻ чтобы начать разметку заново.');
-  return;
-}
+let isViewingFromCabinet = false;
+
 /* ====== Константы авторизации ====== */
 const AUTH_PASS = 'volfisthebest';
 const AUTH_TOKEN = 'volfisthebest-secret';
@@ -272,30 +270,21 @@ function renderDreamView() {
 /* ====== Chips, чат, индикатор «думаю», превью ====== */
 function renderBlocksChips() {
   const wrap = byId('blocks');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-
-  if (isViewingFromCabinet) {
-    const notice = document.createElement('div');
-    notice.className = 'muted';
-    notice.textContent = 'Режим просмотра: чтобы изменить блоки, нажмите ↻';
-    wrap.appendChild(notice);
+  if (wrap) {
+    wrap.innerHTML = '';
+    state.blocks.forEach(b => {
+      const el = document.createElement('div');
+      el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
+      el.textContent = `#${b.id} ${b.text.slice(0, 20)}${b.text.length > 20 ? '…' : ''}`;
+      el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
+      el.style.color = '#222';
+      el.addEventListener('click', () => selectBlock(b.id));
+      wrap.appendChild(el);
+    });
   }
-
-  state.blocks.forEach(b => {
-    const el = document.createElement('div');
-    el.className = 'chip' + (b.id === state.currentBlockId ? ' active' : '');
-    el.textContent = `#${b.id} ${b.text.slice(0, 20)}${b.text.length > 20 ? '…' : ''}`;
-    el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
-    el.style.color = '#222';
-    el.addEventListener('click', () => selectBlock(b.id));
-    wrap.appendChild(el);
-  });
-
   const cb = byId('currentBlock');
   const b = getCurrentBlock();
   if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
-}
 
   function renderQuickReplies(quickReplies) {
   const quickDiv = document.querySelector('.quick');
@@ -815,7 +804,7 @@ function renderCabinet() {
 }
 
 function showCabinetEntry(idx) {
-  isViewingFromCabinet = true; // Включаем режим просмотра
+  isViewingFromCabinet = true; // <--- добавляем флаг
 
   const list = loadCabinet();
   const entry = list[idx];
@@ -838,37 +827,26 @@ function showCabinetEntry(idx) {
 
   // Меняем текст и действие кнопки
   const saveBtn = byId('saveToCabinetBtn');
-  if (saveBtn) {
-    saveBtn.textContent = 'Загрузить Сновидение для толкования';
-    saveBtn.classList.remove('secondary');
-    saveBtn.classList.add('primary');
-    saveBtn.onclick = function() {
-      // Загружаем сон в рабочее состояние
-      state.dreamText = entry.dreamText || '';
-      state.blocks = (entry.blocks || []).map(b => ({
-        ...b,
-        chat: Array.isArray(b.chat) ? b.chat : [],
-        finalInterpretation: b.finalInterpretation ?? null,
-        userAnswersCount: b.userAnswersCount ?? 0,
-        _moonFlashShown: false // всегда сбрасываем при загрузке
-      }));
-      state.currentBlockId = state.blocks[0]?.id || null;
-      state.nextBlockId = (state.blocks.reduce((max, b) => Math.max(max, b.id), 0) || 0) + 1;
-      state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
-
-      showStep(2);
-      const dreamEl = byId('dream');
-      if (dreamEl) dreamEl.value = state.dreamText;
-      renderBlocksChips();
-      renderDreamView();
-      resetSelectionColor();
-      updateProgressIndicator();
-      const dialog = byId('finalDialog');
-      if (dialog) dialog.style.display = 'none';
-
-      isViewingFromCabinet = true; // Важно! Оставляем режим просмотра
-      updateBlockEditability();
-    };
+if (saveBtn) {
+  saveBtn.textContent = 'Загрузить Сновидение для толкования';
+  saveBtn.classList.remove('secondary');
+  saveBtn.classList.add('primary');
+  saveBtn.onclick = function() {
+  state.dreamText = entry.dreamText || '';
+  state.blocks = entry.blocks || [];
+  state.currentBlockId = state.blocks[0]?.id || null;
+  state.nextBlockId = (state.blocks.reduce((max, b) => Math.max(max, b.id), 0) || 0) + 1;
+  state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
+  showStep(2);
+  const dreamEl = byId('dream');
+  if (dreamEl) dreamEl.value = state.dreamText;
+  renderDreamView();
+  resetSelectionColor();
+  updateProgressIndicator();
+  const dialog = byId('finalDialog');
+  if (dialog) dialog.style.display = 'none';
+  isViewingFromCabinet = false;
+};
   }
 }
 
@@ -926,14 +904,6 @@ function saveCurrentSessionToCabinet() {
   });
   saveCabinet(list);
   alert('Сон сохранён в личный кабинет!');
-}
-
-function updateBlockEditability() {
-  const addBtn = byId('addBlock');
-  const addWholeBtn = byId('addWholeBlock');
-  if (addBtn) addBtn.disabled = isViewingFromCabinet;
-  if (addWholeBtn) addWholeBtn.disabled = isViewingFromCabinet;
-  // Кнопка ↻ всегда активна, если isViewingFromCabinet
 }
 
 // ====== Показ финального окна ======
@@ -1043,19 +1013,6 @@ function addBlockFromSelection() {
 }
 
 function refreshSelectedBlocks() {
-  if (!isViewingFromCabinet) {
-    alert('Эта функция нужна только для сброса блоков после загрузки из кабинета.');
-    return;
-  }
-  if (!confirm('Очистить все блоки и начать разметку заново?')) return;
-  state.blocks = [];
-  state.currentBlockId = null;
-  state.nextBlockId = 1;
-  isViewingFromCabinet = false; // Теперь можно редактировать!
-  renderBlocksChips();
-  resetSelectionColor();
-  updateBlockEditability();
-}
   const confirmMsg = 'Обновить выбранные блоки? Текущие блоки будут очищены, а выделения сброшены.';
   if (!confirm(confirmMsg)) return;
 
