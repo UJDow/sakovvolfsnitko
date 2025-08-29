@@ -850,7 +850,7 @@ function showCabinetEntry(idx) {
 
   main.innerHTML = `<div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px;">${new Date(entry.date).toLocaleString('ru-RU')}</div>
     <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${entry.dreamText}</div>
-    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.finalInterpretation || '<i>Нет</i>'}</div>`;
+    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.globalFinalInterpretation || '<i>Нет</i>'}</div>`;
   blocks.innerHTML = (entry.blocks || []).map((b, i) =>
     `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation || '<i>Нет толкования</i>'}</span></div>`
   ).join('');
