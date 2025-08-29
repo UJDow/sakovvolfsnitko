@@ -949,14 +949,18 @@ function showFinalDialog() {
 
   dialog.style.display = 'block';
 
-  // Важно: возвращаем кнопке стандартный вид и действие
+  // Управляем кнопкой "Сохранить в кабинет" — активна только если у текущего блока >= 10 ответов
   const saveBtn = byId('saveToCabinetBtn');
-if (saveBtn) {
-  saveBtn.textContent = 'Сохранить в кабинет';
-  saveBtn.classList.remove('primary');
-  saveBtn.classList.add('secondary');
-  saveBtn.onclick = saveCurrentSessionToCabinet;
-}
+  if (saveBtn) {
+    const b = getCurrentBlock();
+    const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
+    saveBtn.disabled = !enoughAnswers;
+    saveBtn.style.opacity = enoughAnswers ? 1 : 0.5;
+    saveBtn.textContent = 'Сохранить в кабинет';
+    saveBtn.classList.remove('primary');
+    saveBtn.classList.add('secondary');
+    saveBtn.onclick = saveCurrentSessionToCabinet;
+  }
 }
 
 // ====== Экспорт итогового толкования и блоков ======
