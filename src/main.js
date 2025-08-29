@@ -770,11 +770,11 @@ function renderCabinet() {
 }).join('');
   // Вешаем обработчики
   wrap.querySelectorAll('button[data-view]').forEach(btn => {
-    btn.onclick = () => showCabinetEntry(+btn.dataset.view);
-  });
-  wrap.querySelectorAll('button[data-del]').forEach(btn => {
-    btn.onclick = () => { if (confirm('Удалить запись?')) { removeFromCabinet(+btn.dataset.del); renderCabinet(); } };
-  });
+  btn.onclick = () => showCabinetEntry(+btn.dataset.view);
+});
+wrap.querySelectorAll('button[data-del]').forEach(btn => {
+  btn.onclick = () => { if (confirm('Удалить запись?')) { removeFromCabinet(+btn.dataset.del); renderCabinet(); } };
+});
 }
 
 function showCabinetEntry(idx) {
