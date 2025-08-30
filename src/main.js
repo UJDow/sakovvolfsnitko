@@ -42,12 +42,10 @@ function setStep1BtnToSave() {
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
     if (currentDreamId) {
-      showToastNotice('Сон уже сохранён!');
       setStep1BtnToNext(); // вдруг пользователь обновил страницу
       return;
     }
     currentDreamId = saveDreamToCabinetOnlyText(text);
-    showToastNotice('Сон сохранён в личный кабинет!');
     setStep1BtnToNext();
   };
 }
