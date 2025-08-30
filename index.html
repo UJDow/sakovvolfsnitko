@@ -206,8 +206,6 @@
       padding: 16px;
       margin: 0;
       display: block;
-      min-height: var(--surface-height);
-      height: var(--surface-height);
       max-height: var(--surface-height);
       font-size: 16px;
       transition: height 0.3s ease, min-height 0.3s ease;
@@ -216,7 +214,6 @@
     .surface {
       background: rgba(255,255,255,0.8);
       border: 1px solid var(--border);
-      overflow: hidden;
     }
   
     .dream-view {
@@ -240,7 +237,6 @@
 
     .chat-wrap.surface {
       padding: 0 !important;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
@@ -339,7 +335,6 @@
       position: relative; 
       flex: 1 1 auto; 
       min-height: 260px; 
-      overflow: hidden; 
       padding-bottom: env(keyboard-inset-height, 0px); 
     }
   
@@ -347,7 +342,7 @@
       display: flex; 
       flex-direction: column; 
       gap: 12px;
-      height: 100%;
+      flex: 1 1 auto;
       padding: 16px;
       border-radius: 12px;
       background: var(--chat-bg);
