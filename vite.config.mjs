@@ -1,10 +1,10 @@
-// vite.config.mjs
 import { defineConfig } from 'vite'
 import obfuscator from 'vite-plugin-javascript-obfuscator'
 
 export default defineConfig({
   plugins: [
     obfuscator({
+      include: [/\.js$/, /\.ts$/], // <--- добавьте эту строку!
       compact: true,
       selfDefending: true,
       debugProtection: true,
