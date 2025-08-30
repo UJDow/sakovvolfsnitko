@@ -1157,19 +1157,20 @@ body.modal-open {
     </div>
 
     <!-- Шаг 1 -->
-    <div id="step1">
-      <div class="row">
-        <div class="card">
-          <div class="header-row">
-            <h3>Мы всегда рады новым историям</h3>
-          </div>
-          <textarea id="dream" class="surface" placeholder="Запишите свое сновидение..."></textarea>
-          <div class="controls">
-            <button id="toStep2" class="btn primary">Далее →</button>
-          </div>
-        </div>
+<div id="step1">
+  <div class="row">
+    <div class="card">
+      <div class="header-row">
+        <h3>Мы всегда рады новым историям</h3>
+      </div>
+      <textarea id="dream" class="surface" placeholder="Запишите свое сновидение..."></textarea>
+      <div class="controls" id="step1Controls">
+        <button id="saveDreamBtn" class="btn secondary">💾 Сохранить в кабинет</button>
+        <button id="toStep2" class="btn primary" disabled>Далее →</button>
       </div>
     </div>
+  </div>
+</div>
 
     <!-- Шаг 2 -->
     <div id="step2" style="display:none;">
