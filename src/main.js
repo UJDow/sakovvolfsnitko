@@ -54,8 +54,8 @@ function setStep1BtnToNext() {
   const btn = byId('step1MainBtn');
   if (!btn) return;
   btn.textContent = 'Далее →';
-  btn.classList.remove('primary');
-  btn.classList.add('secondary');
+  btn.classList.remove('secondary');
+  btn.classList.add('primary');
   btn.onclick = () => {
     if (!currentDreamId) {
       alert('Сначала сохраните сон!');
