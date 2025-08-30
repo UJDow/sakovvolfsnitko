@@ -1,5 +1,21 @@
 let isViewingFromCabinet = false;
 
+const openModals = new Set();
+
+function openModal(modalId) {
+  if (openModals.size === 0) {
+    disableBodyScroll();
+  }
+  openModals.add(modalId);
+}
+
+function closeModal(modalId) {
+  openModals.delete(modalId);
+  if (openModals.size === 0) {
+    enableBodyScroll();
+  }
+}
+
 /* ====== Константы авторизации ====== */
 const AUTH_PASS = 'volfisthebest';
 const AUTH_TOKEN = 'volfisthebest-secret';
@@ -879,15 +895,20 @@ function renderCabinet() {
   });
 }
 
+// ====== Показ записи из кабинета ======
 function showCabinetEntry(idx) {
-  isViewingFromCabinet = true; // <--- добавляем флаг
-
+  isViewingFromCabinet = true;
+  
   const list = loadCabinet();
   const entry = list[idx];
   if (!entry) return;
+  
   const cabinet = byId('cabinetModal');
-  if (cabinet) cabinet.style.display = 'none';
-
+  if (cabinet) {
+    cabinet.style.display = 'none';
+    enableBodyScroll(); // Разблокируем при переходе
+  }
+  
   const dialog = byId('finalDialog');
   const main = byId('finalDialogMain');
   const blocks = byId('finalDialogBlocks');
@@ -900,6 +921,8 @@ function showCabinetEntry(idx) {
     `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation || '<i>Нет толкования</i>'}</span></div>`
   ).join('');
   dialog.style.display = 'block';
+  disableBodyScroll(); // Блокируем для финального диалога
+}
 
   // Меняем текст и действие кнопки
   const saveBtn = byId('saveToCabinetBtn');
@@ -1004,6 +1027,8 @@ function showFinalDialog() {
   });
 
   dialog.style.display = 'block';
+  disableBodyScroll(); // Блокируем скролл фона
+}
 
   // Управляем кнопкой "Сохранить в кабинет" — активна только если у текущего блока >= 10 ответов
   const saveBtn = byId('saveToCabinetBtn');
@@ -1057,7 +1082,10 @@ function exportFinalTXT() {
 // ====== Закрытие финального окна ======
 onClick('closeFinalDialog', () => {
   const dialog = byId('finalDialog');
-  if (dialog) dialog.style.display = 'none';
+  if (dialog) {
+    dialog.style.display = 'none';
+    enableBodyScroll(); // Разблокируем скролл фона
+  }
 });
 
 /* ====== Добавление блоков ====== */
@@ -1273,14 +1301,43 @@ function initHandlers() {
   resetSelectionColor();
 }
 
+// ====== Утилиты для управления скроллом ======
+let scrollLockCount = 0;
+let savedScrollPosition = 0;
+
+function disableBodyScroll() {
+  if (scrollLockCount === 0) {
+    savedScrollPosition = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${savedScrollPosition}px`;
+    document.body.style.width = '100%';
+  }
+  scrollLockCount++;
+}
+
+function enableBodyScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  
+  if (scrollLockCount === 0) {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    
+    window.scrollTo(0, savedScrollPosition);
+  }
+}
+
 onClick('openCabinetBtn', () => {
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
-  document.body.classList.add('modal-open');
+  openModal('cabinetModal');
 });
+
 onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
-  document.body.classList.remove('modal-open');
+  closeModal('cabinetModal');
 });
 onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
@@ -1289,12 +1346,22 @@ onClick('clearCabinetBtn', () => {
   }
 });
 
+// ====== Обновляем обработчик оверлея кабинета ======
 document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.querySelector('#cabinetModal .modal-overlay');
   if (overlay) {
     overlay.onclick = () => {
       document.getElementById('cabinetModal').style.display = 'none';
-      document.body.classList.remove('modal-open');
+      enableBodyScroll(); // Разблокируем скролл
+    };
+  }
+
+// Также для оверлея финального диалога, если он есть
+  const finalOverlay = document.querySelector('#finalDialog .modal-overlay');
+  if (finalOverlay) {
+    finalOverlay.onclick = () => {
+      document.getElementById('finalDialog').style.display = 'none';
+      enableBodyScroll();
     };
   }
 });
