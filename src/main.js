@@ -1263,10 +1263,12 @@ onClick('openCabinetBtn', () => {
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
 });
 onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
   document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
 });
 onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
@@ -1453,6 +1455,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (overlay) {
     overlay.onclick = () => {
       document.getElementById('cabinetModal').style.display = 'none';
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
     };
   }
 });
