@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#2563eb">
   <style>
     :root {
+      --surface-min-height: 180px;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
       --secondary: #64748b;
@@ -206,7 +207,8 @@
       padding: 16px;
       margin: 0;
       display: block;
-      max-height: var(--surface-height);
+      min-height: var(--surface-min-height, 180px);
+      max-height: var(--surface-height);      
       font-size: 16px;
       transition: height 0.3s ease, min-height 0.3s ease;
     }
@@ -449,6 +451,8 @@
 }
 
 @media (max-width: 600px) {
+  :root {
+    --surface-min-height: 32vh;
   #userInput {
     padding: 12px 120px 12px 16px; /* на мобильных 120px справа */
   }
