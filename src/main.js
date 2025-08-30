@@ -22,6 +22,8 @@ const state = {
 
 let currentSelectionColor = null;
 
+let currentDreamId = null; // id текущего сна в кабинете, с которым сейчас работаем
+
 /* ====== Утилиты DOM ====== */
 function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
@@ -661,6 +663,7 @@ function appendUser(text) {
 
   renderChat();
   renderBlocksChips();
+  syncCurrentDreamToCabinet();
 }
 function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = false) {
   const b = getCurrentBlock(); if (!b) return;
@@ -755,6 +758,7 @@ async function blockInterpretation() {
     appendBot(content, [], true);
     updateButtonsState();
     renderBlockPreviews();
+    syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
     appendBot('Ошибка при формировании толкования блока: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
@@ -916,6 +920,7 @@ async function finalInterpretation() {
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
     showFinalDialog();
+    syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
     appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
@@ -1045,6 +1050,7 @@ function addBlockFromSelection() {
 
   renderBlocksChips();
   resetSelectionColor();
+  syncCurrentDreamToCabinet();
 }
 
 function refreshSelectedBlocks() {
@@ -1082,14 +1088,30 @@ function selectBlock(id) {
 /* ====== Handlers ====== */
 function initHandlers() {
   onClick('toStep2', () => {
-    const dreamEl = byId('dream');
-    state.dreamText = dreamEl ? dreamEl.value : '';
-    if (!state.dreamText.trim()) { alert('Введите текст сна!'); return; }
-    showStep(2);
-    renderDreamView();
-    resetSelectionColor();
-    updateProgressIndicator();
-  });
+  if (!currentDreamId) {
+    alert('Сначала сохраните сон в кабинет!');
+    return;
+  }
+  const dreamEl = byId('dream');
+  state.dreamText = dreamEl ? dreamEl.value : '';
+  showStep(2);
+  renderDreamView();
+  resetSelectionColor();
+  updateProgressIndicator();
+});
+
+onClick('saveDreamBtn', () => {
+  const dreamEl = byId('dream');
+  const text = dreamEl ? dreamEl.value.trim() : '';
+  if (!text) { alert('Введите текст сна!'); return; }
+  if (currentDreamId) {
+    showToastNotice('Сон уже сохранён!');
+    return;
+  }
+  currentDreamId = saveDreamToCabinetOnlyText(text);
+  showToastNotice('Сон сохранён в личный кабинет!');
+  byId('toStep2').disabled = false;
+});
 
   onClick('toStep3', () => {
   if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
@@ -1113,8 +1135,8 @@ function initHandlers() {
 });
   
   // Назад
-  onClick('backTo1Top', () => { showStep(1); updateProgressIndicator(); });
-onClick('backTo1', () => { showStep(1); updateProgressIndicator(); });
+  onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
+onClick('backTo1', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
 onClick('backTo2Header', () => { showStep(2); updateProgressIndicator(); });
 onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
@@ -1287,6 +1309,50 @@ function removeFromCabinet(idx) {
 function clearCabinet() {
   localStorage.removeItem(CABINET_KEY);
   updateStorageIndicator(); // <--- и сюда
+}
+
+function saveDreamToCabinetOnlyText(dreamText) {
+  const list = loadCabinet();
+  const entry = {
+    id: Date.now() + Math.floor(Math.random() * 10000), // уникальный id
+    date: Date.now(),
+    dreamText,
+    blocks: [],
+    globalFinalInterpretation: null
+  };
+  list.unshift(entry);
+  saveCabinet(list);
+  updateStorageIndicator();
+  return entry.id;
+}
+
+function updateDreamInCabinet(id, data) {
+  const list = loadCabinet();
+  const idx = list.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  list[idx] = { ...list[idx], ...data };
+  saveCabinet(list);
+}
+
+function syncCurrentDreamToCabinet() {
+  if (!currentDreamId) return;
+  updateDreamInCabinet(currentDreamId, {
+    dreamText: state.dreamText,
+    blocks: state.blocks,
+    globalFinalInterpretation: state.globalFinalInterpretation || null
+  });
+}
+
+function startNewDream() {
+  currentDreamId = null;
+  state.dreamText = '';
+  state.blocks = [];
+  state.currentBlockId = null;
+  state.nextBlockId = 1;
+  state.globalFinalInterpretation = null;
+  const dreamEl = byId('dream');
+  if (dreamEl) dreamEl.value = '';
+  byId('toStep2').disabled = true;
 }
 
 // ====== Индикатор заполненности localStorage ======
