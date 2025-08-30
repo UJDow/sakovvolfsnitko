@@ -1,3 +1,5 @@
+все теперь в порядке и правильно?
+
 let isViewingFromCabinet = false;
 
 /* ====== Константы авторизации ====== */
@@ -42,10 +44,12 @@ function setStep1BtnToSave() {
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
     if (currentDreamId) {
+      showToastNotice('Сон уже сохранён!');
       setStep1BtnToNext(); // вдруг пользователь обновил страницу
       return;
     }
     currentDreamId = saveDreamToCabinetOnlyText(text);
+    showToastNotice('Сон сохранён в личный кабинет!');
     setStep1BtnToNext();
   };
 }
@@ -54,8 +58,8 @@ function setStep1BtnToNext() {
   const btn = byId('step1MainBtn');
   if (!btn) return;
   btn.textContent = 'Далее →';
-  btn.classList.remove('secondary'); // На всякий случай удаляем secondary
-  btn.classList.add('primary'); // Оставляем primary класс для синего цвета
+  btn.classList.remove('primary');
+  btn.classList.add('secondary');
   btn.onclick = () => {
     if (!currentDreamId) {
       alert('Сначала сохраните сон!');
@@ -1147,7 +1151,7 @@ function initHandlers() {
   onClick('menuSaveToCabinet', () => {
     saveCurrentSessionToCabinet();
   });
-  
+
   // Назад
   onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
   onClick('backTo1', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
@@ -1465,7 +1469,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   initHandlers();
-  
+
   // ====== 2025: Поддержка виртуальной клавиатуры ======
   if ('virtualKeyboard' in navigator) {
     try {
