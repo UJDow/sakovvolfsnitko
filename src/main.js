@@ -887,6 +887,7 @@ function showCabinetEntry(idx) {
   if (!entry) return;
   const cabinet = byId('cabinetModal');
   if (cabinet) cabinet.style.display = 'none';
+  document.body.classList.remove('modal-open');
 
   const dialog = byId('finalDialog');
   const main = byId('finalDialogMain');
