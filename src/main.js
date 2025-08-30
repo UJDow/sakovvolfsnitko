@@ -30,6 +30,49 @@ function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handle
 function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
+/* ====== Динамическая кнопка шага 1 ====== */
+function setStep1BtnToSave() {
+  const btn = byId('step1MainBtn');
+  if (!btn) return;
+  btn.textContent = 'Сохранить в кабинет';
+  btn.classList.remove('secondary');
+  btn.classList.add('primary');
+  btn.onclick = () => {
+    const dreamEl = byId('dream');
+    const text = dreamEl ? dreamEl.value.trim() : '';
+    if (!text) { alert('Введите текст сна!'); return; }
+    if (currentDreamId) {
+      showToastNotice('Сон уже сохранён!');
+      setStep1BtnToNext(); // вдруг пользователь обновил страницу
+      return;
+    }
+    currentDreamId = saveDreamToCabinetOnlyText(text);
+    showToastNotice('Сон сохранён в личный кабинет!');
+    setStep1BtnToNext();
+  };
+}
+
+function setStep1BtnToNext() {
+  const btn = byId('step1MainBtn');
+  if (!btn) return;
+  btn.textContent = 'Далее →';
+  btn.classList.remove('primary');
+  btn.classList.add('secondary');
+  btn.onclick = () => {
+    if (!currentDreamId) {
+      alert('Сначала сохраните сон!');
+      setStep1BtnToSave();
+      return;
+    }
+    const dreamEl = byId('dream');
+    state.dreamText = dreamEl ? dreamEl.value : '';
+    showStep(2);
+    renderDreamView();
+    resetSelectionColor();
+    updateProgressIndicator();
+  };
+}
+
 /* ====== Луна-прогресс ====== */
 function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, theme = 'light') {
   const moonBtn = document.getElementById('moonBtn');
@@ -1087,58 +1130,31 @@ function selectBlock(id) {
 
 /* ====== Handlers ====== */
 function initHandlers() {
-  onClick('toStep2', () => {
-  if (!currentDreamId) {
-    alert('Сначала сохраните сон в кабинет!');
-    return;
-  }
-  const dreamEl = byId('dream');
-  state.dreamText = dreamEl ? dreamEl.value : '';
-  showStep(2);
-  renderDreamView();
-  resetSelectionColor();
-  updateProgressIndicator();
-});
-
-onClick('saveDreamBtn', () => {
-  const dreamEl = byId('dream');
-  const text = dreamEl ? dreamEl.value.trim() : '';
-  if (!text) { alert('Введите текст сна!'); return; }
-  if (currentDreamId) {
-    showToastNotice('Сон уже сохранён!');
-    return;
-  }
-  currentDreamId = saveDreamToCabinetOnlyText(text);
-  showToastNotice('Сон сохранён в личный кабинет!');
-  byId('toStep2').disabled = false;
-});
+  setStep1BtnToSave();
 
   onClick('toStep3', () => {
-  if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
-  // Если пользователь не выбрал блок — по умолчанию первый
-  if (!state.currentBlockId) {
-    state.currentBlockId = sortedBlocks()[0]?.id || null;
-  }
-  showStep(3);
-  renderBlocksChips();
-  updateProgressIndicator();
-  const b = getCurrentBlock();
-  // Новый блок: только если чат пустой, иначе не дублируем вопрос
-  if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
-});
+    if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
+    if (!state.currentBlockId) {
+      state.currentBlockId = sortedBlocks()[0]?.id || null;
+    }
+    showStep(3);
+    renderBlocksChips();
+    updateProgressIndicator();
+    const b = getCurrentBlock();
+    if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
+  });
 
 
-  //Обработчик для созранения сновидения в личный кабинет
+  //Обработчик для сохранения сновидения в личный кабинет
   onClick('menuSaveToCabinet', () => {
-  saveCurrentSessionToCabinet();
-  // Можно добавить showToastNotice('Сон сохранён в личный кабинет!');
-});
+    saveCurrentSessionToCabinet();
+  });
   
   // Назад
   onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
-onClick('backTo1', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
-onClick('backTo2Header', () => { showStep(2); updateProgressIndicator(); });
-onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
+  onClick('backTo1', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
+  onClick('backTo2Header', () => { showStep(2); updateProgressIndicator(); });
+  onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   // Добавление блоков (шаг 2)
   onClick('addBlock', addBlockFromSelection);
@@ -1215,20 +1231,20 @@ onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   // Скрепка и меню (ЛУНА)
   onClick('moonBtn', (e) => {
-  e.stopPropagation();
-  const menu = byId('attachMenu');
-  if (!menu) return;
-  menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
-});
+    e.stopPropagation();
+    const menu = byId('attachMenu');
+    if (!menu) return;
+    menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
+  });
 
   onClick('menuExportFinal', () => {
-  exportFinalTXT();
-  hideAttachMenu();
-});
+    exportFinalTXT();
+    hideAttachMenu();
+  });
 
-onClick('exportFinalDialogBtn', () => {
-  exportFinalTXT();
-});
+  onClick('exportFinalDialogBtn', () => {
+    exportFinalTXT();
+  });
 
   // Клик вне меню — закрыть
   document.addEventListener('click', (e) => {
@@ -1240,13 +1256,13 @@ onClick('exportFinalDialogBtn', () => {
 
   onClick('menuBlockInterpret', () => { hideAttachMenu(); blockInterpretation(); });
   onClick('menuFinalInterpret', () => { 
-  hideAttachMenu();
-  if (state.globalFinalInterpretation) {
-    showFinalDialog();
-  } else {
-    finalInterpretation();
-  }
-});
+    hideAttachMenu();
+    if (state.globalFinalInterpretation) {
+      showFinalDialog();
+    } else {
+      finalInterpretation();
+    }
+  });
   // Старые стрелки — если присутствуют в HTML
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
   onClick('prevBlockBtn', () => { const id = prevUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
@@ -1263,17 +1279,35 @@ onClick('openCabinetBtn', () => {
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
 });
 onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
   document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
 });
 onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
     clearCabinet();
     renderCabinet();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const overlay = document.querySelector('#cabinetModal .modal-overlay');
+  if (overlay) {
+    overlay.onclick = () => {
+      document.getElementById('cabinetModal').style.display = 'none';
+      document.body.classList.remove('modal-open');
+    };
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('cabinetModal');
+  if (modal) {
+    modal.addEventListener('touchmove', function(e) {
+      if (e.target.closest('.cabinet-list')) return;
+      e.preventDefault();
+    }, { passive: false });
   }
 });
 
@@ -1354,7 +1388,7 @@ function startNewDream() {
   state.globalFinalInterpretation = null;
   const dreamEl = byId('dream');
   if (dreamEl) dreamEl.value = '';
-  byId('toStep2').disabled = true;
+  setStep1BtnToSave();
 }
 
 // ====== Индикатор заполненности localStorage ======
@@ -1383,14 +1417,15 @@ function updateStorageIndicator() {
 
   if (bar) bar.style.width = percent + '%';
   if (text) {
-  text.style.color = getBarColor(percent);
-  text.textContent = percent + '%';
+    text.style.color = getBarColor(percent);
+    text.textContent = percent + '%';
   }
 }
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
+  setStep1BtnToSave();
   updateProgressIndicator();
   updateStorageIndicator();
 
@@ -1432,7 +1467,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   initHandlers();
-
+  
   // ====== 2025: Поддержка виртуальной клавиатуры ======
   if ('virtualKeyboard' in navigator) {
     try {
@@ -1447,26 +1482,5 @@ window.addEventListener('DOMContentLoaded', () => {
   // ====== 2025: Поддержка foldables и новых форм-факторов ======
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const overlay = document.querySelector('#cabinetModal .modal-overlay');
-  if (overlay) {
-    overlay.onclick = () => {
-      document.getElementById('cabinetModal').style.display = 'none';
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-    };
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('cabinetModal');
-  if (modal) {
-    modal.addEventListener('touchmove', function(e) {
-      if (e.target.closest('.cabinet-list')) return;
-      e.preventDefault();
-    }, { passive: false });
   }
 });
