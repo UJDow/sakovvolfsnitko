@@ -56,8 +56,8 @@ function setStep1BtnToNext() {
   const btn = byId('step1MainBtn');
   if (!btn) return;
   btn.textContent = 'Далее →';
-  btn.classList.remove('primary');
-  btn.classList.add('secondary');
+  btn.classList.remove('secondary'); // На всякий случай удаляем secondary
+  btn.classList.add('primary'); // Оставляем primary класс для синего цвета
   btn.onclick = () => {
     if (!currentDreamId) {
       alert('Сначала сохраните сон!');
