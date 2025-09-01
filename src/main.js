@@ -900,7 +900,7 @@ function renderCabinet() {
 }
 
 function showCabinetEntry(idx) {
-  isViewingFromCabinet = true; // <--- добавляем флаг
+  isViewingFromCabinet = true;
 
   const list = loadCabinet();
   const entry = list[idx];
@@ -924,22 +924,41 @@ function showCabinetEntry(idx) {
 
   // Меняем текст и действие кнопки
   const saveBtn = byId('saveToCabinetBtn');
-if (saveBtn) {
-  saveBtn.textContent = 'Загрузить Сновидение для толкования';
-  saveBtn.classList.remove('secondary');
-  saveBtn.classList.add('primary');
-  saveBtn.onclick = function() {
-  currentDreamId = entry.id;
-  showStep(2);
-  const dreamEl = byId('dream');
-  if (dreamEl) dreamEl.value = state.dreamText;
-  renderDreamView();
-  resetSelectionColor();
-  updateProgressIndicator();
-  const dialog = byId('finalDialog');
-  if (dialog) dialog.style.display = 'none';
-  isViewingFromCabinet = false;
-};
+  if (saveBtn) {
+    saveBtn.textContent = 'Загрузить Сновидение для толкования';
+    saveBtn.classList.remove('secondary');
+    saveBtn.classList.add('primary');
+    saveBtn.onclick = function() {
+      // === ВОССТАНАВЛИВАЕМ ВСЁ СОСТОЯНИЕ ===
+      currentDreamId = entry.id;
+      state.dreamText = entry.dreamText || '';
+      state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
+        ...b,
+        chat: Array.isArray(b.chat) ? b.chat : [],
+        finalInterpretation: b.finalInterpretation ?? null,
+        userAnswersCount: b.userAnswersCount ?? 0,
+        _moonFlashShown: false
+      })) : [];
+      state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
+      state.nextBlockId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
+      state.currentBlockId = null;
+      state.userSelectedBlock = false;
+
+      // Переносим текст в textarea
+      const dreamEl = byId('dream');
+      if (dreamEl) dreamEl.value = state.dreamText;
+
+      // Переходим на шаг 2 и обновляем интерфейс
+      showStep(2);
+      renderBlocksChips();
+      resetSelectionColor();
+      updateProgressIndicator();
+
+      // Закрываем модалку
+      const dialog = byId('finalDialog');
+      if (dialog) dialog.style.display = 'none';
+      isViewingFromCabinet = false;
+    };
   }
 }
 
