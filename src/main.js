@@ -741,6 +741,46 @@ async function startOrContinue() {
     // Не делаем return!
   }
 
+  // --- Новый уникальный идентификатор запроса для этого блока ---
+  const requestId = Date.now() + Math.random();
+  b.pendingRequestId = requestId;
+
+  setThinking(true);
+  try {
+    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
+    const next = await llmNextStep(b.text, history);
+
+    // --- Проверяем, что пользователь всё ещё на этом блоке и id совпадает ---
+    if (b !== getCurrentBlock() || b.pendingRequestId !== requestId) {
+      // Пользователь уже ушёл на другой блок — игнорируем результат
+      return;
+    }
+
+    if (next.isFinal) {
+      b.finalInterpretation = next.question.trim();
+      b.finalAt = Date.now();
+      b.done = true;
+      appendBot(next.question, [], true);
+      updateButtonsState();
+      renderBlockPreviews();
+    } else {
+      appendBot(next.question, next.quickReplies);
+    }
+  } catch (e) {
+    // --- Только если пользователь всё ещё на этом блоке и id совпадает ---
+    if (b === getCurrentBlock() && b.pendingRequestId === requestId) {
+      appendBot('Ошибка при обработке запроса', ['Повторить']);
+    }
+  } finally {
+    // --- Только если пользователь всё ещё на этом блоке и id совпадает ---
+    if (b === getCurrentBlock() && b.pendingRequestId === requestId) {
+      setThinking(false);
+      updateButtonsState();
+      renderBlockPreviews();
+    }
+  }
+}
+
   setThinking(true);
   try {
     const history = b.chat.map(m => ({ role: m.role, text: m.text }));
