@@ -1437,8 +1437,14 @@ function startNewDream() {
 
 // ====== Индикатор заполненности localStorage ======
 const SAFE_LS_LIMIT = 2 * 1024 * 1024; // 2 МБ
-const AVG_DREAM_SIZE = 1200; // символов
 const WAR_AND_PEACE_TOM_SIZE = 650000; // символов
+
+function getAvgDreamSize() {
+  const arr = loadCabinet();
+  if (!arr.length) return 1200; // fallback на старое значение
+  const totalSize = arr.reduce((sum, entry) => sum + JSON.stringify(entry).length, 0);
+  return Math.ceil(totalSize / arr.length);
+}
 
 function getBarColor(percent) {
   if (percent < 60) return '#22c55e'; // зелёный
@@ -1454,7 +1460,8 @@ function updateStorageIndicator() {
     used += k.length + (v ? v.length : 0);
   }
   const percent = Math.min(100, Math.round(used / SAFE_LS_LIMIT * 100));
-  const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
+  const avgDreamSize = getAvgDreamSize();
+  const dreamsLeft = Math.max(0, Math.floor((SAFE_LS_LIMIT - used) / avgDreamSize));
   const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
   const bar = document.getElementById('storageBar');
   const text = document.getElementById('storageText');
@@ -1463,6 +1470,10 @@ function updateStorageIndicator() {
   if (text) {
     text.style.color = getBarColor(percent);
     text.textContent = percent + '%';
+  }
+  const info = document.getElementById('cabinetStorageInfo');
+  if (info) {
+    info.textContent = `Осталось записать примерно ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
   }
 }
 
