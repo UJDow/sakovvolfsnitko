@@ -781,31 +781,6 @@ async function startOrContinue() {
   }
 }
 
-  setThinking(true);
-  try {
-    const history = b.chat.map(m => ({ role: m.role, text: m.text }));
-    const next = await llmNextStep(b.text, history);
-
-    if (next.isFinal) {
-      b.finalInterpretation = next.question.trim();
-      b.finalAt = Date.now();
-      b.done = true;
-      appendBot(next.question, [], true);
-      updateButtonsState();
-      renderBlockPreviews();
-    } else {
-      appendBot(next.question, next.quickReplies);
-    }
-  } catch (e) {
-    console.error(e);
-    appendBot('Ошибка при обработке запроса', ['Повторить']);
-  } finally {
-    setThinking(false);
-    updateButtonsState();
-    renderBlockPreviews();
-  }
-}
-
 /* ====== Толкования ====== */
 async function blockInterpretation() {
   const b = getCurrentBlock();
