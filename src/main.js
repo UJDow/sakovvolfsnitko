@@ -47,7 +47,13 @@ function setStep1BtnToSave() {
       return;
     }
     currentDreamId = saveDreamToCabinetOnlyText(text);
-    setStep1BtnToNext();
+// GA4: Сохранение сна
+gtag('event', 'save_dream', {
+  event_category: 'dream',
+  event_label: 'Сохранён сон',
+  dream_id: currentDreamId
+});
+setStep1BtnToNext();
   };
 }
 
@@ -697,15 +703,25 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
 
-  renderMoonProgress(b.userAnswersCount, 10, false);
+renderMoonProgress(b.userAnswersCount, 10, false);
 
-  // Показываем уведомление ровно на 10-м ответе (и только один раз)
-  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
-    b._moonFlashShown = true;
-    renderMoonProgress(b.userAnswersCount, 10, true);
-    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-    showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
-  }
+// GA4: Блок готов к толкованию (ровно 10 ответов)
+if (b.userAnswersCount === 10) {
+  gtag('event', 'block_ready_for_interpretation', {
+    event_category: 'block',
+    event_label: 'Блок готов к толкованию',
+    block_id: b.id,
+    dream_id: currentDreamId
+  });
+}
+
+// Показываем уведомление ровно на 10-м ответе (и только один раз)
+if (b.userAnswersCount === 10 && !b._moonFlashShown) {
+  b._moonFlashShown = true;
+  renderMoonProgress(b.userAnswersCount, 10, true);
+  setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+  showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+}
 
   renderChat();
   renderBlocksChips();
@@ -814,14 +830,29 @@ async function blockInterpretation() {
     if (!content) content = 'Не удалось получить толкование';
 
     b.finalInterpretation = content;
-    b.finalAt = Date.now();
-    b.done = true;
-    appendBot(content, [], true);
-    updateButtonsState();
-    renderBlockPreviews();
-    syncCurrentDreamToCabinet();
+b.finalAt = Date.now();
+b.done = true;
+// GA4: Толкование блока
+gtag('event', 'block_interpreted', {
+  event_category: 'block',
+  event_label: 'Толкование блока',
+  block_id: b.id,
+  dream_id: currentDreamId
+});
+appendBot(content, [], true);
+updateButtonsState();
+renderBlockPreviews();
+syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
+    // GA4: Ошибка при толковании блока
+  gtag('event', 'error', {
+    event_category: 'error',
+    event_label: 'Ошибка при толковании блока',
+    error_message: e.message || 'Unknown',
+    block_id: b ? b.id : null,
+    dream_id: currentDreamId
+  });
     appendBot('Ошибка при формировании толкования блока: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     setThinking(false);
@@ -992,13 +1023,26 @@ async function finalInterpretation() {
     if (!content) content = 'Не удалось получить итоговое толкование';
 
     state.globalFinalInterpretation = content;
+// GA4: Финальное толкование сна
+gtag('event', 'final_interpretation', {
+  event_category: 'dream',
+  event_label: 'Финальное толкование',
+  dream_id: currentDreamId
+});
 
-    const b = getCurrentBlock();
-    if (b) appendFinalGlobal(content);
-    showFinalDialog();
-    syncCurrentDreamToCabinet();
+const b = getCurrentBlock();
+if (b) appendFinalGlobal(content);
+showFinalDialog();
+syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
+    // GA4: Ошибка при финальном толковании
+  gtag('event', 'error', {
+    event_category: 'error',
+    event_label: 'Ошибка при финальном толковании',
+    error_message: e.message || 'Unknown',
+    dream_id: currentDreamId
+  });
     appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     setThinking(false);
@@ -1064,6 +1108,12 @@ function showFinalDialog() {
 
 // ====== Экспорт итогового толкования и блоков ======
 function exportFinalTXT() {
+  // GA4: Экспорт финального толкования
+  gtag('event', 'export_final', {
+    event_category: 'export',
+    event_label: 'Экспорт финального толкования',
+    dream_id: currentDreamId
+  });
   const title = 'Saviora — Толкование сна';
   const date = new Date().toLocaleString('ru-RU', { dateStyle: 'long', timeStyle: 'short' });
   const dream = state.dreamText || '(нет текста)';
@@ -1124,7 +1174,15 @@ function addBlockFromSelection() {
   const id = state.nextBlockId++;
   const text = state.dreamText.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0, _moonFlashShown: false });
-  state.currentBlockId = id;
+state.currentBlockId = id;
+// GA4: Добавлен блок
+gtag('event', 'add_block', {
+  event_category: 'block',
+  event_label: 'Добавлен блок',
+  block_id: id,
+  block_length: text.length,
+  dream_id: currentDreamId
+});
 
   selected.forEach(s => {
     s.classList.remove('selected');
@@ -1182,6 +1240,13 @@ function initHandlers() {
     showStep(3);
     renderBlocksChips();
     updateProgressIndicator();
+    // GA4: Начат диалог по блоку
+gtag('event', 'start_dialog', {
+  event_category: 'dialog',
+  event_label: 'Начат диалог',
+  block_id: state.currentBlockId,
+  dream_id: currentDreamId
+});
     const b = getCurrentBlock();
     if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
   });
@@ -1318,6 +1383,11 @@ function initHandlers() {
 }
 
 onClick('openCabinetBtn', () => {
+  // GA4: Открытие личного кабинета
+  gtag('event', 'open_cabinet', {
+    event_category: 'cabinet',
+    event_label: 'Открыт личный кабинет'
+  });
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
