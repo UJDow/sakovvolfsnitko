@@ -17,7 +17,7 @@ const state = {
   nextBlockId: 1,
   currentStep: 1,
   isThinking: false,
-  globalFinalInterpretation: null // <--- добавлено!
+  globalFinalInterpretation: null,
   userSelectedBlock: false
 };
 
