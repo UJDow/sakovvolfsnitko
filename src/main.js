@@ -18,6 +18,7 @@ const state = {
   currentStep: 1,
   isThinking: false,
   globalFinalInterpretation: null // <--- добавлено!
+  userSelectedBlock: false
 };
 
 let currentSelectionColor = null;
@@ -1128,6 +1129,7 @@ state.blocks.forEach(b => b._moonFlashShown = false);
 
 function selectBlock(id) {
   state.currentBlockId = id;
+  state.userSelectedBlock = true;
   renderBlocksChips();
 }
 
@@ -1137,7 +1139,7 @@ function initHandlers() {
 
   onClick('toStep3', () => {
     if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
-    if (!state.currentBlockId) {
+    if (!state.userSelectedBlock) {
       state.currentBlockId = sortedBlocks()[0]?.id || null;
     }
     showStep(3);
@@ -1389,6 +1391,7 @@ function startNewDream() {
   state.currentBlockId = null;
   state.nextBlockId = 1;
   state.globalFinalInterpretation = null;
+  state.userSelectedBlock = false;
   const dreamEl = byId('dream');
   if (dreamEl) dreamEl.value = '';
   setStep1BtnToSave();
