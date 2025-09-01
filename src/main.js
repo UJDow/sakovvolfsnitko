@@ -929,12 +929,7 @@ if (saveBtn) {
   saveBtn.classList.remove('secondary');
   saveBtn.classList.add('primary');
   saveBtn.onclick = function() {
-  state.dreamText = entry.dreamText || '';
-  // Очищаем блоки, чтобы пользователь выделял их заново:
-  state.blocks = [];
-  state.currentBlockId = null;
-  state.nextBlockId = 1;
-  state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
+  currentDreamId = entry.id;
   showStep(2);
   const dreamEl = byId('dream');
   if (dreamEl) dreamEl.value = state.dreamText;
@@ -993,15 +988,23 @@ async function finalInterpretation() {
 }
 
 function saveCurrentSessionToCabinet() {
-  const list = loadCabinet();
-  list.unshift({
+  const entry = {
+    id: currentDreamId || (Date.now() + Math.floor(Math.random() * 10000)),
     date: Date.now(),
     dreamText: state.dreamText,
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
-  });
+  };
+  const list = loadCabinet(); // <--- обязательно!
+  const idx = list.findIndex(e => e.id === entry.id);
+  if (idx !== -1) {
+    list[idx] = entry;
+  } else {
+    list.unshift(entry);
+  }
   saveCabinet(list);
   showToastNotice('Сон сохранён в личный кабинет!');
+  currentDreamId = entry.id; // <--- обновляем id для дальнейшей работы
 }
 
 // ====== Показ финального окна ======
@@ -1379,6 +1382,7 @@ function saveDreamToCabinetOnlyText(dreamText) {
   list.unshift(entry);
   saveCabinet(list);
   updateStorageIndicator();
+  currentDreamId = entry.id; // <--- сохраняем id черновика
   return entry.id;
 }
 
