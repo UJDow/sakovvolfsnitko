@@ -190,6 +190,10 @@ function showStep(step) {
   }
   state.currentStep = step;
   updateProgressIndicator();
+  // --- Вот это добавь ---
+  if (step === 3 && !state.currentBlockId && state.blocks.length) {
+    state.currentBlockId = sortedBlocks()[0]?.id || null;
+  }
 }
 function getCurrentBlock() {
   return state.blocks.find(b => b.id === state.currentBlockId) || null;
