@@ -178,6 +178,19 @@ function checkAuth() {
   showAuth(); return false;
 }
 
+function showHowToModal() {
+  const modal = document.getElementById('howToModal');
+  if (modal) modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function hideHowToModal() {
+  const modal = document.getElementById('howToModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.getElementById('closeHowToModal').onclick = hideHowToModal;
+document.getElementById('howToModalOk').onclick = hideHowToModal;
+
 function showToastNotice(text, ms = 3200) {
   const toast = document.getElementById('toastNotice');
   if (!toast) return;
@@ -1542,4 +1555,31 @@ function addMessage(text, fromUser = false) {
   msg.textContent = text;
   messagesContainer.appendChild(msg);
   scrollToBottom();
+}
+
+if (getToken() === AUTH_TOKEN) {
+  hideAuth();
+} else {
+  showAuth();
+  const authBtn = byId('authBtn');
+  const authPass = byId('authPass');
+  const authError = byId('authError');
+
+  if (authBtn && authPass) {
+  authBtn.onclick = () => {
+    const val = authPass.value;
+    if (val === AUTH_PASS) {
+      setToken(AUTH_TOKEN);
+      hideAuth();
+      if (!localStorage.getItem('howto_shown')) {
+        showHowToModal();
+        localStorage.setItem('howto_shown', '1');
+      }
+      // location.reload(); // НЕ нужно, иначе модалка не покажется!
+    } else {
+      if (authError) authError.style.display = 'block';
+    }
+  };
+  authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+  authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
 }
