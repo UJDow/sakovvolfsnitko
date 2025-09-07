@@ -1490,28 +1490,32 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   if (getToken() === AUTH_TOKEN) {
-    hideAuth();
-  } else {
-    showAuth();
-    const authBtn = byId('authBtn');
-    const authPass = byId('authPass');
-    const authError = byId('authError');
+  hideAuth();
+} else {
+  showAuth();
+  const authBtn = byId('authBtn');
+  const authPass = byId('authPass');
+  const authError = byId('authError');
 
-    if (authBtn && authPass) {
-      authBtn.onclick = () => {
-        const val = authPass.value;
-        if (val === AUTH_PASS) {
-          setToken(AUTH_TOKEN);
-          hideAuth();
-          location.reload();
-        } else {
-          if (authError) authError.style.display = 'block';
+  if (authBtn && authPass) {
+    authBtn.onclick = () => {
+      const val = authPass.value;
+      if (val === AUTH_PASS) {
+        setToken(AUTH_TOKEN);
+        hideAuth();
+        if (!localStorage.getItem('howto_shown')) {
+          showHowToModal();
+          localStorage.setItem('howto_shown', '1');
         }
-      };
-      authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-      authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
-    }
+        // location.reload(); // НЕ нужно!
+      } else {
+        if (authError) authError.style.display = 'block';
+      }
+    };
+    authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+    authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
   }
+}
 
   initHandlers();
 
@@ -1555,31 +1559,4 @@ function addMessage(text, fromUser = false) {
   msg.textContent = text;
   messagesContainer.appendChild(msg);
   scrollToBottom();
-}
-
-if (getToken() === AUTH_TOKEN) {
-  hideAuth();
-} else {
-  showAuth();
-  const authBtn = byId('authBtn');
-  const authPass = byId('authPass');
-  const authError = byId('authError');
-
-  if (authBtn && authPass) {
-  authBtn.onclick = () => {
-    const val = authPass.value;
-    if (val === AUTH_PASS) {
-      setToken(AUTH_TOKEN);
-      hideAuth();
-      if (!localStorage.getItem('howto_shown')) {
-        showHowToModal();
-        localStorage.setItem('howto_shown', '1');
-      }
-      // location.reload(); // НЕ нужно, иначе модалка не покажется!
-    } else {
-      if (authError) authError.style.display = 'block';
-    }
-  };
-  authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-  authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
 }
