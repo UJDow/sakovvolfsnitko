@@ -388,27 +388,33 @@ function renderChat() {
   const chat = byId('chat');
   if (!chat) return;
   const b = getCurrentBlock();
+  if (!b) return;
 
-  // Сохраняем только системные элементы: #thinking, .chat-stabilizer, #jumpToBottom
+  // Сохраняем, был ли пользователь внизу
+  const atBottomBefore = isChatAtBottom();
+
+  // Оставляем только системные элементы (thinking, chat-stabilizer, jumpToBottom)
   const preserve = new Set(['thinking', 'jumpToBottom']);
   Array.from(chat.children).forEach(node => {
     const keep = (node.id && preserve.has(node.id)) || node.classList?.contains('chat-stabilizer');
     if (!keep) chat.removeChild(node);
   });
 
-  if (!b) return;
+  // Считаем сколько уже есть сообщений (без системных)
+  const existingMsgs = Array.from(chat.children).filter(
+    node => node.classList?.contains('msg')
+  ).length;
 
-  const atBottomBefore = isChatAtBottom();
-
-  for (const m of b.chat) {
+  // Добавляем только недостающие сообщения
+  for (let i = existingMsgs; i < b.chat.length; i++) {
+    const m = b.chat[i];
     const div = document.createElement('div');
     const baseClass = 'msg ' + (m.role === 'bot' ? 'bot' : 'user');
     div.className = baseClass
       + (m.isFinal ? ' final' : '')
       + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
-
-    // вставляем перед thinking, чтобы thinking оставался внизу
+    // Вставляем перед thinking, чтобы thinking оставался внизу
     const thinking = byId('thinking');
     chat.insertBefore(div, thinking || chat.firstChild);
 
@@ -425,9 +431,11 @@ function renderChat() {
     }
   }
 
+  // Кнопка "вниз"
   const j = byId('jumpToBottom');
   if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
 
+  // Скроллим вниз только если пользователь был внизу
   if (atBottomBefore) {
     requestAnimationFrame(() => scrollChatToBottom());
   }
