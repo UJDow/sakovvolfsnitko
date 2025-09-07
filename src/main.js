@@ -415,14 +415,6 @@ function renderChat() {
     }
   }
 
-  const j = byId('jumpToBottom');
-  if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
-
-  if (atBottomBefore) {
-    requestAnimationFrame(() => scrollChatToBottom());
-  }
-}
-
 /* ====== Индикатор «думаю» внутри чата ====== */
 function setThinking(on) {
   state.isThinking = !!on;
@@ -1320,6 +1312,24 @@ onClick('clearCabinetBtn', () => {
   }
 });
 
+const userInputEl = byId('userInput');
+const sendBtnEl = byId('sendAnswerBtn');
+const jumpToBottomBtnEl = byId('jumpToBottom');
+
+if (userInputEl) {
+  userInputEl.addEventListener('focus', () => {
+    setTimeout(scrollChatToBottom, 100);
+  });
+}
+if (sendBtnEl) {
+  sendBtnEl.addEventListener('click', () => {
+    setTimeout(scrollChatToBottom, 100);
+  });
+}
+if (jumpToBottomBtnEl) {
+  jumpToBottomBtnEl.addEventListener('click', scrollChatToBottom);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.querySelector('#cabinetModal .modal-overlay');
   if (overlay) {
@@ -1516,37 +1526,3 @@ window.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('foldable-vertical');
   }
 });
-
-// --- АВТОСКРОЛЛ ДЛЯ ЧАТА НА МОБИЛЬНЫХ ---
-
-const chatContainer = document.getElementById('chat');
-const userInput = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendAnswerBtn');
-const jumpToBottomBtn = document.getElementById('jumpToBottom');
-
-// Скролл к низу
-function scrollChatToBottom() {
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-// Скроллим вниз при фокусе на поле ввода (клавиатура появляется)
-userInput.addEventListener('focus', () => {
-  setTimeout(scrollChatToBottom, 100);
-});
-
-// Скроллим вниз после отправки сообщения
-sendBtn.addEventListener('click', () => {
-  setTimeout(scrollChatToBottom, 100);
-});
-
-// Скролл по кнопке "В конец"
-jumpToBottomBtn.addEventListener('click', scrollChatToBottom);
-
-// Если у тебя есть функция добавления сообщений — добавь туда scrollChatToBottom();
-function addMessage(text, fromUser = false) {
-  const msg = document.createElement('div');
-  msg.className = 'msg ' + (fromUser ? 'user' : 'bot');
-  msg.textContent = text;
-  chatContainer.appendChild(msg);
-  scrollChatToBottom();
-}
