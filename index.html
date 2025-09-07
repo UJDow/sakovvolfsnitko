@@ -92,10 +92,23 @@
 /* Скрываем окно авторизации по умолчанию */
 #auth { display: none; }
 
-    .theme-toggle, .howto-toggle {
+    .top-bar {
   position: fixed;
   top: max(18px, env(safe-area-inset-top, 18px));
+  left: 0;
+  right: 0;
+  width: 100vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   z-index: 100;
+  pointer-events: none; /* чтобы не мешать кликам вне кнопок */
+}
+
+.top-bar button {
+  pointer-events: auto; /* вернуть кликабельность кнопкам */
+  margin: 0 18px;
+  position: static; /* уберите position: fixed у самих кнопок */
   background: var(--card-bg);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -109,15 +122,11 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 40px; /* фиксированная высота для обеих кнопок */
+  height: 40px;
 }
 
-.theme-toggle { right: max(18px, env(safe-area-inset-right, 18px)); }
-.howto-toggle { left: max(18px, env(safe-area-inset-left, 18px)); }
-
-.theme-toggle .icon,
-.howto-toggle .icon {
-  font-size: 20px; /* чуть больше для emoji */
+.top-bar .icon {
+  font-size: 20px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -126,18 +135,13 @@
   width: 20px;
 }
 
-.theme-toggle .label,
-.howto-toggle .label {
+.top-bar .text {
   display: flex;
   align-items: center;
   height: 20px;
   line-height: 1;
   font-size: 15px;
   font-weight: 400;
-}
-/* Ключевая строка для выравнивания ❓ */
-.howto-toggle .icon {
-  margin-top: 2px;
 }
     .pre-auth .center-wrap { visibility: hidden; }
     #auth { display: block; }
