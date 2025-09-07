@@ -1197,6 +1197,8 @@ function selectBlock(id) {
 function initHandlers() {
   setStep1BtnToSave();
 
+  onClick('howToBtn', showHowToModal);
+
   onClick('toStep3', () => {
     if (!state.blocks.length) { alert('Добавьте хотя бы один блок!'); return; }
     if (!state.userSelectedBlock) {
