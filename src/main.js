@@ -1611,4 +1611,3 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
-});
