@@ -1517,29 +1517,36 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
+// --- АВТОСКРОЛЛ ДЛЯ ЧАТА НА МОБИЛЬНЫХ ---
 
-const messagesContainer = document.getElementById('messages');
-const input = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
+const chatContainer = document.getElementById('chat');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendAnswerBtn');
+const jumpToBottomBtn = document.getElementById('jumpToBottom');
 
-function scrollToBottom() {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// Скролл к низу
+function scrollChatToBottom() {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Скроллим вниз при фокусе на инпуте (клавиатура появляется)
-input.addEventListener('focus', scrollToBottom);
+// Скроллим вниз при фокусе на поле ввода (клавиатура появляется)
+userInput.addEventListener('focus', () => {
+  setTimeout(scrollChatToBottom, 100);
+});
 
 // Скроллим вниз после отправки сообщения
 sendBtn.addEventListener('click', () => {
-  setTimeout(scrollToBottom, 100); // Даем DOM обновиться
+  setTimeout(scrollChatToBottom, 100);
 });
 
-// Если у тебя есть функция добавления сообщений, добавь туда scrollToBottom:
+// Скролл по кнопке "В конец"
+jumpToBottomBtn.addEventListener('click', scrollChatToBottom);
+
+// Если у тебя есть функция добавления сообщений — добавь туда scrollChatToBottom();
 function addMessage(text, fromUser = false) {
   const msg = document.createElement('div');
-  msg.className = fromUser ? 'user-message' : 'bot-message';
+  msg.className = 'msg ' + (fromUser ? 'user' : 'bot');
   msg.textContent = text;
-  messagesContainer.appendChild(msg);
-  scrollToBottom();
+  chatContainer.appendChild(msg);
+  scrollChatToBottom();
 }
