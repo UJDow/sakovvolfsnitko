@@ -429,11 +429,8 @@ function renderChat() {
   if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
 
   if (atBottomBefore) {
-  requestAnimationFrame(() => {
-    scrollChatToBottom();
-    setTimeout(scrollChatToBottom, 0);
-    setTimeout(scrollChatToBottom, 100);
-  });
+    requestAnimationFrame(() => scrollChatToBottom());
+  }
 }
 
 /* ====== Индикатор «думаю» внутри чата ====== */
@@ -1611,4 +1608,4 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
-}); // <-- вот этой скобки и точки с запятой у тебя не хватает!
+});
