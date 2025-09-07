@@ -429,8 +429,11 @@ function renderChat() {
   if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
 
   if (atBottomBefore) {
-    requestAnimationFrame(() => scrollChatToBottom());
-  }
+  requestAnimationFrame(() => {
+    scrollChatToBottom();
+    setTimeout(scrollChatToBottom, 0);
+    setTimeout(scrollChatToBottom, 100);
+  });
 }
 
 /* ====== Индикатор «думаю» внутри чата ====== */
