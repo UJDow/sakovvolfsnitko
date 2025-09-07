@@ -930,6 +930,24 @@ function showCabinetEntry(idx) {
   main.innerHTML = `<div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px;">${new Date(entry.date).toLocaleString('ru-RU')}</div>
     <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${escapeHTML(entry.dreamText)}</div>
     <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.globalFinalInterpretation ? escapeHTML(entry.globalFinalInterpretation) : '<i>Нет</i>'}</div>`;
+
+  // --- ДОБАВЛЯЕМ КНОПКУ ЭКСПОРТА ---
+  // Проверяем, есть ли уже кнопка, чтобы не дублировать
+  let exportBtn = byId('exportCabinetEntryBtn');
+  if (!exportBtn) {
+    exportBtn = document.createElement('button');
+    exportBtn.id = 'exportCabinetEntryBtn';
+    exportBtn.className = 'btn secondary';
+    exportBtn.textContent = 'Экспорт';
+    exportBtn.style.marginBottom = '12px';
+    // Вставляем кнопку после блока main
+    main.parentNode.insertBefore(exportBtn, main.nextSibling);
+  }
+  exportBtn.onclick = function() {
+    exportFinalTXT(entry); // Экспортируем именно этот сон
+  };
+  // --- КОНЕЦ ДОБАВЛЕНИЯ КНОПКИ ---
+
   blocks.innerHTML = (entry.blocks || []).map((b, i) =>
     `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation ? escapeHTML(b.finalInterpretation) : '<i>Нет толкования</i>'}</span></div>`
   ).join('');
@@ -966,7 +984,6 @@ function showCabinetEntry(idx) {
     };
   }
 }
-
 // ====== Итоговое толкование только для финального окна ======
 async function finalInterpretation() {
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
@@ -1076,17 +1093,19 @@ function showFinalDialog() {
   }
 }
 
-function exportFinalTXT() {
-  gtag('event', 'export_final', {
-    event_category: 'export',
-    event_label: 'Экспорт финального толкования',
-    dream_id: currentDreamId
-  });
+function exportFinalTXT(entry) {
+  // Если передан entry — экспортируем его, иначе state
+  const src = entry || {
+    dreamText: state.dreamText,
+    globalFinalInterpretation: state.globalFinalInterpretation,
+    blocks: sortedBlocks().filter(b => b.finalInterpretation)
+  };
+
   const title = 'Saviora — Толкование сна';
   const date = new Date().toLocaleString('ru-RU', { dateStyle: 'long', timeStyle: 'short' });
-  const dream = state.dreamText || '(нет текста)';
-  const final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
-  const blocks = sortedBlocks().filter(b => b.finalInterpretation);
+  const dream = src.dreamText || '(нет текста)';
+  const final = src.globalFinalInterpretation || 'Итоговое толкование не найдено.';
+  const blocks = src.blocks || [];
 
   let txt = `${title}\n\n`;
   txt += `Оригинальный текст сна:\n${dream}\n\n`;
