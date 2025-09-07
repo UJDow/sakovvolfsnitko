@@ -415,6 +415,14 @@ function renderChat() {
     }
   }
 
+  const j = byId('jumpToBottom');
+  if (j) j.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+
+  if (atBottomBefore) {
+    requestAnimationFrame(() => scrollChatToBottom());
+  }
+}
+
 /* ====== Индикатор «думаю» внутри чата ====== */
 function setThinking(on) {
   state.isThinking = !!on;
@@ -1312,24 +1320,6 @@ onClick('clearCabinetBtn', () => {
   }
 });
 
-const userInputEl = byId('userInput');
-const sendBtnEl = byId('sendAnswerBtn');
-const jumpToBottomBtnEl = byId('jumpToBottom');
-
-if (userInputEl) {
-  userInputEl.addEventListener('focus', () => {
-    setTimeout(scrollChatToBottom, 100);
-  });
-}
-if (sendBtnEl) {
-  sendBtnEl.addEventListener('click', () => {
-    setTimeout(scrollChatToBottom, 100);
-  });
-}
-if (jumpToBottomBtnEl) {
-  jumpToBottomBtnEl.addEventListener('click', scrollChatToBottom);
-}
-
 document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.querySelector('#cabinetModal .modal-overlay');
   if (overlay) {
@@ -1526,3 +1516,30 @@ window.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('foldable-vertical');
   }
 });
+
+// --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
+
+const messagesContainer = document.getElementById('messages');
+const input = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function scrollToBottom() {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Скроллим вниз при фокусе на инпуте (клавиатура появляется)
+input.addEventListener('focus', scrollToBottom);
+
+// Скроллим вниз после отправки сообщения
+sendBtn.addEventListener('click', () => {
+  setTimeout(scrollToBottom, 100); // Даем DOM обновиться
+});
+
+// Если у тебя есть функция добавления сообщений, добавь туда scrollToBottom:
+function addMessage(text, fromUser = false) {
+  const msg = document.createElement('div');
+  msg.className = fromUser ? 'user-message' : 'bot-message';
+  msg.textContent = text;
+  messagesContainer.appendChild(msg);
+  scrollToBottom();
+}
