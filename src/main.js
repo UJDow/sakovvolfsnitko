@@ -1611,3 +1611,4 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
+}); // <-- вот этой скобки и точки с запятой у тебя не хватает!
