@@ -957,31 +957,6 @@ function showFinalDialog() {
   }
 }
 
-  dialog.style.display = 'block';
-
-  // Восстанавливаем стандартную кнопку экспорта
-  const exportBtn = byId('exportFinalDialogBtn');
-  if (exportBtn) {
-    exportBtn.textContent = '⬇️ Экспорт итога';
-    exportBtn.onclick = function() {
-      exportFinalTXT(); // Экспортируем текущую сессию
-    };
-    exportBtn.style.display = '';
-  }
-
-  const saveBtn = byId('saveToCabinetBtn');
-  if (saveBtn) {
-    const b = getCurrentBlock();
-    const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
-    saveBtn.disabled = !enoughAnswers;
-    saveBtn.style.opacity = enoughAnswers ? 1 : 0.5;
-    saveBtn.textContent = 'Сохранить в кабинет';
-    saveBtn.classList.remove('primary');
-    saveBtn.classList.add('secondary');
-    saveBtn.onclick = saveCurrentSessionToCabinet;
-  }
-}
-
 function showCabinetEntry(idx) {
   isViewingFromCabinet = true;
 
