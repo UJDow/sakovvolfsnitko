@@ -7,14 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#2563eb">
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q8M6H79LLX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-Q8M6H79LLX');
-</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q8M6H79LLX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-Q8M6H79LLX');
+  </script>
   <style>
     :root {
       --surface-min-height: 180px;
@@ -1133,31 +1132,29 @@ body.modal-open {
 <body class="pre-auth">
   <button class="theme-toggle" id="themeToggle" title="Сменить тему">🌙 Тема</button>
   <div id="auth" style="display:none;">
-  <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
-  <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
-    <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
-      <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
-      <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px; font-family: inherit; padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px; width:100%; max-width:280px; background:rgba(255,255,255,0.8); transition:all 0.2s ease; text-align:center;">
-      <button id="authBtn" style="font-size:16px; font-family: inherit; padding:16px 32px; border-radius:12px; border:none; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; transition:all 0.2s ease; width:100%; max-width:280px;">Войти</button>
-      <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
-    </div>
-  </div>
-</div>
-
- <div class="center-wrap">
-  <h1>Saviora</h1>
-  <div id="cabinetMenu" style="margin: 18px 0 0 0; display: flex; flex-direction: column; align-items: center;">
-  <button id="openCabinetBtn" class="btn secondary" style="margin: 0 auto;">Личный кабинет</button>
-  <!-- Индикатор заполненности localStorage -->
-  <div id="storageIndicator" style="margin-top:10px; width: fit-content;">
-    <div id="storageBarContainer" style="height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden;">
-      <div id="storageBar" style="height:12px; width:0; background:linear-gradient(90deg, #22c55e 0%, #facc15 60%, #ef4444 100%); transition:width 0.3s;"></div>
-    </div>
-    <div id="storageText" style="font-size:13px; color:#22c55e; margin-top:4px; text-align:center;">0%</div>
+    <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
+    <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
+      <div style="background:var(--card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.2);border-radius:24px;padding:40px 32px;min-width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(20px);border:1px solid var(--border);">
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;color:var(--text-primary);text-align:center;">Доступ ограничен</h2>
+        <input type="password" id="authPass" placeholder="Пароль" style="font-size:16px; font-family: inherit; padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px; width:100%; max-width:280px; background:rgba(255,255,255,0.8); transition:all 0.2s ease; text-align:center;">
+        <button id="authBtn" style="font-size:16px; font-family: inherit; padding:16px 32px; border-radius:12px; border:none; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; transition:all 0.2s ease; width:100%; max-width:280px;">Войти</button>
+        <div id="authError" style="color: var(--error); margin-top: 16px; display: none; font-size: 14px;">Неверный пароль</div>
+      </div>
     </div>
   </div>
 
-    <!-- Progress Indicator -->
+  <div class="center-wrap">
+    <h1>Saviora</h1>
+    <div id="cabinetMenu" style="margin: 18px 0 0 0; display: flex; flex-direction: column; align-items: center;">
+      <button id="openCabinetBtn" class="btn secondary" style="margin: 0 auto;">Личный кабинет</button>
+      <div id="storageIndicator" style="margin-top:10px; width: fit-content;">
+        <div id="storageBarContainer" style="height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden;">
+          <div id="storageBar" style="height:12px; width:0; background:linear-gradient(90deg, #22c55e 0%, #facc15 60%, #ef4444 100%); transition:width 0.3s;"></div>
+        </div>
+        <div id="storageText" style="font-size:13px; color:#22c55e; margin-top:4px; text-align:center;">0%</div>
+      </div>
+    </div>
+
     <div class="progress-indicator">
       <div class="progress-step active" id="step1-indicator">1</div>
       <div class="progress-step" id="step2-indicator">2</div>
@@ -1167,36 +1164,33 @@ body.modal-open {
     </div>
 
     <!-- Шаг 1 -->
-<div id="step1">
-  <div class="row">
-    <div class="card">
-      <div class="header-row">
-        <h3>Мы всегда рады новым историям</h3>
-      </div>
-      <textarea id="dream" class="surface" placeholder="Запишите свое сновидение..."></textarea>
-      <div class="controls" id="step1Controls">
-  <button id="step1MainBtn" class="btn primary">Сохранить в кабинет</button>
+    <div id="step1">
+      <div class="row">
+        <div class="card">
+          <div class="header-row">
+            <h3>Мы всегда рады новым историям</h3>
+          </div>
+          <textarea id="dream" class="surface" placeholder="Запишите свое сновидение..."></textarea>
+          <div class="controls" id="step1Controls">
+            <button id="step1MainBtn" class="btn primary">Сохранить в кабинет</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
     <!-- Шаг 2 -->
     <div id="step2" style="display:none;">
       <div class="row">
         <div class="card">
-          <button id="backTo1Top" class="top-back" title="Назад">&larr;</button>
+          <button id="backTo1Top" class="top-back" title="Назад" aria-label="Назад">&larr;</button>
           <div class="header-row">
             <h3>Смысловые блоки</h3>
           </div>
-
           <div class="hint-inline">
             Для лучшего анализа разделите сон на ключевые фрагменты. Выделите часть текста и нажмите «Добавить блок» или интерпретируйте «Весь текст» сразу.
             <button class="hint-refresh" id="refreshInline" title="Обновить выбранные блоки" aria-label="Обновить выбранные блоки">↻</button>
           </div>
-
           <div class="dream-view surface" id="dreamView"></div>
-
           <div class="controls left" style="justify-content: space-between; align-items: center;">
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button id="addBlock" class="btn secondary">Добавить блок</button>
@@ -1204,9 +1198,7 @@ body.modal-open {
             </div>
             <div style="margin-left:auto;"></div>
           </div>
-
           <div class="blocks" id="blocks"></div>
-
           <div class="controls">
             <button id="toStep3" class="btn primary">Начать</button>
           </div>
@@ -1218,7 +1210,7 @@ body.modal-open {
     <div id="step3" style="display:none;">
       <div class="row">
         <div class="card">
-          <button id="backTo2Top" class="top-back" title="Назад">&larr;</button>
+          <button id="backTo2Top" class="top-back" title="Назад" aria-label="Назад">&larr;</button>
           <div class="dialog-header">
             <h3>Диалог по вашему сновидению</h3>
           </div>
@@ -1228,26 +1220,24 @@ body.modal-open {
               <div id="thinking" class="msg thinking" style="display:none;">Думаю<span class="dots">...</span></div>
               <div class="chat-stabilizer"></div>
             </div>
-            <button id="jumpToBottom" class="jump-bottom-btn" title="В конец">▼</button>
+            <button id="jumpToBottom" class="jump-bottom-btn" title="В конец" aria-label="В конец">▼</button>
           </div>
           <div class="footer">
             <div id="chatInputBar" class="chat-input-bar" style="width:100%; position:relative;">
               <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
               <button id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны"></button>
-              <div id="attachMenu" class="attach-menu">
+              <div id="attachMenu" class="attach-menu" style="display:none;">
                 <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
                 <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
                 <button id="menuSaveToCabinet" class="attach-item">💾 Сохранить в кабинет</button>
               </div>
-              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить">➤</button>
+              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить" aria-label="Отправить">➤</button>
             </div>
           </div>
           <div class="nav-previews">
             <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
             <div id="nextPreview" class="block-preview"><span class="label"></span></div>
           </div>
-
-          <!-- Скрытые служебные кнопки -->
           <div style="display:none;">
             <button id="blockInterpretBtn">Толкование</button>
             <button id="finalInterpretBtn">Итог</button>
@@ -1259,6 +1249,59 @@ body.modal-open {
     </div>
   </div>
 
+  <!-- Итоговое окно -->
+  <div id="finalDialog" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); overflow-y:auto;">
+    <div id="finalDialogContent"
+      style="
+        max-width:540px;
+        margin:40px auto;
+        background:var(--card-bg);
+        border-radius:18px;
+        box-shadow:0 8px 32px rgba(0,0,0,0.18);
+        padding:32px 24px;
+        position:relative;
+        max-height: 80vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      ">
+      <button id="closeFinalDialog" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;" aria-label="Закрыть">×</button>
+      <h2 style="margin-top:0;">Итоговое толкование</h2>
+      <div id="finalDialogMain" style="overflow-y:auto; max-height: 32vh; margin-bottom: 18px;"></div>
+      <h3 style="margin-bottom:10px;">Толкования блоков</h3>
+      <div id="finalDialogBlocks" style="overflow-y:auto; max-height: 32vh;"></div>
+      <button id="exportFinalDialogBtn" class="btn primary" style="margin-top:18px;">⬇️ Экспорт итога</button>
+      <button id="saveToCabinetBtn" class="btn primary" style="margin-top:18px;">💾 Сохранить в кабинет</button>
+    </div>
+  </div>
+  <div id="moonNotice" class="moon-notice"></div>
+  <div id="cabinetModal" style="display:none; position:fixed; inset:0; z-index:2000;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button id="closeCabinetBtn" aria-label="Закрыть">×</button>
+      <h2>Личный кабинет</h2>
+      <div id="cabinetStorageInfo" class="muted" style="margin-bottom: 10px;"></div>
+      <div id="cabinetList" class="cabinet-list"></div>
+      <button id="clearCabinetBtn" class="btn secondary" style="margin-top:18px;">Очистить всю историю</button>
+    </div>
+  </div>
+  <div id="toastNotice" style="
+    display:none;
+    position:fixed;
+    left:50%;
+    bottom:32px;
+    transform:translateX(-50%);
+    background:#2563eb;
+    color:#fff;
+    padding:14px 28px;
+    border-radius:12px;
+    font-size:16px;
+    box-shadow:0 4px 24px rgba(37,99,235,0.18);
+    z-index:3000;
+    opacity:0.97;
+    transition:opacity 0.3s, bottom 0.3s;
+    pointer-events:none;
+  "></div>
   <script type="module" src="src/main.js"></script>
   <script>
     // ====== Theme toggle ======
@@ -1279,59 +1322,5 @@ body.modal-open {
     };
     setTheme(getPreferredTheme());
   </script>
-  <!-- Итоговое окно -->
-  <div id="finalDialog" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); overflow-y:auto;">
-  <div id="finalDialogContent"
-    style="
-      max-width:540px;
-      margin:40px auto;
-      background:var(--card-bg);
-      border-radius:18px;
-      box-shadow:0 8px 32px rgba(0,0,0,0.18);
-      padding:32px 24px;
-      position:relative;
-      max-height: 80vh;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    ">
-    <button id="closeFinalDialog" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;">×</button>
-    <h2 style="margin-top:0;">Итоговое толкование</h2>
-    <div id="finalDialogMain" style="overflow-y:auto; max-height: 32vh; margin-bottom: 18px;"></div>
-    <h3 style="margin-bottom:10px;">Толкования блоков</h3>
-    <div id="finalDialogBlocks" style="overflow-y:auto; max-height: 32vh;"></div>
-    <button id="exportFinalDialogBtn" class="btn primary" style="margin-top:18px;">⬇️ Экспорт итога</button>
-    <button id="saveToCabinetBtn" class="btn primary" style="margin-top:18px;">💾 Сохранить в кабинет</button>
-</div>
-    
-  </div>
-  <div id="moonNotice" class="moon-notice"></div>
-  <div id="cabinetModal" style="display:none; position:fixed; inset:0; z-index:2000;">
-  <div class="modal-overlay"></div>
-  <div class="modal-content">
-    <button id="closeCabinetBtn" ...>×</button>
-    <h2>Личный кабинет</h2>
-    <div id="cabinetStorageInfo" class="muted" style="margin-bottom: 10px;"></div>
-    <div id="cabinetList" class="cabinet-list"></div>
-    <button id="clearCabinetBtn" class="btn secondary" style="margin-top:18px;">Очистить всю историю</button>
-  </div>
-</div>
-  <div id="toastNotice" style="
-  display:none;
-  position:fixed;
-  left:50%;
-  bottom:32px;
-  transform:translateX(-50%);
-  background:#2563eb;
-  color:#fff;
-  padding:14px 28px;
-  border-radius:12px;
-  font-size:16px;
-  box-shadow:0 4px 24px rgba(37,99,235,0.18);
-  z-index:3000;
-  opacity:0.97;
-  transition:opacity 0.3s, bottom 0.3s;
-  pointer-events:none;
-"></div>
 </body>
 </html>
