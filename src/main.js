@@ -912,76 +912,47 @@ function renderCabinet() {
   });
 }
 
-function showCabinetEntry(idx) {
-  isViewingFromCabinet = true;
-
-  const list = loadCabinet();
-  const entry = list[idx];
-  if (!entry) return;
-  const cabinet = byId('cabinetModal');
-  if (cabinet) cabinet.style.display = 'none';
-  document.body.classList.remove('modal-open');
-
+function showFinalDialog() {
   const dialog = byId('finalDialog');
   const main = byId('finalDialogMain');
   const blocks = byId('finalDialogBlocks');
   if (!dialog || !main || !blocks) return;
 
-  main.innerHTML = `<div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px;">${new Date(entry.date).toLocaleString('ru-RU')}</div>
-    <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${escapeHTML(entry.dreamText)}</div>
-    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.globalFinalInterpretation ? escapeHTML(entry.globalFinalInterpretation) : '<i>Нет</i>'}</div>`;
+  let final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
+  main.textContent = final;
 
-  // --- ДОБАВЛЯЕМ КНОПКУ ЭКСПОРТА ---
-  // Проверяем, есть ли уже кнопка, чтобы не дублировать
-  let exportBtn = byId('exportCabinetEntryBtn');
-  if (!exportBtn) {
-    exportBtn = document.createElement('button');
-    exportBtn.id = 'exportCabinetEntryBtn';
-    exportBtn.className = 'btn secondary';
-    exportBtn.textContent = 'Экспорт';
-    exportBtn.style.marginBottom = '12px';
-    // Вставляем кнопку после блока main
-    main.parentNode.insertBefore(exportBtn, main.nextSibling);
-  }
-  exportBtn.onclick = function() {
-    exportFinalTXT(entry); // Экспортируем именно этот сон
-  };
-  // --- КОНЕЦ ДОБАВЛЕНИЯ КНОПКИ ---
+  blocks.innerHTML = '';
+  sortedBlocks().forEach(b => {
+    if (b.finalInterpretation) {
+      const div = document.createElement('div');
+      div.style.marginBottom = '18px';
+      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${escapeHTML(b.finalInterpretation)}</span>`;
+      blocks.appendChild(div);
+    }
+  });
 
-  blocks.innerHTML = (entry.blocks || []).map((b, i) =>
-    `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation ? escapeHTML(b.finalInterpretation) : '<i>Нет толкования</i>'}</span></div>`
-  ).join('');
   dialog.style.display = 'block';
+
+  // Восстанавливаем стандартную кнопку экспорта
+  const exportBtn = byId('exportFinalDialogBtn');
+  if (exportBtn) {
+    exportBtn.textContent = '⬇️ Экспорт итога';
+    exportBtn.onclick = function() {
+      exportFinalTXT(); // Экспортируем текущую сессию
+    };
+    exportBtn.style.display = '';
+  }
 
   const saveBtn = byId('saveToCabinetBtn');
   if (saveBtn) {
-    saveBtn.textContent = 'Загрузить Сновидение для толкования';
-    saveBtn.classList.remove('secondary');
-    saveBtn.classList.add('primary');
-    saveBtn.onclick = function() {
-      currentDreamId = entry.id;
-      state.dreamText = entry.dreamText || '';
-      state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
-        ...b,
-        chat: Array.isArray(b.chat) ? b.chat : [],
-        finalInterpretation: b.finalInterpretation ?? null,
-        userAnswersCount: b.userAnswersCount ?? 0,
-        _moonFlashShown: false
-      })) : [];
-      state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
-      state.nextBlockId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
-      state.currentBlockId = null;
-      state.userSelectedBlock = false;
-      const dreamEl = byId('dream');
-      if (dreamEl) dreamEl.value = state.dreamText;
-      showStep(2);
-      renderBlocksChips();
-      resetSelectionColor();
-      updateProgressIndicator();
-      const dialog = byId('finalDialog');
-      if (dialog) dialog.style.display = 'none';
-      isViewingFromCabinet = false;
-    };
+    const b = getCurrentBlock();
+    const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
+    saveBtn.disabled = !enoughAnswers;
+    saveBtn.style.opacity = enoughAnswers ? 1 : 0.5;
+    saveBtn.textContent = 'Сохранить в кабинет';
+    saveBtn.classList.remove('primary');
+    saveBtn.classList.add('secondary');
+    saveBtn.onclick = saveCurrentSessionToCabinet;
   }
 }
 // ====== Итоговое толкование только для финального окна ======
