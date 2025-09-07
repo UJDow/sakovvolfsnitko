@@ -106,10 +106,8 @@
   box-shadow: var(--shadow);
   transition: background 0.2s, color 0.2s;
   user-select: none;
-
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
 }
 
@@ -118,13 +116,11 @@
 
 .theme-toggle .icon,
 .howto-toggle .icon {
-  display: inline-block;
   font-size: 18px;
   line-height: 1;
-}
-
-.howto-toggle .icon {
-  margin-top: 1px; /* подбери вручную, если нужно */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
     .pre-auth .center-wrap { visibility: hidden; }
     #auth { display: block; }
@@ -1169,10 +1165,12 @@ body.modal-open {
 </head>
 <body class="pre-auth">
   <button class="howto-toggle" id="howToBtn" title="Как?">
-  <span class="icon">❓</span> Как?
+  <span class="icon">❓</span>
+  <span class="text">Как?</span>
 </button>
 <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-  <span class="icon">🌙</span> Тема
+  <span class="icon">🌙</span>
+  <span class="text">Тема</span>
 </button>
   <div id="auth" style="display:none;">
     <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
