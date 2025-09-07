@@ -1165,6 +1165,29 @@ body.modal-open {
     </div>
   </div>
 
+  <div id="howToModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.45);">
+  <div style="
+    max-width:420px;
+    margin:60px auto;
+    background:var(--card-bg);
+    border-radius:18px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    padding:32px 24px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  ">
+    <button id="closeHowToModal" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;" aria-label="Закрыть">×</button>
+    <h2 style="margin-top:0;">Как пользоваться?</h2>
+    <p style="font-size:16px;line-height:1.6;text-align:center;">
+      Посмотрите короткую инструкцию по использованию приложения:<br>
+      <a href="https://scribehow.com/viewer/Record_and_Interpret_a_Dream_on_Sakov_Volfsnitko__CU0i2UA-QTqnNEW0_Dg_Uw" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:underline;">Открыть инструкцию</a>
+    </p>
+    <button id="howToModalOk" class="btn primary" style="margin-top:18px;">Понятно</button>
+  </div>
+</div>
+
   <div class="center-wrap">
     <h1>Saviora</h1>
     <div id="cabinetMenu" style="margin: 18px 0 0 0; display: flex; flex-direction: column; align-items: center;">
