@@ -1516,3 +1516,30 @@ window.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('foldable-vertical');
   }
 });
+
+// --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
+
+const messagesContainer = document.getElementById('messages');
+const input = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function scrollToBottom() {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Скроллим вниз при фокусе на инпуте (клавиатура появляется)
+input.addEventListener('focus', scrollToBottom);
+
+// Скроллим вниз после отправки сообщения
+sendBtn.addEventListener('click', () => {
+  setTimeout(scrollToBottom, 100); // Даем DOM обновиться
+});
+
+// Если у тебя есть функция добавления сообщений, добавь туда scrollToBottom:
+function addMessage(text, fromUser = false) {
+  const msg = document.createElement('div');
+  msg.className = fromUser ? 'user-message' : 'bot-message';
+  msg.textContent = text;
+  messagesContainer.appendChild(msg);
+  scrollToBottom();
+}
