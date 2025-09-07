@@ -110,6 +110,11 @@
     }
     .theme-toggle:active { transform: scale(0.97); }
 
+    .howto-toggle {
+  /* Стили аналогичны .theme-toggle, только left вместо right */
+}
+.howto-toggle:active { transform: scale(0.97); }
+
     .pre-auth .center-wrap { visibility: hidden; }
     #auth { display: block; }
 
@@ -1153,6 +1158,22 @@ body.modal-open {
 </head>
 <body class="pre-auth">
   <button class="theme-toggle" id="themeToggle" title="Сменить тему">🌙 Тема</button>
+  <button class="howto-toggle" id="howToBtn" title="Как пользоваться?" style="
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top, 18px));
+  left: max(18px, env(safe-area-inset-left, 18px));
+  z-index: 100;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+">❓ Как пользоваться?</button>
   <div id="auth" style="display:none;">
     <div class="auth-bg" style="position:absolute;inset:0;background:var(--background);opacity:1;z-index:1;"></div>
     <div class="auth-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;">
