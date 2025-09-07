@@ -3,8 +3,8 @@
 let isViewingFromCabinet = false;
 
 /* ====== Константы авторизации ====== */
-const AUTH_PASS = 'volfisthebest';
-const AUTH_TOKEN = 'volfisthebest-secret';
+const AUTH_PASS = 'dreamteam';
+const AUTH_TOKEN = 'dreamteam-secret';
 
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
