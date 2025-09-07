@@ -109,6 +109,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  height: 40px; /* фиксированная высота для обеих кнопок */
 }
 
 .theme-toggle { right: max(18px, env(safe-area-inset-right, 18px)); }
@@ -116,13 +117,24 @@
 
 .theme-toggle .icon,
 .howto-toggle .icon {
-  font-size: 18px;
+  font-size: 20px; /* чуть больше для emoji */
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 20px;
+  width: 20px;
 }
 
+.theme-toggle .label,
+.howto-toggle .label {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  line-height: 1;
+  font-size: 15px;
+  font-weight: 400;
+}
 /* Ключевая строка для выравнивания ❓ */
 .howto-toggle .icon {
   margin-top: 2px;
