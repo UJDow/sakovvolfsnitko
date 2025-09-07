@@ -933,6 +933,32 @@ function showFinalDialog() {
 
   dialog.style.display = 'block';
 
+  // Настраиваем одну кнопку экспорта
+  const exportBtn = byId('exportFinalDialogBtn');
+  if (exportBtn) {
+    exportBtn.textContent = '⬇️ Экспорт итога';
+    exportBtn.onclick = function() {
+      exportFinalTXT(); // Экспортируем текущую сессию
+    };
+    exportBtn.style.display = '';
+  }
+
+  // Настройка кнопки "Сохранить в кабинет"
+  const saveBtn = byId('saveToCabinetBtn');
+  if (saveBtn) {
+    const b = getCurrentBlock();
+    const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
+    saveBtn.disabled = !enoughAnswers;
+    saveBtn.style.opacity = enoughAnswers ? 1 : 0.5;
+    saveBtn.textContent = 'Сохранить в кабинет';
+    saveBtn.classList.remove('primary');
+    saveBtn.classList.add('secondary');
+    saveBtn.onclick = saveCurrentSessionToCabinet;
+  }
+}
+
+  dialog.style.display = 'block';
+
   // Восстанавливаем стандартную кнопку экспорта
   const exportBtn = byId('exportFinalDialogBtn');
   if (exportBtn) {
@@ -955,6 +981,73 @@ function showFinalDialog() {
     saveBtn.onclick = saveCurrentSessionToCabinet;
   }
 }
+
+function showCabinetEntry(idx) {
+  isViewingFromCabinet = true;
+
+  const list = loadCabinet();
+  const entry = list[idx];
+  if (!entry) return;
+  const cabinet = byId('cabinetModal');
+  if (cabinet) cabinet.style.display = 'none';
+  document.body.classList.remove('modal-open');
+
+  const dialog = byId('finalDialog');
+  const main = byId('finalDialogMain');
+  const blocks = byId('finalDialogBlocks');
+  if (!dialog || !main || !blocks) return;
+
+  main.innerHTML = `<div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px;">${new Date(entry.date).toLocaleString('ru-RU')}</div>
+    <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${escapeHTML(entry.dreamText)}</div>
+    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.globalFinalInterpretation ? escapeHTML(entry.globalFinalInterpretation) : '<i>Нет</i>'}</div>`;
+
+  blocks.innerHTML = (entry.blocks || []).map((b, i) =>
+    `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation ? escapeHTML(b.finalInterpretation) : '<i>Нет толкования</i>'}</span></div>`
+  ).join('');
+  dialog.style.display = 'block';
+
+  // Меняем поведение и текст кнопки экспорта
+  const exportBtn = byId('exportFinalDialogBtn');
+  if (exportBtn) {
+    exportBtn.textContent = '⬇️ Экспорт';
+    exportBtn.onclick = function() {
+      exportFinalTXT(entry); // Экспортируем именно этот сон
+    };
+    exportBtn.style.display = '';
+  }
+
+  const saveBtn = byId('saveToCabinetBtn');
+  if (saveBtn) {
+    saveBtn.textContent = 'Загрузить Сновидение для толкования';
+    saveBtn.classList.remove('secondary');
+    saveBtn.classList.add('primary');
+    saveBtn.onclick = function() {
+      currentDreamId = entry.id;
+      state.dreamText = entry.dreamText || '';
+      state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
+        ...b,
+        chat: Array.isArray(b.chat) ? b.chat : [],
+        finalInterpretation: b.finalInterpretation ?? null,
+        userAnswersCount: b.userAnswersCount ?? 0,
+        _moonFlashShown: false
+      })) : [];
+      state.globalFinalInterpretation = entry.globalFinalInterpretation || null;
+      state.nextBlockId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
+      state.currentBlockId = null;
+      state.userSelectedBlock = false;
+      const dreamEl = byId('dream');
+      if (dreamEl) dreamEl.value = state.dreamText;
+      showStep(2);
+      renderBlocksChips();
+      resetSelectionColor();
+      updateProgressIndicator();
+      const dialog = byId('finalDialog');
+      if (dialog) dialog.style.display = 'none';
+      isViewingFromCabinet = false;
+    };
+  }
+}
+
 // ====== Итоговое толкование только для финального окна ======
 async function finalInterpretation() {
   const interpreted = state.blocks.filter(x => !!x.finalInterpretation);
@@ -1028,40 +1121,6 @@ function saveCurrentSessionToCabinet() {
   saveCabinet(list);
   showToastNotice('Сон сохранён в личный кабинет!');
   currentDreamId = entry.id;
-}
-
-function showFinalDialog() {
-  const dialog = byId('finalDialog');
-  const main = byId('finalDialogMain');
-  const blocks = byId('finalDialogBlocks');
-  if (!dialog || !main || !blocks) return;
-
-  let final = state.globalFinalInterpretation || 'Итоговое толкование не найдено.';
-  main.textContent = final;
-
-  blocks.innerHTML = '';
-  sortedBlocks().forEach(b => {
-    if (b.finalInterpretation) {
-      const div = document.createElement('div');
-      div.style.marginBottom = '18px';
-      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${escapeHTML(b.finalInterpretation)}</span>`;
-      blocks.appendChild(div);
-    }
-  });
-
-  dialog.style.display = 'block';
-
-  const saveBtn = byId('saveToCabinetBtn');
-  if (saveBtn) {
-    const b = getCurrentBlock();
-    const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
-    saveBtn.disabled = !enoughAnswers;
-    saveBtn.style.opacity = enoughAnswers ? 1 : 0.5;
-    saveBtn.textContent = 'Сохранить в кабинет';
-    saveBtn.classList.remove('primary');
-    saveBtn.classList.add('secondary');
-    saveBtn.onclick = saveCurrentSessionToCabinet;
-  }
 }
 
 function exportFinalTXT(entry) {
