@@ -1,3 +1,5 @@
+// main.js
+
 let isViewingFromCabinet = false;
 
 /* ====== Константы авторизации ====== */
@@ -22,13 +24,28 @@ const state = {
 };
 
 let currentSelectionColor = null;
-
 let currentDreamId = null; // id текущего сна в кабинете, с которым сейчас работаем
 
 /* ====== Утилиты DOM ====== */
 function byId(id) { return document.getElementById(id); }
-function onClick(id, handler) { const el = byId(id); if (el) el.onclick = handler; }
-function onChange(id, handler) { const el = byId(id); if (el) el.onchange = handler; }
+function onClick(id, handler) {
+  const el = byId(id);
+  if (el) {
+    el.onclick = null;
+    el.removeEventListener('click', el._handler);
+    el._handler = handler;
+    el.addEventListener('click', handler);
+  }
+}
+function onChange(id, handler) {
+  const el = byId(id);
+  if (el) {
+    el.onchange = null;
+    el.removeEventListener('change', el._handler);
+    el._handler = handler;
+    el.addEventListener('change', handler);
+  }
+}
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
 /* ====== Динамическая кнопка шага 1 ====== */
@@ -43,17 +60,16 @@ function setStep1BtnToSave() {
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
     if (currentDreamId) {
-      setStep1BtnToNext(); // вдруг пользователь обновил страницу
+      setStep1BtnToNext();
       return;
     }
     currentDreamId = saveDreamToCabinetOnlyText(text);
-// GA4: Сохранение сна
-gtag('event', 'save_dream', {
-  event_category: 'dream',
-  event_label: 'Сохранён сон',
-  dream_id: currentDreamId
-});
-setStep1BtnToNext();
+    gtag('event', 'save_dream', {
+      event_category: 'dream',
+      event_label: 'Сохранён сон',
+      dream_id: currentDreamId
+    });
+    setStep1BtnToNext();
   };
 }
 
@@ -84,68 +100,61 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
   if (!moonBtn) return;
   const phase = Math.min(userAnswersCount / max, 1);
 
-  // Цвета ободка по теме
   const goldGlow = {
     stop85: theme === 'dark' ? '#a5b4fc' : '#f6e27a',
     stop100: theme === 'dark' ? '#6366f1' : '#eab308',
     opacity: theme === 'dark' ? 0.32 : 0.22
   };
 
-  // Массив кратеров — много, разных размеров и opacity
   const craters = [
-    // Крупные
     {cx: 8, cy: 10, r: 2.6, opacity: 0.22},
     {cx: 20, cy: 8, r: 2.1, opacity: 0.19},
     {cx: 15, cy: 20, r: 2.3, opacity: 0.21},
-    // Средние
     {cx: 12, cy: 16, r: 1.3, opacity: 0.16},
     {cx: 18, cy: 14, r: 1.1, opacity: 0.15},
     {cx: 22, cy: 18, r: 1.4, opacity: 0.17},
     {cx: 10, cy: 22, r: 1.2, opacity: 0.14},
-    // Мелкие
     {cx: 16, cy: 10, r: 0.7, opacity: 0.12},
     {cx: 24, cy: 12, r: 0.6, opacity: 0.11},
     {cx: 19, cy: 22, r: 0.8, opacity: 0.13},
     {cx: 13, cy: 19, r: 0.5, opacity: 0.10},
     {cx: 21, cy: 16, r: 0.6, opacity: 0.11},
-    // Группировка мелких
     {cx: 17, cy: 18, r: 0.4, opacity: 0.09},
     {cx: 18, cy: 19, r: 0.3, opacity: 0.08},
     {cx: 19, cy: 18, r: 0.4, opacity: 0.09},
-    // Еще несколько для "шума"
     {cx: 14, cy: 13, r: 0.5, opacity: 0.10},
     {cx: 22, cy: 21, r: 0.5, opacity: 0.10},
     {cx: 12, cy: 21, r: 0.4, opacity: 0.09},
     {cx: 20, cy: 20, r: 0.3, opacity: 0.08}
   ];
 
-  const moonBaseColor = '#b0b3b8'; // насыщенный серый фон луны
-  const moonProgressColor = '#44474a'; // тёмно-серый прогресс
-  const craterColor = '#888a8d'; // чуть темнее кратеры
+  const moonBaseColor = '#b0b3b8';
+  const moonProgressColor = '#44474a';
+  const craterColor = '#888a8d';
 
-  // SVG: внешний ободок теперь строго по радиусу луны (r=20)
- const svg = `
-  <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 44 44" fill="none">
-    <defs>
-      <clipPath id="moonPhase">
-        <rect x="0" y="0" width="${44 * phase}" height="44" />
-      </clipPath>
-    </defs>
-    <circle cx="22" cy="22" r="20" fill="${moonBaseColor}" />
-    <circle cx="22" cy="22" r="18" fill="${moonProgressColor}" fill-opacity="0.55" clip-path="url(#moonPhase)" />
-    ${craters.map(c => `
-      <circle 
-        cx="${c.cx + 7}" 
-        cy="${c.cy + 7}" 
-        r="${c.r}" 
-        fill="${craterColor}" 
-        opacity="${Math.min(0.32, c.opacity * 1.5)}" 
-      />
-    `).join('')}
-  </svg>
-`;
+  const svg = `
+    <svg class="moon-svg${isFlash ? ' moon-flash' : ''}" viewBox="0 0 44 44" fill="none">
+      <defs>
+        <clipPath id="moonPhase">
+          <rect x="0" y="0" width="${44 * phase}" height="44" />
+        </clipPath>
+      </defs>
+      <circle cx="22" cy="22" r="20" fill="${moonBaseColor}" />
+      <circle cx="22" cy="22" r="18" fill="${moonProgressColor}" fill-opacity="0.55" clip-path="url(#moonPhase)" />
+      ${craters.map(c => `
+        <circle 
+          cx="${c.cx + 7}" 
+          cy="${c.cy + 7}" 
+          r="${c.r}" 
+          fill="${craterColor}" 
+          opacity="${Math.min(0.32, c.opacity * 1.5)}" 
+        />
+      `).join('')}
+    </svg>
+  `;
   moonBtn.innerHTML = svg;
 }
+
 /* ====== Auth ====== */
 function showAuth() {
   const authDiv = byId('auth');
@@ -197,7 +206,6 @@ function showStep(step) {
   }
   state.currentStep = step;
   updateProgressIndicator();
-  // --- Вот это добавь ---
   if (step === 3 && !state.currentBlockId && state.blocks.length) {
     state.currentBlockId = sortedBlocks()[0]?.id || null;
   }
@@ -229,18 +237,12 @@ function showMoonNotice(text, ms = 4500) {
   notice.style.opacity = '0';
 
   setTimeout(() => {
-    // Получаем размеры
     const btnRect = moonBtn.getBoundingClientRect();
     const noticeRect = notice.getBoundingClientRect();
-
-    // Центрируем по горизонтали относительно окна
     notice.style.left = '50%';
     notice.style.transform = 'translateX(-50%)';
-
-    // По вертикали — над луной, как было
     const top = btnRect.top - noticeRect.height - 14 + window.scrollY;
     notice.style.top = top + 'px';
-
     notice.style.zIndex = 2000;
     notice.style.opacity = '';
     notice.classList.add('show');
@@ -255,7 +257,6 @@ function showMoonNotice(text, ms = 4500) {
 
 /* ====== Обновление индикатора прогресса ====== */
 function updateProgressIndicator() {
-  // Обновляем шаги
   for (let i = 1; i <= 3; i++) {
     const stepIndicator = byId(`step${i}-indicator`);
     if (stepIndicator) {
@@ -267,7 +268,6 @@ function updateProgressIndicator() {
       }
     }
   }
-  // Обновляем линию прогресса
   const progressLine = byId('progress-line-filled');
   if (progressLine) {
     const progressPercentage = ((state.currentStep - 1) / 2) * 100;
@@ -276,6 +276,14 @@ function updateProgressIndicator() {
 }
 
 /* ====== Рендер сна ====== */
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 function renderDreamView() {
   const dv = byId('dreamView');
   if (!dv) return;
@@ -303,7 +311,6 @@ function renderDreamView() {
         span.setAttribute('data-block', String(block.id));
         span.title = `Блок #${block.id}`;
         span.addEventListener('click', () => selectBlock(block.id));
-        // === Вот здесь добавляем класс для выделенного блока ===
         if (block.id === state.currentBlockId) {
           span.classList.add('block-selected');
         }
@@ -351,7 +358,7 @@ function renderBlocksChips() {
       el.textContent = `#${b.id} ${b.text.slice(0, 20)}${b.text.length > 20 ? '…' : ''}`;
       el.style.background = BLOCK_COLORS[(b.id - 1) % BLOCK_COLORS.length];
       el.style.color = '#222';
-      el.addEventListener('click', () => selectBlock(b.id));
+      el.onclick = () => selectBlock(b.id);
       wrap.appendChild(el);
     });
   }
@@ -359,22 +366,7 @@ function renderBlocksChips() {
   const b = getCurrentBlock();
   if (cb) cb.textContent = b ? `Текущий блок #${b.id}: “${b.text}”` : 'Блок не выбран';
 
-  function renderQuickReplies(quickReplies) {
-  const quickDiv = document.querySelector('.quick');
-  quickDiv.innerHTML = quickReplies.map(q => `<button>${q}</button>`).join('');
-
-  // Вот здесь вешаем обработчики!
-  document.querySelectorAll('.quick button').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const input = document.querySelector('#inputField'); // id твоего input
-      input.value = this.textContent;
-      input.focus();
-    });
-  });
-}
-
-  // Рендерим луну
-renderMoonProgress(b ? b.userAnswersCount : 0, 10);
+  renderMoonProgress(b ? b.userAnswersCount : 0, 10);
 
   renderDreamView();
   renderChat();
@@ -389,7 +381,6 @@ function renderChat() {
   if (!chat) return;
   const b = getCurrentBlock();
 
-  // Сохраняем только системные элементы: #thinking, .chat-stabilizer, #jumpToBottom
   const preserve = new Set(['thinking', 'jumpToBottom']);
   Array.from(chat.children).forEach(node => {
     const keep = (node.id && preserve.has(node.id)) || node.classList?.contains('chat-stabilizer');
@@ -408,7 +399,6 @@ function renderChat() {
       + (m.isGlobalFinal ? ' final-global' : '');
     div.textContent = m.text;
 
-    // вставляем перед thinking, чтобы thinking оставался внизу
     const thinking = byId('thinking');
     chat.insertBefore(div, thinking || chat.firstChild);
 
@@ -418,7 +408,7 @@ function renderChat() {
       m.quickReplies.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
-        btn.addEventListener('click', () => sendAnswer(opt));
+        btn.onclick = () => sendAnswer(opt);
         q.appendChild(btn);
       });
       chat.insertBefore(q, thinking || chat.firstChild);
@@ -499,7 +489,6 @@ function renderBlockPreviews() {
   const prevId = prevUndoneBlockIdStrict();
   const nextId = nextUndoneBlockIdStrict();
 
-  // NEXT
   if (b && nextId && nextId !== b.id) {
     const nb = state.blocks.find(x => x.id === nextId);
     nextEl.classList.remove('disabled');
@@ -507,17 +496,16 @@ function renderBlockPreviews() {
     const label = nextEl.querySelector('.label');
     if (label) label.textContent = `#${nb.id} ${clampPreviewText(nb.text, 80)}`;
     nextEl.onclick = () => { 
-  selectBlock(nextId); 
-  const cb = getCurrentBlock(); 
-  if (cb && !cb.done && (!cb.chat || cb.chat.length === 0)) startOrContinue(); 
-};
+      selectBlock(nextId); 
+      const cb = getCurrentBlock(); 
+      if (cb && !cb.done && (!cb.chat || cb.chat.length === 0)) startOrContinue(); 
+    };
   } else {
     nextEl.classList.add('disabled');
     const label = nextEl.querySelector('.label'); if (label) label.textContent = 'Нет следующего блока';
     nextEl.onclick = null;
   }
 
-  // PREV
   if (b && prevId && prevId !== b.id) {
     const pb = state.blocks.find(x => x.id === prevId);
     prevEl.classList.remove('disabled');
@@ -525,10 +513,10 @@ function renderBlockPreviews() {
     const label = prevEl.querySelector('.label');
     if (label) label.textContent = `#${pb.id} ${clampPreviewText(pb.text, 80)}`;
     prevEl.onclick = () => { 
-  selectBlock(prevId); 
-  const cb = getCurrentBlock(); 
-  if (cb && !cb.done && (!cb.chat || cb.chat.length === 0)) startOrContinue(); 
-};
+      selectBlock(prevId); 
+      const cb = getCurrentBlock(); 
+      if (cb && !cb.done && (!cb.chat || cb.chat.length === 0)) startOrContinue(); 
+    };
   } else {
     prevEl.classList.add('disabled');
     const label = prevEl.querySelector('.label'); if (label) label.textContent = '…';
@@ -545,10 +533,8 @@ function updateButtonsState() {
   const miBlock = byId('menuBlockInterpret');
   const miFinal = byId('menuFinalInterpret');
 
-  // Сколько блоков истолковано
   const finalsCount = state.blocks.filter(x => !!x.finalInterpretation).length;
 
-  // 1. Пока не 10 ответов — всё неактивно
   if (!b || (b.userAnswersCount || 0) < 10) {
     if (blockBtn) blockBtn.disabled = true;
     if (saveBtn) saveBtn.disabled = true;
@@ -558,7 +544,6 @@ function updateButtonsState() {
     return;
   }
 
-  // 2. Есть 10 ответов, но нет толкования блока — только "Толкование" активна
   if (!b.finalInterpretation) {
     if (blockBtn) blockBtn.disabled = false;
     if (saveBtn) saveBtn.disabled = true;
@@ -568,7 +553,6 @@ function updateButtonsState() {
     return;
   }
 
-  // 3. Есть толкование блока — "Сохранить" активна, "Итог" только если два и более блока истолкованы
   if (b.finalInterpretation) {
     if (blockBtn) blockBtn.disabled = true;
     if (saveBtn) saveBtn.disabled = false;
@@ -578,6 +562,7 @@ function updateButtonsState() {
     return;
   }
 }
+
 /* ====== Экспорт/импорт ====== */
 function exportJSON() {
   const data = { dreamText: state.dreamText, blocks: state.blocks };
@@ -585,7 +570,12 @@ function exportJSON() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'snova_session.json';
+  document.body.appendChild(a);
   a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }, 0);
 }
 function importJSON(file) {
   const reader = new FileReader();
@@ -594,12 +584,12 @@ function importJSON(file) {
       const data = JSON.parse(reader.result);
       state.dreamText = data.dreamText || '';
       state.blocks = (data.blocks || []).map(b => ({
-  ...b,
-  chat: Array.isArray(b.chat) ? b.chat : [],
-  finalInterpretation: b.finalInterpretation ?? null,
-  userAnswersCount: b.userAnswersCount ?? 0,
-  _moonFlashShown: false // всегда сбрасываем при импорте
-}));
+        ...b,
+        chat: Array.isArray(b.chat) ? b.chat : [],
+        finalInterpretation: b.finalInterpretation ?? null,
+        userAnswersCount: b.userAnswersCount ?? 0,
+        _moonFlashShown: false
+      }));
       const maxId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0);
       state.nextBlockId = Math.max(1, maxId + 1);
       state.currentBlockId = state.blocks[0]?.id || null;
@@ -634,17 +624,13 @@ async function apiRequest(url, data) {
 /* ====== LLM ====== */
 function parseAIResponse(text) {
   let cleanText = (text || '').trim();
-
-  // Очищаем от кода, html, шумовых символов и т.д.
   cleanText = cleanText
-    .replace(/```[\s\S]*?```/g, ' ')   // убираем блоки кода
-    .replace(/<[^>]+>/g, ' ')          // убираем html-теги
-    .replace(/[\u2502\uFF5C]/g, ' ')   // убираем спецсимволы
-    .replace(/[\u4e00-\u9fff]+/g, ' ') // убираем иероглифы
-    .replace(/\s+/g, ' ')              // убираем лишние пробелы
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[\u2502\uFF5C]/g, ' ')
+    .replace(/[\u4e00-\u9fff]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
-
-  // Не ищем варианты ответов вообще!
   return { question: cleanText, quickReplies: [], isFinal: false };
 }
 
@@ -703,25 +689,23 @@ function appendUser(text) {
   b.chat.push({ role: 'user', text });
   b.userAnswersCount = (b.userAnswersCount || 0) + 1;
 
-renderMoonProgress(b.userAnswersCount, 10, false);
+  renderMoonProgress(b.userAnswersCount, 10, false);
 
-// GA4: Блок готов к толкованию (ровно 10 ответов)
-if (b.userAnswersCount === 10) {
-  gtag('event', 'block_ready_for_interpretation', {
-    event_category: 'block',
-    event_label: 'Блок готов к толкованию',
-    block_id: b.id,
-    dream_id: currentDreamId
-  });
-}
+  if (b.userAnswersCount === 10) {
+    gtag('event', 'block_ready_for_interpretation', {
+      event_category: 'block',
+      event_label: 'Блок готов к толкованию',
+      block_id: b.id,
+      dream_id: currentDreamId
+    });
+  }
 
-// Показываем уведомление ровно на 10-м ответе (и только один раз)
-if (b.userAnswersCount === 10 && !b._moonFlashShown) {
-  b._moonFlashShown = true;
-  renderMoonProgress(b.userAnswersCount, 10, true);
-  setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
-  showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
-}
+  if (b.userAnswersCount === 10 && !b._moonFlashShown) {
+    b._moonFlashShown = true;
+    renderMoonProgress(b.userAnswersCount, 10, true);
+    setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
+    showMoonNotice('Вы можете запросить итоговое толкование блока (луна) или продолжить диалог.');
+  }
 
   renderChat();
   renderBlocksChips();
@@ -730,7 +714,6 @@ if (b.userAnswersCount === 10 && !b._moonFlashShown) {
 function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = false) {
   const b = getCurrentBlock(); if (!b) return;
   b.chat.push({ role: 'bot', text, quickReplies, isFinal, isSystemNotice });
-
   renderChat();
 }
 function appendFinalGlobal(text) {
@@ -748,16 +731,13 @@ async function startOrContinue() {
   const b = getCurrentBlock();
   if (!b) return alert('Выберите блок.');
 
-  // Если пользователь уже дал 10 ответов — показываем уведомление, но не блокируем диалог
   if (b.userAnswersCount === 10 && !b._moonFlashShown) {
     b._moonFlashShown = true;
     renderMoonProgress(b.userAnswersCount, 10, true);
     setTimeout(() => renderMoonProgress(b.userAnswersCount, 10, false), 2000);
     showMoonNotice('Теперь вы можете запросить Толкование Блока в Луне или продолжить диалог.');
-    // Не делаем return!
   }
 
-  // --- Новый уникальный идентификатор запроса для этого блока ---
   const requestId = Date.now() + Math.random();
   b.pendingRequestId = requestId;
 
@@ -766,9 +746,7 @@ async function startOrContinue() {
     const history = b.chat.map(m => ({ role: m.role, text: m.text }));
     const next = await llmNextStep(b.text, history);
 
-    // --- Проверяем, что пользователь всё ещё на этом блоке и id совпадает ---
     if (b !== getCurrentBlock() || b.pendingRequestId !== requestId) {
-      // Пользователь уже ушёл на другой блок — игнорируем результат
       return;
     }
 
@@ -783,12 +761,10 @@ async function startOrContinue() {
       appendBot(next.question, next.quickReplies);
     }
   } catch (e) {
-    // --- Только если пользователь всё ещё на этом блоке и id совпадает ---
     if (b === getCurrentBlock() && b.pendingRequestId === requestId) {
       appendBot('Ошибка при обработке запроса', ['Повторить']);
     }
   } finally {
-    // --- Только если пользователь всё ещё на этом блоке и id совпадает ---
     if (b === getCurrentBlock() && b.pendingRequestId === requestId) {
       setThinking(false);
       updateButtonsState();
@@ -830,29 +806,27 @@ async function blockInterpretation() {
     if (!content) content = 'Не удалось получить толкование';
 
     b.finalInterpretation = content;
-b.finalAt = Date.now();
-b.done = true;
-// GA4: Толкование блока
-gtag('event', 'block_interpreted', {
-  event_category: 'block',
-  event_label: 'Толкование блока',
-  block_id: b.id,
-  dream_id: currentDreamId
-});
-appendBot(content, [], true);
-updateButtonsState();
-renderBlockPreviews();
-syncCurrentDreamToCabinet();
+    b.finalAt = Date.now();
+    b.done = true;
+    gtag('event', 'block_interpreted', {
+      event_category: 'block',
+      event_label: 'Толкование блока',
+      block_id: b.id,
+      dream_id: currentDreamId
+    });
+    appendBot(content, [], true);
+    updateButtonsState();
+    renderBlockPreviews();
+    syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
-    // GA4: Ошибка при толковании блока
-  gtag('event', 'error', {
-    event_category: 'error',
-    event_label: 'Ошибка при толковании блока',
-    error_message: e.message || 'Unknown',
-    block_id: b ? b.id : null,
-    dream_id: currentDreamId
-  });
+    gtag('event', 'error', {
+      event_category: 'error',
+      event_label: 'Ошибка при толковании блока',
+      error_message: e.message || 'Unknown',
+      block_id: b ? b.id : null,
+      dream_id: currentDreamId
+    });
     appendBot('Ошибка при формировании толкования блока: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     setThinking(false);
@@ -886,19 +860,16 @@ function renderCabinet() {
   }
   wrap.innerHTML = list.map((entry, idx) => {
     const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const dreamPreview = (entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...';
-
+    const dreamPreview = escapeHTML((entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...');
     let status = 'none';
     if (entry.globalFinalInterpretation) {
       status = 'done';
     } else if (Array.isArray(entry.blocks) && entry.blocks.some(b => b.finalInterpretation)) {
       status = 'partial';
     }
-
     let color = '#ef4444';
     if (status === 'done') color = '#22c55e';
     else if (status === 'partial') color = '#facc15';
-
     return `
       <div class="cabinet-tile" data-view="${idx}" style="cursor:pointer;">
         <div class="cabinet-date">${date}</div>
@@ -910,7 +881,6 @@ function renderCabinet() {
     `;
   }).join('');
 
-  // Клик по всей плитке для просмотра
   wrap.querySelectorAll('.cabinet-tile[data-view]').forEach(tile => {
     tile.onclick = function(e) {
       if (e.target.closest('button[data-del]')) return;
@@ -918,7 +888,6 @@ function renderCabinet() {
     };
   });
 
-  // Кнопка удаления
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
     btn.onclick = function(e) {
       e.stopPropagation();
@@ -946,21 +915,19 @@ function showCabinetEntry(idx) {
   if (!dialog || !main || !blocks) return;
 
   main.innerHTML = `<div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px;">${new Date(entry.date).toLocaleString('ru-RU')}</div>
-    <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${entry.dreamText}</div>
-    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.globalFinalInterpretation || '<i>Нет</i>'}</div>`;
+    <div style="margin-bottom:12px;"><b>Текст сна:</b><br>${escapeHTML(entry.dreamText)}</div>
+    <div style="margin-bottom:12px;"><b>Итоговое толкование:</b><br>${entry.globalFinalInterpretation ? escapeHTML(entry.globalFinalInterpretation) : '<i>Нет</i>'}</div>`;
   blocks.innerHTML = (entry.blocks || []).map((b, i) =>
-    `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation || '<i>Нет толкования</i>'}</span></div>`
+    `<div style="margin-bottom:14px;"><b>Блок #${i+1}:</b> <span>${b.finalInterpretation ? escapeHTML(b.finalInterpretation) : '<i>Нет толкования</i>'}</span></div>`
   ).join('');
   dialog.style.display = 'block';
 
-  // Меняем текст и действие кнопки
   const saveBtn = byId('saveToCabinetBtn');
   if (saveBtn) {
     saveBtn.textContent = 'Загрузить Сновидение для толкования';
     saveBtn.classList.remove('secondary');
     saveBtn.classList.add('primary');
     saveBtn.onclick = function() {
-      // === ВОССТАНАВЛИВАЕМ ВСЁ СОСТОЯНИЕ ===
       currentDreamId = entry.id;
       state.dreamText = entry.dreamText || '';
       state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
@@ -974,18 +941,12 @@ function showCabinetEntry(idx) {
       state.nextBlockId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
       state.currentBlockId = null;
       state.userSelectedBlock = false;
-
-      // Переносим текст в textarea
       const dreamEl = byId('dream');
       if (dreamEl) dreamEl.value = state.dreamText;
-
-      // Переходим на шаг 2 и обновляем интерфейс
       showStep(2);
       renderBlocksChips();
       resetSelectionColor();
       updateProgressIndicator();
-
-      // Закрываем модалку
       const dialog = byId('finalDialog');
       if (dialog) dialog.style.display = 'none';
       isViewingFromCabinet = false;
@@ -1023,26 +984,24 @@ async function finalInterpretation() {
     if (!content) content = 'Не удалось получить итоговое толкование';
 
     state.globalFinalInterpretation = content;
-// GA4: Финальное толкование сна
-gtag('event', 'final_interpretation', {
-  event_category: 'dream',
-  event_label: 'Финальное толкование',
-  dream_id: currentDreamId
-});
+    gtag('event', 'final_interpretation', {
+      event_category: 'dream',
+      event_label: 'Финальное толкование',
+      dream_id: currentDreamId
+    });
 
-const b = getCurrentBlock();
-if (b) appendFinalGlobal(content);
-showFinalDialog();
-syncCurrentDreamToCabinet();
+    const b = getCurrentBlock();
+    if (b) appendFinalGlobal(content);
+    showFinalDialog();
+    syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
-    // GA4: Ошибка при финальном толковании
-  gtag('event', 'error', {
-    event_category: 'error',
-    event_label: 'Ошибка при финальном толковании',
-    error_message: e.message || 'Unknown',
-    dream_id: currentDreamId
-  });
+    gtag('event', 'error', {
+      event_category: 'error',
+      event_label: 'Ошибка при финальном толковании',
+      error_message: e.message || 'Unknown',
+      dream_id: currentDreamId
+    });
     appendBot('Ошибка при формировании итогового толкования: ' + (e.message || 'Неизвестная ошибка'), ['Повторить']);
   } finally {
     setThinking(false);
@@ -1058,7 +1017,7 @@ function saveCurrentSessionToCabinet() {
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
   };
-  const list = loadCabinet(); // <--- обязательно!
+  const list = loadCabinet();
   const idx = list.findIndex(e => e.id === entry.id);
   if (idx !== -1) {
     list[idx] = entry;
@@ -1067,10 +1026,9 @@ function saveCurrentSessionToCabinet() {
   }
   saveCabinet(list);
   showToastNotice('Сон сохранён в личный кабинет!');
-  currentDreamId = entry.id; // <--- обновляем id для дальнейшей работы
+  currentDreamId = entry.id;
 }
 
-// ====== Показ финального окна ======
 function showFinalDialog() {
   const dialog = byId('finalDialog');
   const main = byId('finalDialogMain');
@@ -1085,14 +1043,13 @@ function showFinalDialog() {
     if (b.finalInterpretation) {
       const div = document.createElement('div');
       div.style.marginBottom = '18px';
-      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${b.finalInterpretation}</span>`;
+      div.innerHTML = `<b>Блок #${b.id}:</b> <span>${escapeHTML(b.finalInterpretation)}</span>`;
       blocks.appendChild(div);
     }
   });
 
   dialog.style.display = 'block';
 
-  // Управляем кнопкой "Сохранить в кабинет" — активна только если у текущего блока >= 10 ответов
   const saveBtn = byId('saveToCabinetBtn');
   if (saveBtn) {
     const b = getCurrentBlock();
@@ -1106,9 +1063,7 @@ function showFinalDialog() {
   }
 }
 
-// ====== Экспорт итогового толкования и блоков ======
 function exportFinalTXT() {
-  // GA4: Экспорт финального толкования
   gtag('event', 'export_final', {
     event_category: 'export',
     event_label: 'Экспорт финального толкования',
@@ -1147,7 +1102,6 @@ function exportFinalTXT() {
   }, 0);
 }
 
-// ====== Закрытие финального окна ======
 onClick('closeFinalDialog', () => {
   const dialog = byId('finalDialog');
   if (dialog) dialog.style.display = 'none';
@@ -1174,15 +1128,14 @@ function addBlockFromSelection() {
   const id = state.nextBlockId++;
   const text = state.dreamText.slice(start, end);
   state.blocks.push({ id, start, end, text, done: false, chat: [], finalInterpretation: null, userAnswersCount: 0, _moonFlashShown: false });
-state.currentBlockId = id;
-// GA4: Добавлен блок
-gtag('event', 'add_block', {
-  event_category: 'block',
-  event_label: 'Добавлен блок',
-  block_id: id,
-  block_length: text.length,
-  dream_id: currentDreamId
-});
+  state.currentBlockId = id;
+  gtag('event', 'add_block', {
+    event_category: 'block',
+    event_label: 'Добавлен блок',
+    block_id: id,
+    block_length: text.length,
+    dream_id: currentDreamId
+  });
 
   selected.forEach(s => {
     s.classList.remove('selected');
@@ -1202,8 +1155,7 @@ function refreshSelectedBlocks() {
   state.blocks = [];
   state.currentBlockId = null;
   state.nextBlockId = 1;
-  // (Если вдруг где-то останутся старые блоки — сбрасываем флаги)
-state.blocks.forEach(b => b._moonFlashShown = false);
+  state.blocks.forEach(b => b._moonFlashShown = false);
 
   const dv = byId('dreamView');
   if (dv) {
@@ -1240,30 +1192,23 @@ function initHandlers() {
     showStep(3);
     renderBlocksChips();
     updateProgressIndicator();
-    // GA4: Начат диалог по блоку
-gtag('event', 'start_dialog', {
-  event_category: 'dialog',
-  event_label: 'Начат диалог',
-  block_id: state.currentBlockId,
-  dream_id: currentDreamId
-});
+    gtag('event', 'start_dialog', {
+      event_category: 'dialog',
+      event_label: 'Начат диалог',
+      block_id: state.currentBlockId,
+      dream_id: currentDreamId
+    });
     const b = getCurrentBlock();
     if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
   });
 
-
-  //Обработчик для сохранения сновидения в личный кабинет
   onClick('menuSaveToCabinet', () => {
     saveCurrentSessionToCabinet();
   });
 
-  // Назад
   onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
-  onClick('backTo1', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
-  onClick('backTo2Header', () => { showStep(2); updateProgressIndicator(); });
   onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
-  // Добавление блоков (шаг 2)
   onClick('addBlock', addBlockFromSelection);
   onClick('addWholeBlock', () => {
     const dreamEl = byId('dream');
@@ -1285,15 +1230,9 @@ gtag('event', 'start_dialog', {
 
   onClick('refreshInline', refreshSelectedBlocks);
 
-  const refreshBtn = byId('refreshInline');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {});
-  }
-
   onClick('blockInterpretBtn', blockInterpretation);
   onClick('finalInterpretBtn', finalInterpretation);
 
-  // Отправка ответа
   onClick('sendAnswerBtn', () => {
     if (state.currentStep !== 3) { alert('Перейдите к шагу "Работа с блоками"'); return; }
     const el = byId('userInput');
@@ -1305,7 +1244,6 @@ gtag('event', 'start_dialog', {
     setTimeout(scrollChatToBottom, 0);
   });
 
-  // Enter в textarea
   const userInputEl = byId('userInput');
   if (userInputEl) {
     userInputEl.addEventListener('keydown', e => {
@@ -1318,25 +1256,16 @@ gtag('event', 'start_dialog', {
     userInputEl.addEventListener('click', hideAttachMenu);
   }
 
-  // Jump-to-bottom и scrollend (2025)
   const chatEl = byId('chat');
   if (chatEl) {
-    if ('onscrollend' in window) {
-      chatEl.addEventListener('scrollend', () => {
-        const jumpBtn = byId('jumpToBottom');
-        if (jumpBtn) jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
-      });
-    } else {
-      chatEl.addEventListener('scroll', () => {
-        const jumpBtn = byId('jumpToBottom');
-        if (jumpBtn) jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
-      });
-    }
+    chatEl.addEventListener('scroll', () => {
+      const jumpBtn = byId('jumpToBottom');
+      if (jumpBtn) jumpBtn.style.display = isChatAtBottom() ? 'none' : 'inline-flex';
+    });
     chatEl.addEventListener('click', hideAttachMenu);
   }
   onClick('jumpToBottom', scrollChatToBottom);
 
-  // Скрепка и меню (ЛУНА)
   onClick('moonBtn', (e) => {
     e.stopPropagation();
     const menu = byId('attachMenu');
@@ -1344,16 +1273,10 @@ gtag('event', 'start_dialog', {
     menu.style.display = (menu.style.display !== 'none') ? 'none' : 'block';
   });
 
-  onClick('menuExportFinal', () => {
-    exportFinalTXT();
-    hideAttachMenu();
-  });
-
   onClick('exportFinalDialogBtn', () => {
     exportFinalTXT();
   });
 
-  // Клик вне меню — закрыть
   document.addEventListener('click', (e) => {
     const menu = byId('attachMenu');
     const bar = byId('chatInputBar');
@@ -1370,20 +1293,14 @@ gtag('event', 'start_dialog', {
       finalInterpretation();
     }
   });
-  // Старые стрелки — если присутствуют в HTML
   onClick('nextBlockBtn', () => { const id = nextUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
   onClick('prevBlockBtn', () => { const id = prevUndoneBlockIdStrict(); if (id) { selectBlock(id); const b = getCurrentBlock(); if (b && !b.done) startOrContinue(); } });
-
-  // Экспорт/импорт
-  onClick('exportBtn', exportJSON);
-  onChange('importFile', (e) => { const f = e?.target?.files?.[0]; if (f) importJSON(f); });
 
   updateButtonsState();
   resetSelectionColor();
 }
 
 onClick('openCabinetBtn', () => {
-  // GA4: Открытие личного кабинета
   gtag('event', 'open_cabinet', {
     event_category: 'cabinet',
     event_label: 'Открыт личный кабинет'
@@ -1442,27 +1359,21 @@ function loadCabinet() {
 function saveCabinet(arr) {
   localStorage.setItem(CABINET_KEY, JSON.stringify(arr));
 }
-function addToCabinet(entry) {
-  const arr = loadCabinet();
-  arr.unshift(entry); // новые сверху
-  saveCabinet(arr);
-  updateStorageIndicator();
-}
 function removeFromCabinet(idx) {
   const arr = loadCabinet();
   arr.splice(idx, 1);
   saveCabinet(arr);
-  updateStorageIndicator(); // <--- и сюда
+  updateStorageIndicator();
 }
 function clearCabinet() {
   localStorage.removeItem(CABINET_KEY);
-  updateStorageIndicator(); // <--- и сюда
+  updateStorageIndicator();
 }
 
 function saveDreamToCabinetOnlyText(dreamText) {
   const list = loadCabinet();
   const entry = {
-    id: Date.now() + Math.floor(Math.random() * 10000), // уникальный id
+    id: Date.now() + Math.floor(Math.random() * 10000),
     date: Date.now(),
     dreamText,
     blocks: [],
@@ -1471,7 +1382,7 @@ function saveDreamToCabinetOnlyText(dreamText) {
   list.unshift(entry);
   saveCabinet(list);
   updateStorageIndicator();
-  currentDreamId = entry.id; // <--- сохраняем id черновика
+  currentDreamId = entry.id;
   return entry.id;
 }
 
@@ -1506,20 +1417,20 @@ function startNewDream() {
 }
 
 // ====== Индикатор заполненности localStorage ======
-const SAFE_LS_LIMIT = 2 * 1024 * 1024; // 2 МБ
-const WAR_AND_PEACE_TOM_SIZE = 650000; // символов
+const SAFE_LS_LIMIT = 2 * 1024 * 1024;
+const WAR_AND_PEACE_TOM_SIZE = 650000;
 
 function getAvgDreamSize() {
   const arr = loadCabinet();
-  if (!arr.length) return 1200; // fallback на старое значение
+  if (!arr.length) return 1200;
   const totalSize = arr.reduce((sum, entry) => sum + JSON.stringify(entry).length, 0);
   return Math.ceil(totalSize / arr.length);
 }
 
 function getBarColor(percent) {
-  if (percent < 60) return '#22c55e'; // зелёный
-  if (percent < 90) return '#facc15'; // жёлтый
-  return '#ef4444'; // красный
+  if (percent < 60) return '#22c55e';
+  if (percent < 90) return '#facc15';
+  return '#ef4444';
 }
 
 function updateStorageIndicator() {
@@ -1554,7 +1465,6 @@ window.addEventListener('DOMContentLoaded', () => {
   updateProgressIndicator();
   updateStorageIndicator();
 
-  // Синхронизируем ширину индикатора с кнопкой
   const btn = document.getElementById('openCabinetBtn');
   const barContainer = document.getElementById('storageBarContainer');
   if (btn && barContainer) {
@@ -1566,7 +1476,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Если токен валиден — сразу показываем контент без вспышек
   if (getToken() === AUTH_TOKEN) {
     hideAuth();
   } else {
@@ -1593,7 +1502,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   initHandlers();
 
-  // ====== 2025: Поддержка виртуальной клавиатуры ======
   if ('virtualKeyboard' in navigator) {
     try {
       navigator.virtualKeyboard.overlaysContent = true;
@@ -1604,7 +1512,6 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   }
 
-  // ====== 2025: Поддержка foldables и новых форм-факторов ======
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
