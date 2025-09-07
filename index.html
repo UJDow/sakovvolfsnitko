@@ -1126,6 +1126,28 @@ body.modal-open {
   overflow: hidden !important;
   touch-action: none;
 }
+
+/* Контейнер сообщений */
+#messages {
+  overflow-y: auto;
+  height: calc(100vh - 64px); /* 64px — высота input-container, подбери под себя */
+  padding-bottom: 72px; /* чуть больше высоты input-container */
+  box-sizing: border-box;
+}
+
+/* Контейнер ввода */
+#input-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #222;
+  z-index: 10;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
   
   </style>
 </head>
