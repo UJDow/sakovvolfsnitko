@@ -1,6 +1,6 @@
 const allowedOrigins = [
   'https://sakovvolfsnitko.vercel.app',
-  'https://sakovvolfsnitko-7w1zex9c3-alexandr-snitkos-projects.vercel.app',
+  'https://sakovvolfsnitko-hup7bbfl1-alexandr-snitkos-projects.vercel.app',
   'http://localhost:3000',
   'http://localhost:5500',
   'http://127.0.0.1:5500',
