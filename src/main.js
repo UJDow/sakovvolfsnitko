@@ -1,4 +1,3 @@
-alert('JS реально работает!');
 
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 
