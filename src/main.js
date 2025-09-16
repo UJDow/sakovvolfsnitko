@@ -1240,7 +1240,7 @@ byId('registerForm').onsubmit = async (e) => {
   const password = byId('regPassword').value;
   byId('registerMsg').textContent = '';
   try {
-    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -1268,7 +1268,7 @@ byId('loginForm').onsubmit = async (e) => {
   const password = byId('loginPassword').value;
   byId('loginMsg').textContent = '';
   try {
-    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
