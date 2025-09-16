@@ -1,5 +1,56 @@
 // main.js
 
+const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev/';
+let userId = null; // Глобальный userId, используем везде
+
+// Получить профиль пользователя с сервера
+async function loadProfileFromServer(userId) {
+  const res = await fetch(`${API_URL}/api/profile/get`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  return await res.json();
+}
+
+async function migrateLocalToServer(userId) {
+  const oldHistory = JSON.parse(localStorage.getItem('saviora_cabinet') || '[]');
+  if (!oldHistory.length) return;
+  for (const dream of oldHistory) {
+    await saveDreamToServer(userId, dream);
+  }
+  // localStorage.removeItem('saviora_cabinet'); // по желанию
+}
+
+// Сохранить профиль пользователя на сервер
+async function saveProfileToServer(user) {
+  await fetch(`${API_URL}/api/profile/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user })
+  });
+}
+
+// Получить историю снов с сервера
+async function loadHistoryFromServer(userId) {
+  const res = await fetch(`${API_URL}/api/history/get`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  return await res.json();
+}
+
+// Сохранить новый сон на сервер
+async function saveDreamToServer(userId, dream) {
+  await fetch(`${API_URL}/api/history/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, dream })
+  });
+}
+
+
 let isViewingFromCabinet = false;
 
 /* ====== Константы авторизации ====== */
@@ -55,7 +106,7 @@ function setStep1BtnToSave() {
   btn.textContent = 'Сохранить в кабинет';
   btn.classList.remove('secondary');
   btn.classList.add('primary');
-  btn.onclick = () => {
+  btn.onclick = async () => {
     const dreamEl = byId('dream');
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
@@ -63,7 +114,16 @@ function setStep1BtnToSave() {
       setStep1BtnToNext();
       return;
     }
-    currentDreamId = saveDreamToCabinetOnlyText(text);
+    // Новый сон
+    const newDream = {
+      id: Date.now() + Math.floor(Math.random() * 10000),
+      date: Date.now(),
+      dreamText: text,
+      blocks: [],
+      globalFinalInterpretation: null
+    };
+    await saveDreamToServer(userId, newDream);
+    currentDreamId = newDream.id;
     gtag('event', 'save_dream', {
       event_category: 'dream',
       event_label: 'Сохранён сон',
@@ -696,7 +756,7 @@ function getPrevBlocksSummary(currentBlockId, limit = 3) {
 }
 
 /* ====== Диалог ====== */
-function appendUser(text) {
+async function appendUser(text) {
   const b = getCurrentBlock();
   if (!b) return;
   b.chat.push({ role: 'user', text });
@@ -722,7 +782,12 @@ function appendUser(text) {
 
   renderChat();
   renderBlocksChips();
-  syncCurrentDreamToCabinet();
+ await saveDreamToServer(userId, {
+  id: currentDreamId,
+  dreamText: state.dreamText,
+  blocks: state.blocks,
+  globalFinalInterpretation: state.globalFinalInterpretation || null
+});
 }
 function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = false) {
   const b = getCurrentBlock(); if (!b) return;
@@ -735,8 +800,8 @@ function appendFinalGlobal(text) {
   renderChat();
 }
 
-function sendAnswer(ans) {
-  appendUser(ans);
+async function sendAnswer(ans) {
+  await appendUser(ans);
   startOrContinue();
 }
 
@@ -830,7 +895,12 @@ async function blockInterpretation() {
     appendBot(content, [], true);
     updateButtonsState();
     renderBlockPreviews();
-    syncCurrentDreamToCabinet();
+    await saveDreamToServer(userId, {
+  id: currentDreamId,
+  dreamText: state.dreamText,
+  blocks: state.blocks,
+  globalFinalInterpretation: state.globalFinalInterpretation || null
+});
   } catch (e) {
     console.error(e);
     gtag('event', 'error', {
@@ -847,24 +917,8 @@ async function blockInterpretation() {
   }
 }
 
-function renderCabinet() {
-  const info = document.getElementById('cabinetStorageInfo');
-  if (info) {
-    let used = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      const v = localStorage.getItem(k);
-      used += k.length + (v ? v.length : 0);
-    }
-    const SAFE_LS_LIMIT = 2 * 1024 * 1024;
-    const AVG_DREAM_SIZE = 1200;
-    const WAR_AND_PEACE_TOM_SIZE = 650000;
-    const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
-    const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
-    info.textContent = `Осталось записать ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
-  }
-
-  const list = loadCabinet();
+async function renderCabinet() {
+  const list = await loadHistoryFromServer(userId);
   const wrap = document.getElementById('cabinetList');
   if (!wrap) return;
   if (!list.length) {
@@ -902,10 +956,15 @@ function renderCabinet() {
   });
 
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
-    btn.onclick = function(e) {
+    btn.onclick = async function(e) {
       e.stopPropagation();
       if (confirm('Удалить запись?')) {
-        removeFromCabinet(+btn.dataset.del);
+        const idx = +btn.dataset.del;
+        await fetch(`${API_URL}/api/history/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, dreamId: list[idx].id })
+        });
         renderCabinet();
       }
     };
@@ -957,10 +1016,10 @@ function showFinalDialog() {
   }
 }
 
-function showCabinetEntry(idx) {
+async function showCabinetEntry(idx) {
   isViewingFromCabinet = true;
 
-  const list = loadCabinet();
+  const list = await loadHistoryFromServer(userId);
   const entry = list[idx];
   if (!entry) return;
   const cabinet = byId('cabinetModal');
@@ -1062,7 +1121,12 @@ async function finalInterpretation() {
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
     showFinalDialog();
-    syncCurrentDreamToCabinet();
+    await saveDreamToServer(userId, {
+  id: currentDreamId,
+  dreamText: state.dreamText,
+  blocks: state.blocks,
+  globalFinalInterpretation: state.globalFinalInterpretation || null
+});
   } catch (e) {
     console.error(e);
     gtag('event', 'error', {
@@ -1078,7 +1142,7 @@ async function finalInterpretation() {
   }
 }
 
-function saveCurrentSessionToCabinet() {
+async function saveCurrentSessionToCabinet() {
   const entry = {
     id: currentDreamId || (Date.now() + Math.floor(Math.random() * 10000)),
     date: Date.now(),
@@ -1086,14 +1150,7 @@ function saveCurrentSessionToCabinet() {
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
   };
-  const list = loadCabinet();
-  const idx = list.findIndex(e => e.id === entry.id);
-  if (idx !== -1) {
-    list[idx] = entry;
-  } else {
-    list.unshift(entry);
-  }
-  saveCabinet(list);
+  await saveDreamToServer(userId, entry);
   showToastNotice('Сон сохранён в личный кабинет!');
   currentDreamId = entry.id;
 }
@@ -1145,7 +1202,7 @@ onClick('closeFinalDialog', () => {
 });
 
 /* ====== Добавление блоков ====== */
-function addBlockFromSelection() {
+async function addBlockFromSelection() {
   const dv = byId('dreamView');
   if (!dv) return;
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
@@ -1182,7 +1239,12 @@ function addBlockFromSelection() {
 
   renderBlocksChips();
   resetSelectionColor();
-  syncCurrentDreamToCabinet();
+  await saveDreamToServer(userId, {
+  id: currentDreamId,
+  dreamText: state.dreamText,
+  blocks: state.blocks,
+  globalFinalInterpretation: state.globalFinalInterpretation || null
+});
 }
 
 function refreshSelectedBlocks() {
@@ -1339,12 +1401,12 @@ function initHandlers() {
   resetSelectionColor();
 }
 
-onClick('openCabinetBtn', () => {
+onClick('openCabinetBtn', async () => {
   gtag('event', 'open_cabinet', {
     event_category: 'cabinet',
     event_label: 'Открыт личный кабинет'
   });
-  renderCabinet();
+  await renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
 });
@@ -1352,9 +1414,13 @@ onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
   document.body.classList.remove('modal-open');
 });
-onClick('clearCabinetBtn', () => {
+onClick('clearCabinetBtn', async () => {
   if (confirm('Очистить всю историю?')) {
-    clearCabinet();
+    await fetch(`${API_URL}/api/history/clear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
     renderCabinet();
   }
 });
@@ -1387,60 +1453,6 @@ function styleDisplay(el, value) {
   if (el) el.style.display = value;
 }
 
-// ====== Кабинет: localStorage ======
-const CABINET_KEY = 'saviora_cabinet';
-
-function loadCabinet() {
-  try {
-    return JSON.parse(localStorage.getItem(CABINET_KEY)) || [];
-  } catch { return []; }
-}
-function saveCabinet(arr) {
-  localStorage.setItem(CABINET_KEY, JSON.stringify(arr));
-}
-function removeFromCabinet(idx) {
-  const arr = loadCabinet();
-  arr.splice(idx, 1);
-  saveCabinet(arr);
-  updateStorageIndicator();
-}
-function clearCabinet() {
-  localStorage.removeItem(CABINET_KEY);
-  updateStorageIndicator();
-}
-
-function saveDreamToCabinetOnlyText(dreamText) {
-  const list = loadCabinet();
-  const entry = {
-    id: Date.now() + Math.floor(Math.random() * 10000),
-    date: Date.now(),
-    dreamText,
-    blocks: [],
-    globalFinalInterpretation: null
-  };
-  list.unshift(entry);
-  saveCabinet(list);
-  updateStorageIndicator();
-  currentDreamId = entry.id;
-  return entry.id;
-}
-
-function updateDreamInCabinet(id, data) {
-  const list = loadCabinet();
-  const idx = list.findIndex(e => e.id === id);
-  if (idx === -1) return;
-  list[idx] = { ...list[idx], ...data };
-  saveCabinet(list);
-}
-
-function syncCurrentDreamToCabinet() {
-  if (!currentDreamId) return;
-  updateDreamInCabinet(currentDreamId, {
-    dreamText: state.dreamText,
-    blocks: state.blocks,
-    globalFinalInterpretation: state.globalFinalInterpretation || null
-  });
-}
 
 function startNewDream() {
   currentDreamId = null;
@@ -1455,54 +1467,12 @@ function startNewDream() {
   setStep1BtnToSave();
 }
 
-// ====== Индикатор заполненности localStorage ======
-const SAFE_LS_LIMIT = 2 * 1024 * 1024;
-const WAR_AND_PEACE_TOM_SIZE = 650000;
-
-function getAvgDreamSize() {
-  const arr = loadCabinet();
-  if (!arr.length) return 1200;
-  const totalSize = arr.reduce((sum, entry) => sum + JSON.stringify(entry).length, 0);
-  return Math.ceil(totalSize / arr.length);
-}
-
-function getBarColor(percent) {
-  if (percent < 60) return '#22c55e';
-  if (percent < 90) return '#facc15';
-  return '#ef4444';
-}
-
-function updateStorageIndicator() {
-  let used = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    const v = localStorage.getItem(k);
-    used += k.length + (v ? v.length : 0);
-  }
-  const percent = Math.min(100, Math.round(used / SAFE_LS_LIMIT * 100));
-  const avgDreamSize = getAvgDreamSize();
-  const dreamsLeft = Math.max(0, Math.floor((SAFE_LS_LIMIT - used) / avgDreamSize));
-  const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
-  const bar = document.getElementById('storageBar');
-  const text = document.getElementById('storageText');
-
-  if (bar) bar.style.width = percent + '%';
-  if (text) {
-    text.style.color = getBarColor(percent);
-    text.textContent = percent + '%';
-  }
-  const info = document.getElementById('cabinetStorageInfo');
-  if (info) {
-    info.textContent = `Осталось записать примерно ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
-  }
-}
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
   setStep1BtnToSave();
   updateProgressIndicator();
-  updateStorageIndicator();
 
   const btn = document.getElementById('openCabinetBtn');
   const barContainer = document.getElementById('storageBarContainer');
@@ -1517,6 +1487,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (getToken() === AUTH_TOKEN) {
   hideAuth();
+  // Здесь userId можно получить из профиля или придумать
+  userId = localStorage.getItem('snova_userid') || ('user_' + Date.now());
+  localStorage.setItem('snova_userid', userId);
 } else {
   showAuth();
   const authBtn = byId('authBtn');
@@ -1524,16 +1497,19 @@ window.addEventListener('DOMContentLoaded', () => {
   const authError = byId('authError');
 
   if (authBtn && authPass) {
-    authBtn.onclick = () => {
+    authBtn.onclick = async () => {
       const val = authPass.value;
       if (val === AUTH_PASS) {
         setToken(AUTH_TOKEN);
         hideAuth();
+        // Генерируем userId, если его нет
+        userId = localStorage.getItem('snova_userid') || ('user_' + Date.now());
+        localStorage.setItem('snova_userid', userId);
+        await migrateLocalToServer(userId);
         if (!localStorage.getItem('howto_shown')) {
           showHowToModal();
           localStorage.setItem('howto_shown', '1');
         }
-        // location.reload(); // НЕ нужно!
       } else {
         if (authError) authError.style.display = 'block';
       }
