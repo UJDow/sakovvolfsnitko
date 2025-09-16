@@ -1515,6 +1515,10 @@ document.getElementById('registerBtn').onclick = async function() {
   const username = document.getElementById('regUsername').value.trim();
   const password = document.getElementById('regPassword').value;
   const errorDiv = document.getElementById('registerError');
+
+  // Вот сюда вставь лог:
+  console.log('Клик по регистрации', email, username, password);
+
   errorDiv.textContent = '';
   if (!email || !username || !password) {
     errorDiv.textContent = 'Заполните все поля!';
