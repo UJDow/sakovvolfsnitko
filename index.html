@@ -1265,25 +1265,24 @@ body.modal-open {
     </button>
   </div>
 
-  <div class="auth-center">
-    <div id="registerForm" style="display: none;">
-      <h2>Регистрация</h2>
-      <input type="email" id="regEmail" placeholder="Email" required>
-      <input type="text" id="regUsername" placeholder="Имя пользователя" required>
-      <input type="password" id="regPassword" placeholder="Пароль" required>
-      <button id="registerBtn">Зарегистрироваться</button>
-      <p>Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
-      <div id="registerError" style="color: red;"></div>
-    </div>
+ <div id="loginForm">
+  <h2>Вход</h2>
+  <input type="email" id="loginEmail" placeholder="Email" required>
+  <input type="password" id="loginPassword" placeholder="Пароль" required>
+  <button id="loginBtn">Войти</button>
+  <p>Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
+  <div id="loginError" style="color: red;"></div>
+</div>
 
-    <div id="loginForm">
-      <h2>Вход</h2>
-      <input type="email" id="loginEmail" placeholder="Email" required>
-      <input type="password" id="loginPassword" placeholder="Пароль" required>
-      <button id="loginBtn">Войти</button>
-      <p>Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
-      <div id="loginError" style="color: red;"></div>
-    </div>
+<div id="registerForm" style="display: none;">
+  <h2>Регистрация</h2>
+  <input type="email" id="regEmail" placeholder="Email" required>
+  <input type="text" id="regUsername" placeholder="Имя пользователя" required>
+  <input type="password" id="regPassword" placeholder="Пароль" required>
+  <button id="registerBtn">Зарегистрироваться</button>
+  <p>Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
+  <div id="registerError" style="color: red;"></div>
+</div>
   </div>
 
   <div id="howToModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.45);">
