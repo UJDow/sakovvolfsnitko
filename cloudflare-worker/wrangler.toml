@@ -1,4 +1,11 @@
+name = "saviora-worker"
+main = "worker.js"
+compatibility_date = "2024-06-01"
 
 [[kv_namespaces]]
 binding = "USERS_KV"
 id = "633f61558d924751b0cc535edb74192f"
+
+[[kv_namespaces]]
+binding = "DREAMS_KV"
+id = "YOUR_DREAMS_KV_NAMESPACE_ID"
