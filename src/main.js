@@ -2,9 +2,8 @@
 
 let isViewingFromCabinet = false;
 
-/* ====== Константы авторизации ====== */
-const AUTH_PASS = 'volfisthebest!';
-const AUTH_TOKEN = 'volfisthebest!-secret';
+let authToken = null;
+
 
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
@@ -155,27 +154,13 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
   moonBtn.innerHTML = svg;
 }
 
-/* ====== Auth ====== */
-function showAuth() {
-  const authDiv = byId('auth');
-  if (!authDiv) return;
-  authDiv.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  document.body.classList.add('pre-auth');
-  setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
+function showAuthCard() {
+  byId('authCard').style.display = '';
+  document.querySelector('.center-wrap').style.display = 'none';
 }
-function hideAuth() {
-  const authDiv = byId('auth');
-  if (!authDiv) return;
-  authDiv.style.display = 'none';
-  document.body.style.overflow = '';
-  document.body.classList.remove('pre-auth');
-}
-function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
-function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
-function checkAuth() {
-  if (getToken() === AUTH_TOKEN) { hideAuth(); return true; }
-  showAuth(); return false;
+function hideAuthCard() {
+  byId('authCard').style.display = 'none';
+  document.querySelector('.center-wrap').style.display = '';
 }
 
 function showHowToModal() {
@@ -612,6 +597,19 @@ function importJSON(file) {
     } catch (e) { alert('Не удалось импортировать JSON'); }
   };
   reader.readAsText(file);
+}
+
+async function loadDreamsFromAPI() {
+  try {
+    const res = await fetch('https://ТВОЙ_ДОМЕН/dreams', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    const data = await res.json();
+    // data.dreams — массив снов пользователя
+    // ...выведи их в интерфейс...
+  } catch (e) {
+    showToastNotice('Ошибка загрузки снов');
+  }
 }
 
 /* ====== API ====== */
@@ -1218,6 +1216,84 @@ function selectBlock(id) {
 }
 
 /* ====== Handlers ====== */
+
+onClick('tabLogin', () => {
+  byId('loginForm').style.display = '';
+  byId('registerForm').style.display = 'none';
+  byId('tabLogin').classList.add('primary');
+  byId('tabLogin').classList.remove('secondary');
+  byId('tabRegister').classList.remove('primary');
+  byId('tabRegister').classList.add('secondary');
+});
+onClick('tabRegister', () => {
+  byId('loginForm').style.display = 'none';
+  byId('registerForm').style.display = '';
+  byId('tabLogin').classList.remove('primary');
+  byId('tabLogin').classList.add('secondary');
+  byId('tabRegister').classList.add('primary');
+  byId('tabRegister').classList.remove('secondary');
+});
+
+byId('registerForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const email = byId('regEmail').value.trim();
+  const password = byId('regPassword').value;
+  byId('registerMsg').textContent = '';
+  try {
+    const res = await fetch('https://ТВОЙ_ДОМЕН/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      byId('registerMsg').style.color = 'var(--success)';
+      byId('registerMsg').textContent = 'Успешно! Теперь войдите.';
+      setTimeout(() => {
+        byId('tabLogin').click();
+      }, 1200);
+    } else {
+      byId('registerMsg').style.color = 'var(--error)';
+      byId('registerMsg').textContent = data.error || 'Ошибка регистрации';
+    }
+  } catch (e) {
+    byId('registerMsg').style.color = 'var(--error)';
+    byId('registerMsg').textContent = 'Ошибка сети';
+  }
+};
+
+byId('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const email = byId('loginEmail').value.trim();
+  const password = byId('loginPassword').value;
+  byId('loginMsg').textContent = '';
+  try {
+    const res = await fetch('https://ТВОЙ_ДОМЕН/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.token) {
+      authToken = data.token;
+      localStorage.setItem('saviora_jwt', authToken);
+      byId('loginMsg').style.color = 'var(--success)';
+      byId('loginMsg').textContent = 'Вход выполнен!';
+      setTimeout(() => {
+        hideAuthCard();
+        // Загрузить сны пользователя
+        loadDreamsFromAPI();
+      }, 600);
+    } else {
+      byId('loginMsg').style.color = 'var(--error)';
+      byId('loginMsg').textContent = data.error || 'Ошибка входа';
+    }
+  } catch (e) {
+    byId('loginMsg').style.color = 'var(--error)';
+    byId('loginMsg').textContent = 'Ошибка сети';
+  }
+};
+
 function initHandlers() {
   setStep1BtnToSave();
 
@@ -1499,6 +1575,16 @@ function updateStorageIndicator() {
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
+  // --- авторизация через email+пароль ---
+  authToken = localStorage.getItem('saviora_jwt');
+  if (!authToken) {
+    showAuthCard();
+  } else {
+    hideAuthCard();
+    loadDreamsFromAPI(); // <-- твоя функция загрузки снов с сервера
+  }
+
+  // --- остальной твой код ---
   showStep(1);
   setStep1BtnToSave();
   updateProgressIndicator();
