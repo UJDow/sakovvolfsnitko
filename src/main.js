@@ -601,7 +601,7 @@ function importJSON(file) {
 
 async function loadDreamsFromAPI() {
   try {
-    const res = await fetch('https://ТВОЙ_ДОМЕН/dreams', {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
       headers: { 'Authorization': 'Bearer ' + authToken }
     });
     const data = await res.json();
@@ -1240,7 +1240,7 @@ byId('registerForm').onsubmit = async (e) => {
   const password = byId('regPassword').value;
   byId('registerMsg').textContent = '';
   try {
-    const res = await fetch('https://ТВОЙ_ДОМЕН/register', {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -1268,7 +1268,7 @@ byId('loginForm').onsubmit = async (e) => {
   const password = byId('loginPassword').value;
   byId('loginMsg').textContent = '';
   try {
-    const res = await fetch('https://ТВОЙ_ДОМЕН/login', {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
