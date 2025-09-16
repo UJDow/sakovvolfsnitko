@@ -1267,24 +1267,115 @@ body.modal-open {
 
   <!-- Форма регистрации -->
   <div class="auth-center">
-  <div id="registerForm" style="display: none;">
-    <h2>Регистрация</h2>
-    <input type="email" id="regEmail" placeholder="Email" required>
-    <input type="text" id="regUsername" placeholder="Имя пользователя" required>
-    <input type="password" id="regPassword" placeholder="Пароль" required>
-    <button id="registerBtn">Зарегистрироваться</button>
-    <p>Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
-    <div id="registerError" style="color: red;"></div>
+    <!-- Форма регистрации -->
+    <div id="registerForm" style="display: none;">
+      <input type="email" id="regEmail" placeholder="Email" required>
+      <input type="text" id="regUsername" placeholder="Имя пользователя" required>
+      <input type="password" id="regPassword" placeholder="Пароль" required>
+      <button id="registerBtn">Зарегистрироваться</button>
+      <p class="switch-link">Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
+      <div id="registerError" class="error"></div>
+    </div>
+
+    <!-- Форма логина -->
+    <div id="loginForm">
+      <h2>Вход</h2>
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPassword" placeholder="Пароль" required>
+      <button id="loginBtn">Войти</button>
+      <p class="switch-link">Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
+      <div id="loginError" class="error"></div>
+    </div>
   </div>
 
-  <!-- Форма логина -->
-  <div id="loginForm">
-    <h2>Вход</h2>
-    <input type="email" id="loginEmail" placeholder="Email" required>
-    <input type="password" id="loginPassword" placeholder="Пароль" required>
-    <button id="loginBtn">Войти</button>
-    <p>Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
-    <div id="loginError" style="color: red;"></div>
+  <script>
+    // Переключение между формами
+    document.getElementById('showRegister').onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'block';
+    };
+    document.getElementById('showLogin').onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'block';
+    };
+
+    // Регистрация
+    document.getElementById('registerBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('regEmail').value.trim();
+      const username = document.getElementById('regUsername').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      document.getElementById('registerError').textContent = '';
+
+      if (!email || !username || !password) {
+        document.getElementById('registerError').textContent = 'Заполни все поля!';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, username, password })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          document.getElementById('registerError').textContent = data.error;
+        } else {
+          localStorage.setItem('userId', data.userId);
+          localStorage.setItem('token', data.token);
+          alert('Регистрация успешна!');
+          document.getElementById('registerForm').style.display = 'none';
+          document.getElementById('loginForm').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('registerError').textContent = 'Ошибка сети';
+      }
+    });
+
+    // Логин
+    document.getElementById('loginBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      document.getElementById('loginError').textContent = '';
+
+      if (!email || !password) {
+        document.getElementById('loginError').textContent = 'Заполни все поля!';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          document.getElementById('loginError').textContent = data.error;
+        } else {
+          localStorage.setItem('userId', data.userId);
+          localStorage.setItem('token', data.token);
+          alert('Вход успешен!');
+          // Здесь можешь скрыть формы и показать основной интерфейс
+        }
+      } catch (err) {
+        document.getElementById('loginError').textContent = 'Ошибка сети';
+      }
+    });
+
+    // По умолчанию показываем форму логина, скрываем регистрацию
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
   </div>
       </div>
     </div>
