@@ -1,16 +1,26 @@
-// main.js
 
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev/';
-let userId = null; // Глобальный userId, используем везде
+let userId = localStorage.getItem('snova_userid');
+let token = localStorage.getItem('snova_token');
+
+async function apiRequest(url, data) {
+  const token = localStorage.getItem('snova_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
+  if (res.status === 401) {
+    localStorage.removeItem('snova_token');
+    localStorage.removeItem('snova_userid');
+    document.body.classList.add('pre-auth');
+    throw new Error('Unauthorized');
+  }
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
 
 // Получить профиль пользователя с сервера
 async function loadProfileFromServer(userId) {
-  const res = await fetch(`${API_URL}/api/profile/get`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId })
-  });
-  return await res.json();
+  return await apiRequest(`${API_URL}/api/profile/get`, { userId });
 }
 
 async function migrateLocalToServer(userId) {
@@ -22,40 +32,41 @@ async function migrateLocalToServer(userId) {
   // localStorage.removeItem('saviora_cabinet'); // по желанию
 }
 
-// Сохранить профиль пользователя на сервер
-async function saveProfileToServer(user) {
-  await fetch(`${API_URL}/api/profile/save`, {
+async function registerUser(email, username, password) {
+  const res = await fetch(`${API_URL}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user })
-  });
-}
-
-// Получить историю снов с сервера
-async function loadHistoryFromServer(userId) {
-  const res = await fetch(`${API_URL}/api/history/get`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId })
+    body: JSON.stringify({ email, username, password })
   });
   return await res.json();
 }
 
-// Сохранить новый сон на сервер
-async function saveDreamToServer(userId, dream) {
-  await fetch(`${API_URL}/api/history/save`, {
+async function loginUser(emailOrUsername, password) {
+  const res = await fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, dream })
+    body: JSON.stringify({ emailOrUsername, password })
   });
+  return await res.json();
+}
+
+// Сохранить профиль пользователя на сервер
+async function saveProfileToServer(user) {
+  return await apiRequest(`${API_URL}/api/profile/save`, { user });
+}
+
+// Получить историю снов с сервера
+async function loadHistoryFromServer(userId) {
+  return await apiRequest(`${API_URL}/api/history/get`, { userId });
+}
+
+// Сохранить новый сон на сервер
+async function saveDreamToServer(userId, dream) {
+  await apiRequest(`${API_URL}/api/history/save`, { userId, dream });
 }
 
 
 let isViewingFromCabinet = false;
-
-/* ====== Константы авторизации ====== */
-const AUTH_PASS = 'volfisthebest!';
-const AUTH_TOKEN = 'volfisthebest!-secret';
 
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
@@ -213,29 +224,6 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
     </svg>
   `;
   moonBtn.innerHTML = svg;
-}
-
-/* ====== Auth ====== */
-function showAuth() {
-  const authDiv = byId('auth');
-  if (!authDiv) return;
-  authDiv.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  document.body.classList.add('pre-auth');
-  setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
-}
-function hideAuth() {
-  const authDiv = byId('auth');
-  if (!authDiv) return;
-  authDiv.style.display = 'none';
-  document.body.style.overflow = '';
-  document.body.classList.remove('pre-auth');
-}
-function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
-function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
-function checkAuth() {
-  if (getToken() === AUTH_TOKEN) { hideAuth(); return true; }
-  showAuth(); return false;
 }
 
 function showHowToModal() {
@@ -674,26 +662,6 @@ function importJSON(file) {
   reader.readAsText(file);
 }
 
-/* ====== API ====== */
-async function apiRequest(url, data) {
-  const token = getToken();
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
-
-  if (res.status === 401) {
-    setToken('');
-    showAuth();
-    throw new Error('Unauthorized');
-  }
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
-  }
-  return res.json();
-}
-
 /* ====== LLM ====== */
 function parseAIResponse(text) {
   let cleanText = (text || '').trim();
@@ -960,11 +928,7 @@ async function renderCabinet() {
       e.stopPropagation();
       if (confirm('Удалить запись?')) {
         const idx = +btn.dataset.del;
-        await fetch(`${API_URL}/api/history/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, dreamId: list[idx].id })
-        });
+        await apiRequest(`${API_URL}/api/history/delete`, { userId, dreamId: list[idx].id });
         renderCabinet();
       }
     };
@@ -1426,11 +1390,7 @@ onClick('closeCabinetBtn', () => {
 });
 onClick('clearCabinetBtn', async () => {
   if (confirm('Очистить всю историю?')) {
-    await fetch(`${API_URL}/api/history/clear`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
-    });
+    await apiRequest(`${API_URL}/api/history/clear`, { userId });
     renderCabinet();
   }
 });
@@ -1477,57 +1437,21 @@ function startNewDream() {
   setStep1BtnToSave();
 }
 
-
-/* ====== Boot ====== */
-window.addEventListener('DOMContentLoaded', () => {
-  showStep(1);
-  setStep1BtnToSave();
-  updateProgressIndicator();
-
-  const btn = document.getElementById('openCabinetBtn');
-  const barContainer = document.getElementById('storageBarContainer');
-  if (btn && barContainer) {
-    barContainer.style.width = btn.offsetWidth + 'px';
-  }
-  window.addEventListener('resize', function() {
-    if (btn && barContainer) {
-      barContainer.style.width = btn.offsetWidth + 'px';
+window.addEventListener('DOMContentLoaded', async () => {
+  userId = localStorage.getItem('snova_userid');
+  token = localStorage.getItem('snova_token');
+  if (!token || !userId) {
+    document.body.classList.add('pre-auth');
+  } else {
+    try {
+      await apiRequest(`${API_URL}/api/profile/get`, { userId });
+      document.body.classList.remove('pre-auth');
+    } catch (e) {
+      document.body.classList.add('pre-auth');
+      localStorage.removeItem('snova_token');
+      localStorage.removeItem('snova_userid');
     }
-  });
-
-  if (getToken() === AUTH_TOKEN) {
-  hideAuth();
-  // Здесь userId можно получить из профиля или придумать
-  userId = localStorage.getItem('snova_userid') || ('user_' + Date.now());
-  localStorage.setItem('snova_userid', userId);
-} else {
-  showAuth();
-  const authBtn = byId('authBtn');
-  const authPass = byId('authPass');
-  const authError = byId('authError');
-
-  if (authBtn && authPass) {
-    authBtn.onclick = async () => {
-      const val = authPass.value;
-      if (val === AUTH_PASS) {
-        setToken(AUTH_TOKEN);
-        hideAuth();
-        // Генерируем userId, если его нет
-        userId = localStorage.getItem('snova_userid') || ('user_' + Date.now());
-        localStorage.setItem('snova_userid', userId);
-        await migrateLocalToServer(userId);
-        if (!localStorage.getItem('howto_shown')) {
-          showHowToModal();
-          localStorage.setItem('howto_shown', '1');
-        }
-      } else {
-        if (authError) authError.style.display = 'block';
-      }
-    };
-    authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-    authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
   }
-}
 
   initHandlers();
 
@@ -1583,4 +1507,53 @@ document.getElementById('showLogin').onclick = function(e) {
   e.preventDefault();
   document.getElementById('registerForm').style.display = 'none';
   document.getElementById('loginForm').style.display = '';
+};
+
+
+document.getElementById('registerBtn').onclick = async function() {
+  const email = document.getElementById('regEmail').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const errorDiv = document.getElementById('registerError');
+  errorDiv.textContent = '';
+  if (!email || !username || !password) {
+    errorDiv.textContent = 'Заполните все поля!';
+    return;
+  }
+  const res = await registerUser(email, username, password); // ← ВЕРНО!
+  if (res.error) {
+    errorDiv.textContent = res.error;
+    return;
+  }
+  localStorage.setItem('snova_token', res.token);
+  localStorage.setItem('snova_userid', res.userId);
+  userId = res.userId;
+  token = res.token;
+  showToastNotice('Регистрация успешна!');
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = '';
+  document.body.classList.remove('pre-auth');
+};
+
+document.getElementById('loginBtn').onclick = async function() {
+  const emailOrUsername = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorDiv = document.getElementById('loginError');
+  errorDiv.textContent = '';
+  if (!emailOrUsername || !password) {
+    errorDiv.textContent = 'Заполните все поля!';
+    return;
+  }
+  const res = await loginUser(emailOrUsername, password);
+  if (res.error) {
+    errorDiv.textContent = res.error;
+    return;
+  }
+  localStorage.setItem('snova_token', res.token);
+  localStorage.setItem('snova_userid', res.userId);
+  userId = res.userId;
+  token = res.token;
+  showToastNotice('Вход выполнен!');
+  document.getElementById('loginForm').style.display = 'none';
+  document.body.classList.remove('pre-auth');
 };
