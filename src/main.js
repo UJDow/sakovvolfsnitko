@@ -1,6 +1,6 @@
 // main.js
 
-const API_URL = "https://<ТВОЙ_WORKER>.workers.dev"; // замени на свой адрес Cloudflare Worker
+const API_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
 // --- Работа с токеном ---
 function saveToken(token) {
