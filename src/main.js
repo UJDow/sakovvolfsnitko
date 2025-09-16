@@ -3,17 +3,11 @@
 const API_URL = "https://deepseek-api-key.lexsnitko.workers.dev/";
 
 // --- Работа с токеном ---
-function saveToken(token) {
-  localStorage.setItem("dreams_token", token);
-}
-function getToken() {
-  return localStorage.getItem("dreams_token");
-}
-function clearToken() {
-  localStorage.removeItem("dreams_token");
-}
+function saveToken(token) { localStorage.setItem("dreams_token", token); }
+function getToken() { return localStorage.getItem("dreams_token"); }
+function clearToken() { localStorage.removeItem("dreams_token"); }
 
-// --- API функции ---
+// Регистрация
 async function register(username, password) {
   const res = await fetch(`${API_URL}/register`, {
     method: "POST",
@@ -25,6 +19,7 @@ async function register(username, password) {
   return data;
 }
 
+// Логин
 async function login(username, password) {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
@@ -36,6 +31,7 @@ async function login(username, password) {
   return data;
 }
 
+// Получить сны
 async function getDreams() {
   const token = getToken();
   if (!token) throw new Error("Нет токена");
@@ -45,6 +41,7 @@ async function getDreams() {
   return await res.json();
 }
 
+// Добавить сон
 async function addDream(text, blocks) {
   const token = getToken();
   if (!token) throw new Error("Нет токена");
@@ -59,6 +56,7 @@ async function addDream(text, blocks) {
   return await res.json();
 }
 
+// Удалить сон
 async function deleteDream(dreamId) {
   const token = getToken();
   if (!token) throw new Error("Нет токена");
@@ -69,6 +67,7 @@ async function deleteDream(dreamId) {
   return await res.json();
 }
 
+// Интерпретация сна
 async function interpretDream(dreamText) {
   const token = getToken();
   if (!token) throw new Error("Нет токена");
@@ -83,100 +82,6 @@ async function interpretDream(dreamText) {
   return await res.json();
 }
 
-// --- UI Логика ---
-
-// Элементы
-const loginForm = document.getElementById("login-form");
-const registerForm = document.getElementById("register-form");
-const dreamsList = document.getElementById("dreams-list");
-const addDreamForm = document.getElementById("add-dream-form");
-const dreamTextInput = document.getElementById("dream-text");
-const blocksInput = document.getElementById("blocks");
-const interpretBtn = document.getElementById("interpret-btn");
-const interpretationDiv = document.getElementById("interpretation");
-const logoutBtn = document.getElementById("logout-btn");
-
-// Показать/скрыть блоки
-function showBlock(id) {
-  document.querySelectorAll(".block").forEach(b => b.style.display = "none");
-  document.getElementById(id).style.display = "block";
-}
-
-// Проверка авторизации при загрузке
-window.addEventListener("DOMContentLoaded", async () => {
-  if (getToken()) {
-    showBlock("cabinet-block");
-    await renderDreams();
-  } else {
-    showBlock("login-block");
-  }
-});
-
-// --- Регистрация ---
-if (registerForm) {
-  registerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = registerForm.username.value.trim();
-    const password = registerForm.password.value.trim();
-    const res = await register(username, password);
-    if (res.ok) {
-      alert("Регистрация успешна!");
-      showBlock("cabinet-block");
-      await renderDreams();
-    } else {
-      alert(res.error || "Ошибка регистрации");
-    }
-  });
-}
-
-// --- Логин ---
-if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = loginForm.username.value.trim();
-    const password = loginForm.password.value.trim();
-    const res = await login(username, password);
-    if (res.ok) {
-      alert("Вход выполнен!");
-      showBlock("cabinet-block");
-      await renderDreams();
-    } else {
-      alert(res.error || "Ошибка входа");
-    }
-  });
-}
-
-// --- Выход ---
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    clearToken();
-    showBlock("login-block");
-  });
-}
-
-// --- Добавить сон ---
-if (addDreamForm) {
-  addDreamForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = dreamTextInput.value.trim();
-    let blocks = [];
-    try {
-      blocks = JSON.parse(blocksInput.value || "[]");
-    } catch {
-      blocks = [];
-    }
-    const res = await addDream(text, blocks);
-    if (res.ok) {
-      dreamTextInput.value = "";
-      blocksInput.value = "";
-      await renderDreams();
-    } else {
-      alert(res.error || "Ошибка добавления сна");
-    }
-  });
-}
-
-// --- Показать сны ---
 async function renderDreams() {
   if (!dreamsList) return;
   dreamsList.innerHTML = "Загрузка...";
