@@ -1004,7 +1004,9 @@ function showFinalDialog() {
 
   // Настройка кнопки "Сохранить в кабинет"
   const saveBtn = byId('saveToCabinetBtn');
-  if (saveBtn) {
+if (saveBtn) {
+  saveBtn.onclick = saveCurrentSessionToCabinet;
+}
     const b = getCurrentBlock();
     const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
     saveBtn.disabled = !enoughAnswers;
@@ -1143,6 +1145,14 @@ async function finalInterpretation() {
 }
 
 async function saveCurrentSessionToCabinet() {
+  if (!userId) {
+    showToastNotice('Ошибка: не определён пользователь. Перезайдите!');
+    return;
+  }
+  if (!state.dreamText.trim()) {
+    showToastNotice('Введите текст сна перед сохранением!');
+    return;
+  }
   const entry = {
     id: currentDreamId || (Date.now() + Math.floor(Math.random() * 10000)),
     date: Date.now(),
@@ -1150,9 +1160,13 @@ async function saveCurrentSessionToCabinet() {
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
   };
-  await saveDreamToServer(userId, entry);
-  showToastNotice('Сон сохранён в личный кабинет!');
-  currentDreamId = entry.id;
+  try {
+    await saveDreamToServer(userId, entry);
+    showToastNotice('Сон сохранён в личный кабинет!');
+    currentDreamId = entry.id;
+  } catch (e) {
+    showToastNotice('Ошибка при сохранении: ' + (e.message || 'Неизвестная ошибка'));
+  }
 }
 
 function exportFinalTXT(entry) {
@@ -1303,9 +1317,7 @@ function initHandlers() {
     if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
   });
 
-  onClick('menuSaveToCabinet', () => {
-    saveCurrentSessionToCabinet();
-  });
+  onClick('menuSaveToCabinet', saveCurrentSessionToCabinet);
 
   onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
   onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
