@@ -1469,12 +1469,22 @@ function addMessage(text, fromUser = false) {
   scrollToBottom();
 }
 
-// Показать форму регистрации и навесить обработчик регистрации
-document.getElementById('showRegister').onclick = function(e) {
-  e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('registerForm').style.display = '';
+window.addEventListener('DOMContentLoaded', function() {
+  // Переключение на форму регистрации
+  document.getElementById('showRegister').onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = '';
+  };
 
+  // Переключение на форму входа
+  document.getElementById('showLogin').onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = '';
+  };
+
+  // Обработчик кнопки регистрации (навешивается всегда)
   document.getElementById('registerBtn').onclick = async function() {
     const email = document.getElementById('regEmail').value.trim();
     const username = document.getElementById('regUsername').value.trim();
@@ -1499,34 +1509,4 @@ document.getElementById('showRegister').onclick = function(e) {
     document.getElementById('loginForm').style.display = '';
     document.body.classList.remove('pre-auth');
   };
-};
-
-// Показать форму логина и навесить обработчик логина
-document.getElementById('showLogin').onclick = function(e) {
-  e.preventDefault();
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('loginForm').style.display = '';
-
-  document.getElementById('loginBtn').onclick = async function() {
-    const emailOrUsername = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-    errorDiv.textContent = '';
-    if (!emailOrUsername || !password) {
-      errorDiv.textContent = 'Заполните все поля!';
-      return;
-    }
-    const res = await loginUser(emailOrUsername, password);
-    if (res.error) {
-      errorDiv.textContent = res.error;
-      return;
-    }
-    localStorage.setItem('snova_token', res.token);
-    localStorage.setItem('snova_userid', res.userId);
-    userId = res.userId;
-    token = res.token;
-    showToastNotice('Вход выполнен!');
-    document.getElementById('loginForm').style.display = 'none';
-    document.body.classList.remove('pre-auth');
-  };
-};
+});
