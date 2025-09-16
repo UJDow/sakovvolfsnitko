@@ -1181,6 +1181,75 @@ body.modal-open {
   align-items: center;
   gap: 8px;
 }
+
+.auth-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+#registerForm, #loginForm {
+  background: var(--card-bg, #23243a);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 32px 28px 24px 28px;
+  min-width: 320px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#registerForm h2, #loginForm h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#registerForm input, #loginForm input {
+  padding: 10px;
+  border-radius: 7px;
+  border: 1px solid #444;
+  background: #18192a;
+  color: #fff;
+  font-size: 16px;
+}
+
+#registerForm button, #loginForm button {
+  padding: 10px 0;
+  border-radius: 7px;
+  border: none;
+  background: #22c55e;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#registerForm button:hover, #loginForm button:hover {
+  background: #16a34a;
+}
+
+#registerForm p, #loginForm p {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+}
+
+#registerForm a, #loginForm a {
+  color: #a78bfa;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#registerError, #loginError {
+  min-height: 18px;
+  text-align: center;
+  font-size: 14px;
+}
   
   </style>
 </head>
@@ -1197,6 +1266,7 @@ body.modal-open {
   </div>
 
   <!-- Форма регистрации -->
+  <div class="auth-center">
   <div id="registerForm" style="display: none;">
     <h2>Регистрация</h2>
     <input type="email" id="regEmail" placeholder="Email" required>
