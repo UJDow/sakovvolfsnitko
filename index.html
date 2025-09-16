@@ -2,117 +2,19 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Кабинет снов</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
-    #dreamsList li { margin-bottom: 20px; }
-    .interp-result { margin-top: 8px; color: #2a7; }
-    .error { color: red; }
-    .success { color: green; }
-  </style>
+  <title>Saviora — толкование снов</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Кабинет снов</h1>
-
-  <div id="authSection">
-    <h2>Вход / Регистрация</h2>
-    <input id="username" placeholder="Логин" autocomplete="username">
-    <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
-    <button id="loginBtn">Войти</button>
-    <button id="registerBtn">Регистрация</button>
-    <div id="authMsg"></div>
+  <div id="app">
+    <h1>Saviora — толкование снов</h1>
+    <div id="dream-form">
+      <textarea id="dream-input" placeholder="Опиши свой сон..."></textarea>
+      <button id="send-btn">Отправить</button>
+    </div>
+    <div id="chat"></div>
   </div>
-
-  <div id="dreamSection" style="display:none;">
-    <button id="logoutBtn">Выйти</button>
-    <h2>Добавить сон</h2>
-    <textarea id="dreamText" rows="3" style="width:100%;" placeholder="Опиши свой сон..."></textarea><br>
-    <button id="addDreamBtn">Добавить</button>
-    <div id="addDreamMsg"></div>
-    <h2>Мои сны</h2>
-    <ul id="dreamsList"></ul>
-  </div>
-
   <script src="src/main.js"></script>
-  <script>
-    // --- Связка UI и main.js ---
-    const dreamsList = document.getElementById("dreamsList");
-    const authSection = document.getElementById("authSection");
-    const dreamSection = document.getElementById("dreamSection");
-    const authMsg = document.getElementById("authMsg");
-    const addDreamMsg = document.getElementById("addDreamMsg");
-
-    // Проверка токена при загрузке
-    if (getToken()) {
-      authSection.style.display = "none";
-      dreamSection.style.display = "";
-      renderDreams();
-    }
-
-    // Вход
-    document.getElementById("loginBtn").onclick = async () => {
-      authMsg.textContent = "";
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const res = await login(username, password);
-      if (res.ok) {
-        authSection.style.display = "none";
-        dreamSection.style.display = "";
-        renderDreams();
-      } else {
-        authMsg.textContent = res.error || "Ошибка входа";
-        authMsg.className = "error";
-      }
-    };
-
-    // Регистрация
-    document.getElementById("registerBtn").onclick = async () => {
-      authMsg.textContent = "";
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const res = await register(username, password);
-      if (res.ok) {
-        authMsg.textContent = "Регистрация успешна! Выполнен вход.";
-        authMsg.className = "success";
-        authSection.style.display = "none";
-        dreamSection.style.display = "";
-        renderDreams();
-      } else {
-        authMsg.textContent = res.error || "Ошибка регистрации";
-        authMsg.className = "error";
-      }
-    };
-
-    // Выход
-    document.getElementById("logoutBtn").onclick = () => {
-      clearToken();
-      dreamSection.style.display = "none";
-      authSection.style.display = "";
-      dreamsList.innerHTML = "";
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-    };
-
-    // Добавить сон
-    document.getElementById("addDreamBtn").onclick = async () => {
-      addDreamMsg.textContent = "";
-      const text = document.getElementById("dreamText").value.trim();
-      if (!text) {
-        addDreamMsg.textContent = "Введите текст сна!";
-        addDreamMsg.className = "error";
-        return;
-      }
-      const res = await addDream(text, []);
-      if (res.ok) {
-        addDreamMsg.textContent = "Сон добавлен!";
-        addDreamMsg.className = "success";
-        document.getElementById("dreamText").value = "";
-        renderDreams();
-      } else {
-        addDreamMsg.textContent = res.error || "Ошибка добавления";
-        addDreamMsg.className = "error";
-      }
-    };
-  </script>
 </body>
 </html>
