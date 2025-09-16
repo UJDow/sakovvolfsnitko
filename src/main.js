@@ -1520,7 +1520,7 @@ document.getElementById('registerBtn').onclick = async function() {
     errorDiv.textContent = 'Заполните все поля!';
     return;
   }
-  const res = await registerUser(email, username, password); // ← ВЕРНО!
+  const res = await registerUser(email, username, password);
   if (res.error) {
     errorDiv.textContent = res.error;
     return;
