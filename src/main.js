@@ -1572,3 +1572,15 @@ function addMessage(text, fromUser = false) {
   messagesContainer.appendChild(msg);
   scrollToBottom();
 }
+
+document.getElementById('showRegister').onclick = function(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = '';
+};
+
+document.getElementById('showLogin').onclick = function(e) {
+  e.preventDefault();
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = '';
+};
