@@ -1,5 +1,5 @@
+const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 
-const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev/';
 let userId = localStorage.getItem('snova_userid');
 let token = localStorage.getItem('snova_token');
 
@@ -16,20 +16,6 @@ async function apiRequest(url, data) {
   }
   if (!res.ok) throw new Error('HTTP ' + res.status);
   return await res.json();
-}
-
-// Получить профиль пользователя с сервера
-async function loadProfileFromServer(userId) {
-  return await apiRequest(`${API_URL}/api/profile/get`, { userId });
-}
-
-async function migrateLocalToServer(userId) {
-  const oldHistory = JSON.parse(localStorage.getItem('saviora_cabinet') || '[]');
-  if (!oldHistory.length) return;
-  for (const dream of oldHistory) {
-    await saveDreamToServer(userId, dream);
-  }
-  // localStorage.removeItem('saviora_cabinet'); // по желанию
 }
 
 async function registerUser(email, username, password) {
@@ -1484,7 +1470,7 @@ window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('loginForm').style.display = '';
   };
 
-  // Обработчик кнопки регистрации (навешивается всегда)
+  // Обработчик кнопки регистрации
   document.getElementById('registerBtn').onclick = async function() {
     const email = document.getElementById('regEmail').value.trim();
     const username = document.getElementById('regUsername').value.trim();
@@ -1504,9 +1490,33 @@ window.addEventListener('DOMContentLoaded', function() {
     localStorage.setItem('snova_userid', res.userId);
     userId = res.userId;
     token = res.token;
-    showToastNotice('Регистрация успешна!');
+    // Можно сразу залогинить или показать сообщение
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('loginForm').style.display = '';
     document.body.classList.remove('pre-auth');
+  };
+
+  // Обработчик кнопки входа
+  document.getElementById('loginBtn').onclick = async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    errorDiv.textContent = '';
+    if (!email || !password) {
+      errorDiv.textContent = 'Заполните все поля!';
+      return;
+    }
+    const res = await loginUser(email, password);
+    if (res.error) {
+      errorDiv.textContent = res.error;
+      return;
+    }
+    localStorage.setItem('snova_token', res.token);
+    localStorage.setItem('snova_userid', res.userId);
+    userId = res.userId;
+    token = res.token;
+    document.body.classList.remove('pre-auth');
+    document.getElementById('loginForm').style.display = 'none';
+    // ...можно вызвать initHandlers() и т.д.
   };
 });
