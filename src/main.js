@@ -1004,9 +1004,8 @@ function showFinalDialog() {
 
   // Настройка кнопки "Сохранить в кабинет"
   const saveBtn = byId('saveToCabinetBtn');
-if (saveBtn) {
-  saveBtn.onclick = saveCurrentSessionToCabinet;
-}
+  if (saveBtn) {
+    saveBtn.onclick = saveCurrentSessionToCabinet;
     const b = getCurrentBlock();
     const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
     saveBtn.disabled = !enoughAnswers;
@@ -1014,7 +1013,6 @@ if (saveBtn) {
     saveBtn.textContent = 'Сохранить в кабинет';
     saveBtn.classList.remove('primary');
     saveBtn.classList.add('secondary');
-    saveBtn.onclick = saveCurrentSessionToCabinet;
   }
 }
 
