@@ -1,59 +1,10 @@
-
-const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
-
-let userId = localStorage.getItem('snova_userid');
-let token = localStorage.getItem('snova_token');
-
-async function apiRequest(url, data) {
-  const token = localStorage.getItem('snova_token');
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
-  if (res.status === 401) {
-    localStorage.removeItem('snova_token');
-    localStorage.removeItem('snova_userid');
-    document.body.classList.add('pre-auth');
-    throw new Error('Unauthorized');
-  }
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
-}
-
-async function registerUser(email, username, password) {
-  const res = await fetch(`${API_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, username, password })
-  });
-  return await res.json();
-}
-
-async function loginUser(emailOrUsername, password) {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ emailOrUsername, password })
-  });
-  return await res.json();
-}
-
-// Сохранить профиль пользователя на сервер
-async function saveProfileToServer(user) {
-  return await apiRequest(`${API_URL}/api/profile/save`, { user });
-}
-
-// Получить историю снов с сервера
-async function loadHistoryFromServer(userId) {
-  return await apiRequest(`${API_URL}/api/history/get`, { userId });
-}
-
-// Сохранить новый сон на сервер
-async function saveDreamToServer(userId, dream) {
-  await apiRequest(`${API_URL}/api/history/save`, { userId, dream });
-}
-
+// main.js
 
 let isViewingFromCabinet = false;
+
+/* ====== Константы авторизации ====== */
+const AUTH_PASS = 'dreamteam';
+const AUTH_TOKEN = 'dreamteam-secret';
 
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
@@ -104,7 +55,7 @@ function setStep1BtnToSave() {
   btn.textContent = 'Сохранить в кабинет';
   btn.classList.remove('secondary');
   btn.classList.add('primary');
-  btn.onclick = async () => {
+  btn.onclick = () => {
     const dreamEl = byId('dream');
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
@@ -112,16 +63,7 @@ function setStep1BtnToSave() {
       setStep1BtnToNext();
       return;
     }
-    // Новый сон
-    const newDream = {
-      id: Date.now() + Math.floor(Math.random() * 10000),
-      date: Date.now(),
-      dreamText: text,
-      blocks: [],
-      globalFinalInterpretation: null
-    };
-    await saveDreamToServer(userId, newDream);
-    currentDreamId = newDream.id;
+    currentDreamId = saveDreamToCabinetOnlyText(text);
     gtag('event', 'save_dream', {
       event_category: 'dream',
       event_label: 'Сохранён сон',
@@ -211,6 +153,29 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
     </svg>
   `;
   moonBtn.innerHTML = svg;
+}
+
+/* ====== Auth ====== */
+function showAuth() {
+  const authDiv = byId('auth');
+  if (!authDiv) return;
+  authDiv.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('pre-auth');
+  setTimeout(() => { const p = byId('authPass'); if (p) p.focus(); }, 100);
+}
+function hideAuth() {
+  const authDiv = byId('auth');
+  if (!authDiv) return;
+  authDiv.style.display = 'none';
+  document.body.style.overflow = '';
+  document.body.classList.remove('pre-auth');
+}
+function getToken() { try { return localStorage.getItem('snova_token'); } catch { return null; } }
+function setToken(token) { try { localStorage.setItem('snova_token', token); } catch {} }
+function checkAuth() {
+  if (getToken() === AUTH_TOKEN) { hideAuth(); return true; }
+  showAuth(); return false;
 }
 
 function showHowToModal() {
@@ -649,6 +614,26 @@ function importJSON(file) {
   reader.readAsText(file);
 }
 
+/* ====== API ====== */
+async function apiRequest(url, data) {
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
+
+  if (res.status === 401) {
+    setToken('');
+    showAuth();
+    throw new Error('Unauthorized');
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
+  }
+  return res.json();
+}
+
 /* ====== LLM ====== */
 function parseAIResponse(text) {
   let cleanText = (text || '').trim();
@@ -711,7 +696,7 @@ function getPrevBlocksSummary(currentBlockId, limit = 3) {
 }
 
 /* ====== Диалог ====== */
-async function appendUser(text) {
+function appendUser(text) {
   const b = getCurrentBlock();
   if (!b) return;
   b.chat.push({ role: 'user', text });
@@ -737,12 +722,7 @@ async function appendUser(text) {
 
   renderChat();
   renderBlocksChips();
- await saveDreamToServer(userId, {
-  id: currentDreamId,
-  dreamText: state.dreamText,
-  blocks: state.blocks,
-  globalFinalInterpretation: state.globalFinalInterpretation || null
-});
+  syncCurrentDreamToCabinet();
 }
 function appendBot(text, quickReplies = [], isFinal = false, isSystemNotice = false) {
   const b = getCurrentBlock(); if (!b) return;
@@ -755,8 +735,8 @@ function appendFinalGlobal(text) {
   renderChat();
 }
 
-async function sendAnswer(ans) {
-  await appendUser(ans);
+function sendAnswer(ans) {
+  appendUser(ans);
   startOrContinue();
 }
 
@@ -850,12 +830,7 @@ async function blockInterpretation() {
     appendBot(content, [], true);
     updateButtonsState();
     renderBlockPreviews();
-    await saveDreamToServer(userId, {
-  id: currentDreamId,
-  dreamText: state.dreamText,
-  blocks: state.blocks,
-  globalFinalInterpretation: state.globalFinalInterpretation || null
-});
+    syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
     gtag('event', 'error', {
@@ -872,8 +847,24 @@ async function blockInterpretation() {
   }
 }
 
-async function renderCabinet() {
-  const list = await loadHistoryFromServer(userId);
+function renderCabinet() {
+  const info = document.getElementById('cabinetStorageInfo');
+  if (info) {
+    let used = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const v = localStorage.getItem(k);
+      used += k.length + (v ? v.length : 0);
+    }
+    const SAFE_LS_LIMIT = 2 * 1024 * 1024;
+    const AVG_DREAM_SIZE = 1200;
+    const WAR_AND_PEACE_TOM_SIZE = 650000;
+    const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
+    const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
+    info.textContent = `Осталось записать ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
+  }
+
+  const list = loadCabinet();
   const wrap = document.getElementById('cabinetList');
   if (!wrap) return;
   if (!list.length) {
@@ -911,11 +902,10 @@ async function renderCabinet() {
   });
 
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
-    btn.onclick = async function(e) {
+    btn.onclick = function(e) {
       e.stopPropagation();
       if (confirm('Удалить запись?')) {
-        const idx = +btn.dataset.del;
-        await apiRequest(`${API_URL}/api/history/delete`, { userId, dreamId: list[idx].id });
+        removeFromCabinet(+btn.dataset.del);
         renderCabinet();
       }
     };
@@ -956,7 +946,6 @@ function showFinalDialog() {
   // Настройка кнопки "Сохранить в кабинет"
   const saveBtn = byId('saveToCabinetBtn');
   if (saveBtn) {
-    saveBtn.onclick = saveCurrentSessionToCabinet;
     const b = getCurrentBlock();
     const enoughAnswers = b && (b.userAnswersCount || 0) >= 10;
     saveBtn.disabled = !enoughAnswers;
@@ -964,13 +953,14 @@ function showFinalDialog() {
     saveBtn.textContent = 'Сохранить в кабинет';
     saveBtn.classList.remove('primary');
     saveBtn.classList.add('secondary');
+    saveBtn.onclick = saveCurrentSessionToCabinet;
   }
 }
 
-async function showCabinetEntry(idx) {
+function showCabinetEntry(idx) {
   isViewingFromCabinet = true;
 
-  const list = await loadHistoryFromServer(userId);
+  const list = loadCabinet();
   const entry = list[idx];
   if (!entry) return;
   const cabinet = byId('cabinetModal');
@@ -1072,12 +1062,7 @@ async function finalInterpretation() {
     const b = getCurrentBlock();
     if (b) appendFinalGlobal(content);
     showFinalDialog();
-    await saveDreamToServer(userId, {
-  id: currentDreamId,
-  dreamText: state.dreamText,
-  blocks: state.blocks,
-  globalFinalInterpretation: state.globalFinalInterpretation || null
-});
+    syncCurrentDreamToCabinet();
   } catch (e) {
     console.error(e);
     gtag('event', 'error', {
@@ -1093,15 +1078,7 @@ async function finalInterpretation() {
   }
 }
 
-async function saveCurrentSessionToCabinet() {
-  if (!userId) {
-    showToastNotice('Ошибка: не определён пользователь. Перезайдите!');
-    return;
-  }
-  if (!state.dreamText.trim()) {
-    showToastNotice('Введите текст сна перед сохранением!');
-    return;
-  }
+function saveCurrentSessionToCabinet() {
   const entry = {
     id: currentDreamId || (Date.now() + Math.floor(Math.random() * 10000)),
     date: Date.now(),
@@ -1109,13 +1086,16 @@ async function saveCurrentSessionToCabinet() {
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
   };
-  try {
-    await saveDreamToServer(userId, entry);
-    showToastNotice('Сон сохранён в личный кабинет!');
-    currentDreamId = entry.id;
-  } catch (e) {
-    showToastNotice('Ошибка при сохранении: ' + (e.message || 'Неизвестная ошибка'));
+  const list = loadCabinet();
+  const idx = list.findIndex(e => e.id === entry.id);
+  if (idx !== -1) {
+    list[idx] = entry;
+  } else {
+    list.unshift(entry);
   }
+  saveCabinet(list);
+  showToastNotice('Сон сохранён в личный кабинет!');
+  currentDreamId = entry.id;
 }
 
 function exportFinalTXT(entry) {
@@ -1165,7 +1145,7 @@ onClick('closeFinalDialog', () => {
 });
 
 /* ====== Добавление блоков ====== */
-async function addBlockFromSelection() {
+function addBlockFromSelection() {
   const dv = byId('dreamView');
   if (!dv) return;
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
@@ -1202,12 +1182,7 @@ async function addBlockFromSelection() {
 
   renderBlocksChips();
   resetSelectionColor();
-  await saveDreamToServer(userId, {
-  id: currentDreamId,
-  dreamText: state.dreamText,
-  blocks: state.blocks,
-  globalFinalInterpretation: state.globalFinalInterpretation || null
-});
+  syncCurrentDreamToCabinet();
 }
 
 function refreshSelectedBlocks() {
@@ -1266,7 +1241,9 @@ function initHandlers() {
     if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
   });
 
-  onClick('menuSaveToCabinet', saveCurrentSessionToCabinet);
+  onClick('menuSaveToCabinet', () => {
+    saveCurrentSessionToCabinet();
+  });
 
   onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
   onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
@@ -1362,12 +1339,12 @@ function initHandlers() {
   resetSelectionColor();
 }
 
-onClick('openCabinetBtn', async () => {
+onClick('openCabinetBtn', () => {
   gtag('event', 'open_cabinet', {
     event_category: 'cabinet',
     event_label: 'Открыт личный кабинет'
   });
-  await renderCabinet();
+  renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
 });
@@ -1375,13 +1352,95 @@ onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
   document.body.classList.remove('modal-open');
 });
-onClick('clearCabinetBtn', async () => {
+onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
-    await apiRequest(`${API_URL}/api/history/clear`, { userId });
+    clearCabinet();
     renderCabinet();
   }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const overlay = document.querySelector('#cabinetModal .modal-overlay');
+  if (overlay) {
+    overlay.onclick = () => {
+      document.getElementById('cabinetModal').style.display = 'none';
+      document.body.classList.remove('modal-open');
+    };
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('cabinetModal');
+  if (modal) {
+    modal.addEventListener('touchmove', function(e) {
+      if (e.target.closest('.cabinet-list')) return;
+      e.preventDefault();
+    }, { passive: false });
+  }
+});
+
+function hideAttachMenu() {
+  const menu = byId('attachMenu');
+  if (menu) menu.style.display = 'none';
+}
+function styleDisplay(el, value) {
+  if (el) el.style.display = value;
+}
+
+// ====== Кабинет: localStorage ======
+const CABINET_KEY = 'saviora_cabinet';
+
+function loadCabinet() {
+  try {
+    return JSON.parse(localStorage.getItem(CABINET_KEY)) || [];
+  } catch { return []; }
+}
+function saveCabinet(arr) {
+  localStorage.setItem(CABINET_KEY, JSON.stringify(arr));
+}
+function removeFromCabinet(idx) {
+  const arr = loadCabinet();
+  arr.splice(idx, 1);
+  saveCabinet(arr);
+  updateStorageIndicator();
+}
+function clearCabinet() {
+  localStorage.removeItem(CABINET_KEY);
+  updateStorageIndicator();
+}
+
+function saveDreamToCabinetOnlyText(dreamText) {
+  const list = loadCabinet();
+  const entry = {
+    id: Date.now() + Math.floor(Math.random() * 10000),
+    date: Date.now(),
+    dreamText,
+    blocks: [],
+    globalFinalInterpretation: null
+  };
+  list.unshift(entry);
+  saveCabinet(list);
+  updateStorageIndicator();
+  currentDreamId = entry.id;
+  return entry.id;
+}
+
+function updateDreamInCabinet(id, data) {
+  const list = loadCabinet();
+  const idx = list.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  list[idx] = { ...list[idx], ...data };
+  saveCabinet(list);
+}
+
+function syncCurrentDreamToCabinet() {
+  if (!currentDreamId) return;
+  updateDreamInCabinet(currentDreamId, {
+    dreamText: state.dreamText,
+    blocks: state.blocks,
+    globalFinalInterpretation: state.globalFinalInterpretation || null
+  });
+}
 
 function startNewDream() {
   currentDreamId = null;
@@ -1396,21 +1455,93 @@ function startNewDream() {
   setStep1BtnToSave();
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
-  userId = localStorage.getItem('snova_userid');
-  token = localStorage.getItem('snova_token');
-  if (!token || !userId) {
-    document.body.classList.add('pre-auth');
-  } else {
-    try {
-      await apiRequest(`${API_URL}/api/profile/get`, { userId });
-      document.body.classList.remove('pre-auth');
-    } catch (e) {
-      document.body.classList.add('pre-auth');
-      localStorage.removeItem('snova_token');
-      localStorage.removeItem('snova_userid');
-    }
+// ====== Индикатор заполненности localStorage ======
+const SAFE_LS_LIMIT = 2 * 1024 * 1024;
+const WAR_AND_PEACE_TOM_SIZE = 650000;
+
+function getAvgDreamSize() {
+  const arr = loadCabinet();
+  if (!arr.length) return 1200;
+  const totalSize = arr.reduce((sum, entry) => sum + JSON.stringify(entry).length, 0);
+  return Math.ceil(totalSize / arr.length);
+}
+
+function getBarColor(percent) {
+  if (percent < 60) return '#22c55e';
+  if (percent < 90) return '#facc15';
+  return '#ef4444';
+}
+
+function updateStorageIndicator() {
+  let used = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    const v = localStorage.getItem(k);
+    used += k.length + (v ? v.length : 0);
   }
+  const percent = Math.min(100, Math.round(used / SAFE_LS_LIMIT * 100));
+  const avgDreamSize = getAvgDreamSize();
+  const dreamsLeft = Math.max(0, Math.floor((SAFE_LS_LIMIT - used) / avgDreamSize));
+  const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
+  const bar = document.getElementById('storageBar');
+  const text = document.getElementById('storageText');
+
+  if (bar) bar.style.width = percent + '%';
+  if (text) {
+    text.style.color = getBarColor(percent);
+    text.textContent = percent + '%';
+  }
+  const info = document.getElementById('cabinetStorageInfo');
+  if (info) {
+    info.textContent = `Осталось записать примерно ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
+  }
+}
+
+/* ====== Boot ====== */
+window.addEventListener('DOMContentLoaded', () => {
+  showStep(1);
+  setStep1BtnToSave();
+  updateProgressIndicator();
+  updateStorageIndicator();
+
+  const btn = document.getElementById('openCabinetBtn');
+  const barContainer = document.getElementById('storageBarContainer');
+  if (btn && barContainer) {
+    barContainer.style.width = btn.offsetWidth + 'px';
+  }
+  window.addEventListener('resize', function() {
+    if (btn && barContainer) {
+      barContainer.style.width = btn.offsetWidth + 'px';
+    }
+  });
+
+  if (getToken() === AUTH_TOKEN) {
+  hideAuth();
+} else {
+  showAuth();
+  const authBtn = byId('authBtn');
+  const authPass = byId('authPass');
+  const authError = byId('authError');
+
+  if (authBtn && authPass) {
+    authBtn.onclick = () => {
+      const val = authPass.value;
+      if (val === AUTH_PASS) {
+        setToken(AUTH_TOKEN);
+        hideAuth();
+        if (!localStorage.getItem('howto_shown')) {
+          showHowToModal();
+          localStorage.setItem('howto_shown', '1');
+        }
+        // location.reload(); // НЕ нужно!
+      } else {
+        if (authError) authError.style.display = 'block';
+      }
+    };
+    authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+    authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
+  }
+}
 
   initHandlers();
 
@@ -1455,69 +1586,3 @@ function addMessage(text, fromUser = false) {
   messagesContainer.appendChild(msg);
   scrollToBottom();
 }
-
-window.addEventListener('DOMContentLoaded', function() {
-  // Переключение на форму регистрации
-  document.getElementById('showRegister').onclick = function(e) {
-    e.preventDefault();
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = '';
-  };
-
-  // Переключение на форму входа
-  document.getElementById('showLogin').onclick = function(e) {
-    e.preventDefault();
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = '';
-  };
-
-  // Обработчик кнопки регистрации
-  document.getElementById('registerBtn').onclick = async function() {
-    const email = document.getElementById('regEmail').value.trim();
-    const username = document.getElementById('regUsername').value.trim();
-    const password = document.getElementById('regPassword').value;
-    const errorDiv = document.getElementById('registerError');
-    errorDiv.textContent = '';
-    if (!email || !username || !password) {
-      errorDiv.textContent = 'Заполните все поля!';
-      return;
-    }
-    const res = await registerUser(email, username, password);
-    if (res.error) {
-      errorDiv.textContent = res.error;
-      return;
-    }
-    localStorage.setItem('snova_token', res.token);
-    localStorage.setItem('snova_userid', res.userId);
-    userId = res.userId;
-    token = res.token;
-    // Можно сразу залогинить или показать сообщение
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = '';
-    document.body.classList.remove('pre-auth');
-  };
-
-  // Обработчик кнопки входа
-  document.getElementById('loginBtn').onclick = async function() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-    errorDiv.textContent = '';
-    if (!email || !password) {
-      errorDiv.textContent = 'Заполните все поля!';
-      return;
-    }
-    const res = await loginUser(email, password);
-    if (res.error) {
-      errorDiv.textContent = res.error;
-      return;
-    }
-    localStorage.setItem('snova_token', res.token);
-    localStorage.setItem('snova_userid', res.userId);
-    userId = res.userId;
-    token = res.token;
-    document.body.classList.remove('pre-auth');
-    document.getElementById('loginForm').style.display = 'none';
-    // ...можно вызвать initHandlers() и т.д.
-  };
-});
