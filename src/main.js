@@ -28,16 +28,12 @@ let currentDreamId = null; // id текущего сна в кабинете, с
 /* ====== Утилиты DOM ====== */
 function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) {
-  const el = document.getElementById(id);
+  const el = byId(id);
   if (el) {
-    if (el._handler) {
-      el.removeEventListener('click', el._handler);
-    }
+    el.onclick = null;
+    el.removeEventListener('click', el._handler);
     el._handler = handler;
     el.addEventListener('click', handler);
-  } else {
-    // Для отладки — чтобы сразу увидеть ошибку
-    console.warn('Нет элемента с id:', id);
   }
 }
 function onChange(id, handler) {
@@ -168,6 +164,7 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
 }
 
 function showAuthCard() {
+  byId('authCard').style.display = '';
   byId('startTrialScreen').style.display = 'none';
   byId('mainCenterWrap').style.display = 'none';
 }
@@ -636,6 +633,7 @@ async function apiRequest(url, data) {
 
   if (res.status === 401) {
     setToken('');
+    showAuth();
     throw new Error('Unauthorized');
   }
   if (!res.ok) {
@@ -1291,11 +1289,11 @@ byId('loginForm').onsubmit = async (e) => {
     if (data.token) {
   authToken = data.token;
   localStorage.setItem('saviora_jwt', authToken);
-  checkTrialStatus();
+  checkTrialStatus(); // <-- ВСТАВЬ СЮДА!
   byId('loginMsg').style.color = 'var(--success)';
   byId('loginMsg').textContent = 'Вход выполнен!';
   setTimeout(() => {
-    hideAuthCard(); // <-- Показываем основной интерфейс только здесь!
+    hideAuthCard();
     // Загрузить сны пользователя
     loadDreamsFromAPI();
   }, 600);
@@ -1336,7 +1334,7 @@ function initHandlers() {
     saveCurrentSessionToCabinet();
   });
 
-  onClick('backTo1Top', () => { startNewDream(); updateProgressIndicator(); });
+  onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
   onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   onClick('addBlock', addBlockFromSelection);
@@ -1448,6 +1446,26 @@ onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
     clearCabinet();
     renderCabinet();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const overlay = document.querySelector('#cabinetModal .modal-overlay');
+  if (overlay) {
+    overlay.onclick = () => {
+      document.getElementById('cabinetModal').style.display = 'none';
+      document.body.classList.remove('modal-open');
+    };
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('cabinetModal');
+  if (modal) {
+    modal.addEventListener('touchmove', function(e) {
+      if (e.target.closest('.cabinet-list')) return;
+      e.preventDefault();
+    }, { passive: false });
   }
 });
 
@@ -1569,6 +1587,70 @@ function updateStorageIndicator() {
   }
 }
 
+/* ====== Boot ====== */
+window.addEventListener('DOMContentLoaded', () => {
+  // --- остальной твой код ---
+  showStep(1);
+  setStep1BtnToSave();
+  updateProgressIndicator();
+  updateStorageIndicator();
+
+  const btn = document.getElementById('openCabinetBtn');
+  const barContainer = document.getElementById('storageBarContainer');
+  if (btn && barContainer) {
+    barContainer.style.width = btn.offsetWidth + 'px';
+  }
+  window.addEventListener('resize', function() {
+    if (btn && barContainer) {
+      barContainer.style.width = btn.offsetWidth + 'px';
+    }
+  });
+
+  if (getToken() === AUTH_TOKEN) {
+  hideAuth();
+} else {
+  showAuth();
+  const authBtn = byId('authBtn');
+  const authPass = byId('authPass');
+  const authError = byId('authError');
+
+  if (authBtn && authPass) {
+    authBtn.onclick = () => {
+      const val = authPass.value;
+      if (val === AUTH_PASS) {
+        setToken(AUTH_TOKEN);
+        hideAuth();
+        if (!localStorage.getItem('howto_shown')) {
+          showHowToModal();
+          localStorage.setItem('howto_shown', '1');
+        }
+        // location.reload(); // НЕ нужно!
+      } else {
+        if (authError) authError.style.display = 'block';
+      }
+    };
+    authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+    authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
+  }
+}
+
+  initHandlers();
+
+  if ('virtualKeyboard' in navigator) {
+    try {
+      navigator.virtualKeyboard.overlaysContent = true;
+      navigator.virtualKeyboard.addEventListener('geometrychange', (event) => {
+        const keyboardHeight = event.target.boundingRect.height;
+        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+      });
+    } catch (e) {}
+  }
+
+  if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
+    document.documentElement.classList.add('foldable-vertical');
+  }
+});
+
 // --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
 
 const messagesContainer = document.getElementById('messages');
@@ -1633,40 +1715,20 @@ async function checkTrialStatus() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // ====== Показываем стартовый экран и форму ======
-  const startTrialScreen = document.getElementById('startTrialScreen');
-  const authCard = document.getElementById('authCard');
-  const mainCenterWrap = document.getElementById('mainCenterWrap');
-  const startTrialBtn = document.getElementById('startTrialBtn');
-  const showLoginLink = document.getElementById('showLoginLink');
-  const tabRegister = document.getElementById('tabRegister');
-  const tabLogin = document.getElementById('tabLogin');
+  byId('startTrialScreen').style.display = '';
+  byId('authCard').style.display = 'none';
+  byId('mainCenterWrap').style.display = 'none';
 
-  if (startTrialScreen) startTrialScreen.style.display = '';
-  if (authCard) authCard.style.display = 'none';
-  if (mainCenterWrap) mainCenterWrap.style.display = 'none';
+  byId('startTrialBtn').onclick = () => {
+    byId('startTrialScreen').style.display = 'none';
+    byId('authCard').style.display = '';
+    byId('tabRegister').click();
+  };
 
-  if (startTrialBtn) {
-    startTrialBtn.onclick = () => {
-      if (startTrialScreen) startTrialScreen.style.display = 'none';
-      if (authCard) authCard.style.display = '';
-      if (tabRegister) tabRegister.click();
-    };
-  }
-
-  if (showLoginLink) {
-    showLoginLink.onclick = (e) => {
-      e.preventDefault();
-      if (startTrialScreen) startTrialScreen.style.display = 'none';
-      if (authCard) authCard.style.display = '';
-      if (tabLogin) tabLogin.click();
-    };
-  }
-
-  // ====== Остальная инициализация ======
-  setStep1BtnToSave();
-  updateProgressIndicator();
-  updateStorageIndicator();
-  initHandlers();
-  // ... и т.д.
+  byId('showLoginLink').onclick = (e) => {
+    e.preventDefault();
+    byId('startTrialScreen').style.display = 'none';
+    byId('authCard').style.display = '';
+    byId('tabLogin').click();
+  };
 });
