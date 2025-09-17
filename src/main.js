@@ -25,6 +25,21 @@ const state = {
 let currentSelectionColor = null;
 let currentDreamId = null; // id текущего сна в кабинете, с которым сейчас работаем
 
+function showScreen(screen) {
+  byId('trialStartScreen').style.display = 'none';
+  byId('authCard').style.display = 'none';
+  const centerWrap = document.querySelector('.center-wrap');
+  if (centerWrap) centerWrap.style.display = 'none';
+
+  if (screen === 'trial') {
+    byId('trialStartScreen').style.display = '';
+  } else if (screen === 'auth') {
+    byId('authCard').style.display = '';
+  } else if (screen === 'main') {
+    if (centerWrap) centerWrap.style.display = '';
+  }
+}
+
 /* ====== Утилиты DOM ====== */
 function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) {
@@ -50,7 +65,7 @@ function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); }
 function logout() {
   localStorage.removeItem('saviora_jwt');
   authToken = null;
-  showAuthCard();
+  showScreen('trial');
   showToastNotice('Вы вышли из аккаунта');
   const cabinet = document.getElementById('cabinetModal');
   if (cabinet) cabinet.style.display = 'none';
@@ -161,24 +176,6 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
     </svg>
   `;
   moonBtn.innerHTML = svg;
-}
-
-function showAuthCard() {
-  byId('authCard').style.display = '';
-  document.querySelector('.center-wrap').style.display = 'none';
-}
-function hideAuthCard() {
-  byId('authCard').style.display = 'none';
-  document.querySelector('.center-wrap').style.display = '';
-}
-function showTrialStartScreen() {
-  byId('trialStartScreen').style.display = '';
-  byId('authCard').style.display = 'none';
-  const centerWrap = document.querySelector('.center-wrap');
-  if (centerWrap) centerWrap.style.display = 'none';
-}
-function hideTrialStartScreen() {
-  byId('trialStartScreen').style.display = 'none';
 }
 
 function showHowToModal() {
@@ -1299,8 +1296,7 @@ byId('loginForm').onsubmit = async (e) => {
       byId('loginMsg').style.color = 'var(--success)';
       byId('loginMsg').textContent = 'Вход выполнен!';
       setTimeout(() => {
-        hideAuthCard();
-        // Загрузить сны пользователя
+        showScreen('main');
         loadDreamsFromAPI();
       }, 600);
     } else {
@@ -1595,27 +1591,23 @@ function updateStorageIndicator() {
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
   onClick('startTrialBtn', () => {
-    hideTrialStartScreen();
-    showAuthCard();
+    showScreen('auth');
     byId('tabRegister').click();
   });
 
   onClick('showLoginLink', (e) => {
     e.preventDefault();
-    hideTrialStartScreen();
-    showAuthCard();
+    showScreen('auth');
     byId('tabLogin').click();
   });
 
   authToken = localStorage.getItem('saviora_jwt');
   if (!authToken) {
-    showTrialStartScreen();
-    hideAuthCard();
+    showScreen('trial');
   } else {
-    hideTrialStartScreen();
-    hideAuthCard();
+    showScreen('main');
     loadDreamsFromAPI();
-    // fetchAndShowTrialWarning(); // если будешь делать предупреждение о триале
+    fetchAndShowTrialWarning(); // предупреждение о триале
   }
 
   // --- остальной твой код ---
