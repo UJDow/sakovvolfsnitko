@@ -1188,13 +1188,57 @@ body.modal-open {
   gap: 8px;
 }
 
-#authCard input:focus {
-  outline: 2px solid var(--primary);
-  border-color: var(--primary);
+    .centered-card {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 400px;
+  min-width: 280px;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
 }
-    #authCard input {
+
+.card-main {
+  width: 100%;
+  max-width: 400px;
+  min-width: 280px;
+  box-sizing: border-box;
+  padding: 32px 24px;
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  margin: 0;
+}
+
+#authCard input,
+#registerForm input,
+#loginForm input {
   width: 100%;
   box-sizing: border-box;
+  margin-bottom: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.8);
+}
+
+@media (max-width: 600px) {
+  .centered-card,
+  .card-main {
+    max-width: 98vw;
+    min-width: 0;
+    padding: 12px 4vw;
+  }
 }
   
   </style>
@@ -1233,8 +1277,9 @@ body.modal-open {
     <button id="howToModalOk" class="btn primary" style="margin-top:18px;">Понятно</button>
   </div>
 </div>
-  <div id="trialStartScreen" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-  <div class="card" style="max-width: 400px; width: 100%; margin: 0 auto; text-align: center;">
+  <!-- Trial Card -->
+<div id="trialStartScreen" class="centered-card" style="display: flex;">
+  <div class="card card-main">
     <h1 style="margin-bottom: 18px; font-size: 2rem; font-weight: 700;">Saviora</h1>
     <div style="color: var(--text-secondary); font-size: 1.15rem; margin-bottom: 28px;">
       Попробуйте бесплатно 7 дней
@@ -1257,25 +1302,29 @@ body.modal-open {
     </div>
   </div>
 </div>
-   <div id="authCard" class="card" style="max-width: 400px; width: 100%; display: none;">
-  <div style="display: flex; gap: 8px; margin-bottom: 18px;">
-    <button id="tabLogin" class="btn primary" style="flex:1;">Вход</button>
-    <button id="tabRegister" class="btn secondary" style="flex:1;">Регистрация</button>
+
+<!-- Auth Card -->
+<div id="authCard" class="centered-card" style="display: none;">
+  <div class="card card-main">
+    <div style="display: flex; gap: 8px; margin-bottom: 18px;">
+      <button id="tabLogin" class="btn primary" style="flex:1;">Вход</button>
+      <button id="tabRegister" class="btn secondary" style="flex:1;">Регистрация</button>
+    </div>
+    <!-- Вход -->
+    <form id="loginForm" style="display: block;">
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPassword" placeholder="Пароль" required>
+      <button type="submit" class="btn primary" style="width:100%;">Войти</button>
+      <div id="loginMsg" style="color:var(--error);margin-top:10px;font-size:14px;"></div>
+    </form>
+    <!-- Регистрация -->
+    <form id="registerForm" style="display: none;">
+      <input type="email" id="regEmail" placeholder="Email" required>
+      <input type="password" id="regPassword" placeholder="Пароль" required>
+      <button type="submit" class="btn primary" style="width:100%;">Зарегистрироваться</button>
+      <div id="registerMsg" style="color:var(--error);margin-top:10px;font-size:14px;"></div>
+    </form>
   </div>
-  <!-- Вход -->
-  <form id="loginForm" style="display: block;">
-    <input type="email" id="loginEmail" placeholder="Email" required style="width:100%;margin-bottom:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.8);">
-    <input type="password" id="loginPassword" placeholder="Пароль" required style="width:100%;margin-bottom:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.8);">
-    <button type="submit" class="btn primary" style="width:100%;">Войти</button>
-    <div id="loginMsg" style="color:var(--error);margin-top:10px;font-size:14px;"></div>
-  </form>
-  <!-- Регистрация -->
-  <form id="registerForm" style="display: none;">
-    <input type="email" id="regEmail" placeholder="Email" required style="width:100%;margin-bottom:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.8);">
-    <input type="password" id="regPassword" placeholder="Пароль" required style="width:100%;margin-bottom:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.8);">
-    <button type="submit" class="btn primary" style="width:100%;">Зарегистрироваться</button>
-    <div id="registerMsg" style="color:var(--error);margin-top:10px;font-size:14px;"></div>
-  </form>
 </div>
 
   <div class="center-wrap" style="display: none;">
