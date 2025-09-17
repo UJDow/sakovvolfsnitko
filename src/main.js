@@ -164,7 +164,6 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
 }
 
 function showAuthCard() {
-  byId('authCard').style.display = '';
   byId('startTrialScreen').style.display = 'none';
   byId('mainCenterWrap').style.display = 'none';
 }
@@ -633,7 +632,6 @@ async function apiRequest(url, data) {
 
   if (res.status === 401) {
     setToken('');
-    showAuth();
     throw new Error('Unauthorized');
   }
   if (!res.ok) {
@@ -1289,11 +1287,11 @@ byId('loginForm').onsubmit = async (e) => {
     if (data.token) {
   authToken = data.token;
   localStorage.setItem('saviora_jwt', authToken);
-  checkTrialStatus(); // <-- ВСТАВЬ СЮДА!
+  checkTrialStatus();
   byId('loginMsg').style.color = 'var(--success)';
   byId('loginMsg').textContent = 'Вход выполнен!';
   setTimeout(() => {
-    hideAuthCard();
+    hideAuthCard(); // <-- Показываем основной интерфейс только здесь!
     // Загрузить сны пользователя
     loadDreamsFromAPI();
   }, 600);
@@ -1334,7 +1332,7 @@ function initHandlers() {
     saveCurrentSessionToCabinet();
   });
 
-  onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
+  onClick('backTo1Top', () => { startNewDream(); updateProgressIndicator(); });
   onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
 
   onClick('addBlock', addBlockFromSelection);
@@ -1446,26 +1444,6 @@ onClick('clearCabinetBtn', () => {
   if (confirm('Очистить всю историю?')) {
     clearCabinet();
     renderCabinet();
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const overlay = document.querySelector('#cabinetModal .modal-overlay');
-  if (overlay) {
-    overlay.onclick = () => {
-      document.getElementById('cabinetModal').style.display = 'none';
-      document.body.classList.remove('modal-open');
-    };
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('cabinetModal');
-  if (modal) {
-    modal.addEventListener('touchmove', function(e) {
-      if (e.target.closest('.cabinet-list')) return;
-      e.preventDefault();
-    }, { passive: false });
   }
 });
 
@@ -1587,70 +1565,6 @@ function updateStorageIndicator() {
   }
 }
 
-/* ====== Boot ====== */
-window.addEventListener('DOMContentLoaded', () => {
-  // --- остальной твой код ---
-  showStep(1);
-  setStep1BtnToSave();
-  updateProgressIndicator();
-  updateStorageIndicator();
-
-  const btn = document.getElementById('openCabinetBtn');
-  const barContainer = document.getElementById('storageBarContainer');
-  if (btn && barContainer) {
-    barContainer.style.width = btn.offsetWidth + 'px';
-  }
-  window.addEventListener('resize', function() {
-    if (btn && barContainer) {
-      barContainer.style.width = btn.offsetWidth + 'px';
-    }
-  });
-
-  if (getToken() === AUTH_TOKEN) {
-  hideAuth();
-} else {
-  showAuth();
-  const authBtn = byId('authBtn');
-  const authPass = byId('authPass');
-  const authError = byId('authError');
-
-  if (authBtn && authPass) {
-    authBtn.onclick = () => {
-      const val = authPass.value;
-      if (val === AUTH_PASS) {
-        setToken(AUTH_TOKEN);
-        hideAuth();
-        if (!localStorage.getItem('howto_shown')) {
-          showHowToModal();
-          localStorage.setItem('howto_shown', '1');
-        }
-        // location.reload(); // НЕ нужно!
-      } else {
-        if (authError) authError.style.display = 'block';
-      }
-    };
-    authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-    authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
-  }
-}
-
-  initHandlers();
-
-  if ('virtualKeyboard' in navigator) {
-    try {
-      navigator.virtualKeyboard.overlaysContent = true;
-      navigator.virtualKeyboard.addEventListener('geometrychange', (event) => {
-        const keyboardHeight = event.target.boundingRect.height;
-        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-      });
-    } catch (e) {}
-  }
-
-  if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
-    document.documentElement.classList.add('foldable-vertical');
-  }
-});
-
 // --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
 
 const messagesContainer = document.getElementById('messages');
@@ -1714,6 +1628,7 @@ async function checkTrialStatus() {
   }
 }
 
+// ====== Показываем стартовый экран и форму ======
 document.addEventListener('DOMContentLoaded', () => {
   const startTrialScreen = document.getElementById('startTrialScreen');
   const authCard = document.getElementById('authCard');
@@ -1744,3 +1659,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 });
+
+// ====== Остальная инициализация ======
+setStep1BtnToSave();
+updateProgressIndicator();
+updateStorageIndicator();
+initHandlers();
+// ... и т.д.
