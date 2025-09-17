@@ -82,10 +82,6 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      padding-left: max(env(safe-area-inset-left, 0px), 16px);
-      padding-right: max(env(safe-area-inset-right, 0px), 16px);
     }
 
     input, button, textarea, select {
@@ -1204,16 +1200,12 @@ body.modal-open {
 }
 
 .card-main {
-  width: 100%;
-  max-width: 400px;
-  min-width: 280px;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; /* если нужно по горизонтали */
+  min-height: 340px;
   padding: 32px 24px;
-  border-radius: 16px;
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  margin: 0;
 }
 
 #authCard input,
