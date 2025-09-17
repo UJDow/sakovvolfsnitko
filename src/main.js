@@ -1487,7 +1487,7 @@ async function saveDreamToCabinetOnlyText(dreamText) {
         'Authorization': 'Bearer ' + authToken
       },
       body: JSON.stringify({
-        text: dreamText,
+        dreamText: dreamText,
         title: '', // если нужно, можешь добавить поле title
         blocks: [],
         globalFinalInterpretation: null
@@ -1521,10 +1521,11 @@ async function updateDreamInCabinet(id, data) {
 async function syncCurrentDreamToCabinet() {
   if (!currentDreamId) return;
   await updateDreamInCabinet(currentDreamId, {
-    text: state.dreamText,
-    blocks: state.blocks,
-    globalFinalInterpretation: state.globalFinalInterpretation || null
-  });
+  dreamText: state.dreamText,
+  date: Date.now(),
+  blocks: state.blocks,
+  globalFinalInterpretation: state.globalFinalInterpretation || null
+});
 }
 
 // Удалить сон по id
