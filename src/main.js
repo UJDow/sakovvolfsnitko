@@ -47,6 +47,12 @@ function onChange(id, handler) {
 }
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
+function logout() {
+  localStorage.removeItem('saviora_jwt');
+  authToken = null;
+  showAuthCard(); // показать форму входа
+  showToastNotice('Вы вышли из аккаунта');
+}
 /* ====== Динамическая кнопка шага 1 ====== */
 function setStep1BtnToSave() {
   const btn = byId('step1MainBtn');
