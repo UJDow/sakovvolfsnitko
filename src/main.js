@@ -1594,6 +1594,19 @@ function updateStorageIndicator() {
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
+  onClick('startTrialBtn', () => {
+    hideTrialStartScreen();
+    showAuthCard();
+    byId('tabRegister').click();
+  });
+
+  onClick('showLoginLink', (e) => {
+    e.preventDefault();
+    hideTrialStartScreen();
+    showAuthCard();
+    byId('tabLogin').click();
+  });
+
   authToken = localStorage.getItem('saviora_jwt');
   if (!authToken) {
     showTrialStartScreen();
@@ -1623,32 +1636,32 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   if (getToken() === AUTH_TOKEN) {
-  hideAuth();
-} else {
-  showAuth();
-  const authBtn = byId('authBtn');
-  const authPass = byId('authPass');
-  const authError = byId('authError');
+    hideAuth();
+  } else {
+    showAuth();
+    const authBtn = byId('authBtn');
+    const authPass = byId('authPass');
+    const authError = byId('authError');
 
-  if (authBtn && authPass) {
-    authBtn.onclick = () => {
-      const val = authPass.value;
-      if (val === AUTH_PASS) {
-        setToken(AUTH_TOKEN);
-        hideAuth();
-        if (!localStorage.getItem('howto_shown')) {
-          showHowToModal();
-          localStorage.setItem('howto_shown', '1');
+    if (authBtn && authPass) {
+      authBtn.onclick = () => {
+        const val = authPass.value;
+        if (val === AUTH_PASS) {
+          setToken(AUTH_TOKEN);
+          hideAuth();
+          if (!localStorage.getItem('howto_shown')) {
+            showHowToModal();
+            localStorage.setItem('howto_shown', '1');
+          }
+          // location.reload(); // НЕ нужно!
+        } else {
+          if (authError) authError.style.display = 'block';
         }
-        // location.reload(); // НЕ нужно!
-      } else {
-        if (authError) authError.style.display = 'block';
-      }
-    };
-    authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
-    authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
+      };
+      authPass.addEventListener('input', () => { if (authError) authError.style.display = 'none'; });
+      authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
+    }
   }
-}
 
   initHandlers();
 
@@ -1665,44 +1678,30 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(spanning: single-fold-vertical)').matches) {
     document.documentElement.classList.add('foldable-vertical');
   }
-});
 
-// --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
+  // --- АВТОСКРОЛЛ И ПОВЕДЕНИЕ ПРИ ВВОДЕ ---
+  const messagesContainer = document.getElementById('messages');
+  const input = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
 
-const messagesContainer = document.getElementById('messages');
-const input = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
 
-function scrollToBottom() {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
+  // Скроллим вниз при фокусе на инпуте (клавиатура появляется)
+  input.addEventListener('focus', scrollToBottom);
 
-// Скроллим вниз при фокусе на инпуте (клавиатура появляется)
-input.addEventListener('focus', scrollToBottom);
+  // Скроллим вниз после отправки сообщения
+  sendBtn.addEventListener('click', () => {
+    setTimeout(scrollToBottom, 100); // Даем DOM обновиться
+  });
 
-// Скроллим вниз после отправки сообщения
-sendBtn.addEventListener('click', () => {
-  setTimeout(scrollToBottom, 100); // Даем DOM обновиться
-});
-
-// Если у тебя есть функция добавления сообщений, добавь туда scrollToBottom:
-function addMessage(text, fromUser = false) {
-  const msg = document.createElement('div');
-  msg.className = fromUser ? 'user-message' : 'bot-message';
-  msg.textContent = text;
-  messagesContainer.appendChild(msg);
-  scrollToBottom();
-}
-
-onClick('startTrialBtn', () => {
-  hideTrialStartScreen();
-  showAuthCard();
-  byId('tabRegister').click();
-});
-
-onClick('showLoginLink', (e) => {
-  e.preventDefault();
-  hideTrialStartScreen();
-  showAuthCard();
-  byId('tabLogin').click();
+  // Если у тебя есть функция добавления сообщений, добавь туда scrollToBottom:
+  function addMessage(text, fromUser = false) {
+    const msg = document.createElement('div');
+    msg.className = fromUser ? 'user-message' : 'bot-message';
+    msg.textContent = text;
+    messagesContainer.appendChild(msg);
+    scrollToBottom();
+  }
 });
