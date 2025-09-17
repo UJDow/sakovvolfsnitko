@@ -4,9 +4,6 @@ const apiUrl = 'https://deepseek-api-key.lexsnitko.workers.dev';
 
 let isViewingFromCabinet = false;
 
-let authToken = null;
-
-
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
 
@@ -42,6 +39,52 @@ function showScreen(screen) {
   }
 }
 
+// Геттер/сеттер токена
+function getToken() {
+  return localStorage.getItem('saviora_jwt');
+}
+function setToken(token) {
+  if (token) {
+    localStorage.setItem('saviora_jwt', token);
+  } else {
+    localStorage.removeItem('saviora_jwt');
+  }
+}
+
+// Логин
+byId('loginForm').onsubmit = async (e) => {
+  // ...
+  if (data.token) {
+    setToken(data.token);
+    // ...
+  }
+}
+
+// Логаут
+function logout() {
+  setToken('');
+  showScreen('trial');
+  showToastNotice('Вы вышли из аккаунта');
+  const cabinet = document.getElementById('cabinetModal');
+  if (cabinet) cabinet.style.display = 'none';
+  document.body.classList.remove('modal-open');
+}
+
+// При загрузке страницы
+window.addEventListener('DOMContentLoaded', () => {
+  if (!getToken()) {
+    showScreen('trial');
+  } else {
+    showScreen('main');
+    loadDreamsFromAPI();
+    fetchAndShowTrialWarning();
+  }
+});
+
+// Везде для API
+const token = getToken();
+if (token) headers['Authorization'] = `Bearer ${token}`;
+
 /* ====== Утилиты DOM ====== */
 function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) {
@@ -64,15 +107,6 @@ function onChange(id, handler) {
 }
 function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); })); }
 
-function logout() {
-  localStorage.removeItem('saviora_jwt');
-  authToken = null;
-  showScreen('trial');
-  showToastNotice('Вы вышли из аккаунта');
-  const cabinet = document.getElementById('cabinetModal');
-  if (cabinet) cabinet.style.display = 'none';
-  document.body.classList.remove('modal-open');
-}
 /* ====== Динамическая кнопка шага 1 ====== */
 function setStep1BtnToSave() {
   const btn = byId('step1MainBtn');
@@ -618,12 +652,11 @@ function importJSON(file) {
 
 async function loadDreamsFromAPI() {
   try {
-    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
+    const token = getToken();
+const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
+  headers: { 'Authorization': 'Bearer ' + token }
+});
     const data = await res.json();
-    // data.dreams — массив снов пользователя
-    // ...выведи их в интерфейс...
   } catch (e) {
     showToastNotice('Ошибка загрузки снов');
   }
@@ -1275,14 +1308,14 @@ byId('loginForm').onsubmit = async (e) => {
     });
     const data = await res.json();
     if (data.token) {
-      authToken = data.token;
-      localStorage.setItem('saviora_jwt', authToken);
-      byId('loginMsg').style.color = 'var(--success)';
-      byId('loginMsg').textContent = 'Вход выполнен!';
-      setTimeout(() => {
-        showScreen('main');
-        loadDreamsFromAPI();
-      }, 600);
+  setToken(data.token);
+  byId('loginMsg').style.color = 'var(--success)';
+  byId('loginMsg').textContent = 'Вход выполнен!';
+  setTimeout(() => {
+    showScreen('main');
+    loadDreamsFromAPI();
+  }, 600);
+}
     } else {
       byId('loginMsg').style.color = 'var(--error)';
       byId('loginMsg').textContent = data.error || 'Ошибка входа';
@@ -1466,10 +1499,11 @@ function styleDisplay(el, value) {
 
 // Получить все сны пользователя
 async function loadCabinet() {
-  if (!authToken) return [];
+  const token = getToken();
+  if (!token) return [];
   try {
     const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/dreams', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
+      headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!res.ok) return [];
     return await res.json(); // массив снов
@@ -1480,7 +1514,8 @@ async function loadCabinet() {
 
 // Сохранить новый сон (только текст)
 async function saveDreamToCabinetOnlyText(text) {
-  if (!authToken) {
+  const token = getToken();
+  if (!token) {
     console.log('Нет токена!');
     return null;
   }
@@ -1489,7 +1524,7 @@ async function saveDreamToCabinetOnlyText(text) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': 'Bearer ' + token
       },
       body: JSON.stringify({ dreamText: text })
     });
@@ -1511,13 +1546,14 @@ async function saveDreamToCabinetOnlyText(text) {
 
 // Обновить существующий сон (по id)
 async function updateDreamInCabinet(id, data) {
-  if (!authToken || !id) return;
+  const token = getToken();
+  if (!token || !id) return;
   try {
     await fetch(`https://deepseek-api-key.lexsnitko.workers.dev/dreams/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': 'Bearer ' + token
       },
       body: JSON.stringify({
         dreamText: data.dreamText,
@@ -1542,11 +1578,12 @@ async function syncCurrentDreamToCabinet() {
 
 // Удалить сон по id
 async function removeFromCabinet(id) {
-  if (!authToken || !id) return;
+  const token = getToken();
+  if (!token || !id) return;
   try {
     await fetch(`https://deepseek-api-key.lexsnitko.workers.dev/dreams/${id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + authToken }
+      headers: { 'Authorization': 'Bearer ' + token }
     });
     renderCabinet();
   } catch {}
@@ -1586,14 +1623,13 @@ window.addEventListener('DOMContentLoaded', () => {
     byId('tabLogin').click();
   });
 
-  authToken = localStorage.getItem('saviora_jwt');
-  if (!authToken) {
-    showScreen('trial');
-  } else {
-    showScreen('main');
-    loadDreamsFromAPI();
-    fetchAndShowTrialWarning(); // предупреждение о триале
-  }
+  if (!getToken()) {
+  showScreen('trial');
+} else {
+  showScreen('main');
+  loadDreamsFromAPI();
+  fetchAndShowTrialWarning(); // предупреждение о триале
+}
 
   // --- остальной твой код ---
   showStep(1);
