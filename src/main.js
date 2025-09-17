@@ -1,5 +1,7 @@
 // main.js
 
+const apiUrl = 'https://deepseek-api-key.lexsnitko.workers.dev';
+
 let isViewingFromCabinet = false;
 
 let authToken = null;
