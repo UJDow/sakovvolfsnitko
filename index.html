@@ -1377,14 +1377,14 @@ body.modal-open {
   </div>
   <div id="moonNotice" class="moon-notice"></div>
   <div id="cabinetModal" style="display:none; position:fixed; inset:0; z-index:2000;">
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
+    <button id="closeCabinetBtn" aria-label="Закрыть">×</button>
+    <h2>Личный кабинет</h2>
     <button id="logoutBtn" class="btn danger" style="margin-top:16px;">Выйти</button>
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-      <button id="closeCabinetBtn" aria-label="Закрыть">×</button>
-      <h2>Личный кабинет</h2>
-      <div id="cabinetStorageInfo" class="muted" style="margin-bottom: 10px;"></div>
-      <div id="cabinetList" class="cabinet-list"></div>
-      <button id="clearCabinetBtn" class="btn secondary" style="margin-top:18px;">Очистить всю историю</button>
+    <div id="cabinetStorageInfo" class="muted" style="margin-bottom: 10px;"></div>
+    <div id="cabinetList" class="cabinet-list"></div>
+    <button id="clearCabinetBtn" class="btn secondary" style="margin-top:18px;">Очистить всю историю</button>
     </div>
   </div>
   <div id="toastNotice" style="
