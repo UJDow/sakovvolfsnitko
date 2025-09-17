@@ -1628,8 +1628,8 @@ async function checkTrialStatus() {
   }
 }
 
-// ====== Показываем стартовый экран и форму ======
 document.addEventListener('DOMContentLoaded', () => {
+  // ====== Показываем стартовый экран и форму ======
   const startTrialScreen = document.getElementById('startTrialScreen');
   const authCard = document.getElementById('authCard');
   const mainCenterWrap = document.getElementById('mainCenterWrap');
@@ -1658,11 +1658,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tabLogin) tabLogin.click();
     };
   }
-});
 
-// ====== Остальная инициализация ======
-setStep1BtnToSave();
-updateProgressIndicator();
-updateStorageIndicator();
-initHandlers();
-// ... и т.д.
+  // ====== Остальная инициализация ======
+  setStep1BtnToSave();
+  updateProgressIndicator();
+  updateStorageIndicator();
+  initHandlers();
+  // ... и т.д.
+});
