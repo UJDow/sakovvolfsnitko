@@ -143,6 +143,8 @@
   font-size: 15px;
   font-weight: 400;
 }
+    .pre-auth .center-wrap { visibility: hidden; }
+    #auth { display: block; }
 
     h1 { font-size: clamp(1.5rem, 5vw, 2rem); margin: 0 0 20px; text-align: center; font-weight: 700; color: var(--text-primary); }
     h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: var(--text-primary); }
@@ -1183,12 +1185,6 @@ body.modal-open {
 #authCard input:focus {
   outline: 2px solid var(--primary);
   border-color: var(--primary);
-}
-
-    /* Скрываем основной интерфейс и authCard до загрузки JS */
-.center-wrap,
-#authCard {
-  display: none;
 }
   
   </style>
