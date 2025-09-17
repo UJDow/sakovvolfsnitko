@@ -171,6 +171,15 @@ function hideAuthCard() {
   byId('authCard').style.display = 'none';
   document.querySelector('.center-wrap').style.display = '';
 }
+function showTrialStartScreen() {
+  byId('trialStartScreen').style.display = '';
+  byId('authCard').style.display = 'none';
+  const centerWrap = document.querySelector('.center-wrap');
+  if (centerWrap) centerWrap.style.display = 'none';
+}
+function hideTrialStartScreen() {
+  byId('trialStartScreen').style.display = 'none';
+}
 
 function showHowToModal() {
   const modal = document.getElementById('howToModal');
@@ -1585,13 +1594,15 @@ function updateStorageIndicator() {
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
-  // --- авторизация через email+пароль ---
   authToken = localStorage.getItem('saviora_jwt');
   if (!authToken) {
-    showAuthCard();
-  } else {
+    showTrialStartScreen();
     hideAuthCard();
-    loadDreamsFromAPI(); // <-- твоя функция загрузки снов с сервера
+  } else {
+    hideTrialStartScreen();
+    hideAuthCard();
+    loadDreamsFromAPI();
+    // fetchAndShowTrialWarning(); // если будешь делать предупреждение о триале
   }
 
   // --- остальной твой код ---
@@ -1682,3 +1693,16 @@ function addMessage(text, fromUser = false) {
   messagesContainer.appendChild(msg);
   scrollToBottom();
 }
+
+onClick('startTrialBtn', () => {
+  hideTrialStartScreen();
+  showAuthCard();
+  byId('tabRegister').click();
+});
+
+onClick('showLoginLink', (e) => {
+  e.preventDefault();
+  hideTrialStartScreen();
+  showAuthCard();
+  byId('tabLogin').click();
+});
