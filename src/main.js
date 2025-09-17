@@ -32,11 +32,11 @@ function showScreen(screen) {
   if (centerWrap) centerWrap.style.display = 'none';
 
   if (screen === 'trial') {
-    byId('trialStartScreen').style.display = '';
+    byId('trialStartScreen').style.display = 'flex'; // flex, как в HTML/CSS
   } else if (screen === 'auth') {
-    byId('authCard').style.display = '';
+    byId('authCard').style.display = 'block';
   } else if (screen === 'main') {
-    if (centerWrap) centerWrap.style.display = '';
+    if (centerWrap) centerWrap.style.display = 'flex';
   }
 }
 
