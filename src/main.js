@@ -1692,16 +1692,31 @@ async function checkTrialStatus() {
     const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/me', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.trialDaysLeft <= 2 && data.trialDaysLeft > 0) {
-      showToastNotice(`У вас осталось ${data.trialDaysLeft} дня(дней) пробного периода!`);
+    if (!res.ok) {
+      console.log('checkTrialStatus: /me not ok', res.status);
+      return;
     }
-    if (data.trialDaysLeft <= 0) {
+    const data = await res.json();
+    console.log('checkTrialStatus: /me data', data);
+
+    // Приведение к числу и защита от undefined/null
+    const daysLeft = Number(data.trialDaysLeft);
+    if (isNaN(daysLeft)) {
+      showToastNotice('Ошибка: не удалось определить статус пробного периода');
+      return;
+    }
+
+    if (daysLeft <= 2 && daysLeft > 0) {
+      showToastNotice(`У вас осталось ${daysLeft} дня(дней) пробного периода!`);
+    }
+    if (daysLeft <= 0) {
       showToastNotice('Пробный период истёк. Оформите подписку!');
       // Можно тут же разлогинить пользователя:
       // localStorage.removeItem('saviora_jwt');
       // location.reload();
     }
-  } catch (e) {}
+  } catch (e) {
+    console.log('checkTrialStatus error', e);
+    showToastNotice('Ошибка проверки статуса trial');
+  }
 }
