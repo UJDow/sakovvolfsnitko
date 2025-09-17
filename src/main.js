@@ -50,8 +50,11 @@ function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); }
 function logout() {
   localStorage.removeItem('saviora_jwt');
   authToken = null;
-  showAuthCard(); // показать форму входа
+  showAuthCard();
   showToastNotice('Вы вышли из аккаунта');
+  const cabinet = document.getElementById('cabinetModal');
+  if (cabinet) cabinet.style.display = 'none';
+  document.body.classList.remove('modal-open');
 }
 /* ====== Динамическая кнопка шага 1 ====== */
 function setStep1BtnToSave() {
@@ -1239,6 +1242,7 @@ onClick('tabRegister', () => {
   byId('tabRegister').classList.add('primary');
   byId('tabRegister').classList.remove('secondary');
 });
+onClick('logoutBtn', logout);
 
 byId('registerForm').onsubmit = async (e) => {
   e.preventDefault();
