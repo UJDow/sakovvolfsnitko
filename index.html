@@ -1188,6 +1188,33 @@ body.modal-open {
   outline: 2px solid var(--primary);
   border-color: var(--primary);
 }
+
+.primary-btn {
+  background: #3b5cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+  box-shadow: 0 2px 8px 0 rgba(59,92,255,0.08);
+}
+.primary-btn:hover, .primary-btn:focus {
+  background: #2741b6;
+}
+
+.muted-link {
+  color: var(--text-link, #7a88b8);
+  text-decoration: none;
+  font-size: 0.98rem;
+  transition: color 0.18s;
+}
+.muted-link:hover, .muted-link:focus {
+  color: #3b5cff;
+  text-decoration: underline;
+}
   
   </style>
 </head>
@@ -1226,11 +1253,11 @@ body.modal-open {
   </div>
 </div>
   <div id="trialStartScreen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
-  <div class="card" style="max-width: 400px; width: 100%; margin: 0 auto; padding: 32px 24px;">
-    <h1>Saviora</h1>
-    <div style="margin-bottom: 24px;">Попробуйте бесплатно 7 дней</div>
-    <button style="width: 100%; margin-bottom: 16px;">Попробовать бесплатно 7 дней</button>
-    <a href="#">Уже зарегистрированы? Войти</a>
+  <div class="card" style="max-width: 400px; width: 100%; margin: 0 auto;">
+    <h1 style="margin-bottom: 18px; font-size: 2.2rem; font-weight: 700; text-align: center;">Saviora</h1>
+    <div style="margin-bottom: 28px; color: var(--text-secondary, #b0b8d2); text-align: center;">Попробуйте бесплатно 7 дней</div>
+    <button class="primary-btn" style="width: 100%; margin-bottom: 18px;">Попробовать бесплатно 7 дней</button>
+    <a href="#" class="muted-link" style="display: block; text-align: center;">Уже зарегистрированы? Войти</a>
 </div>
    <div id="authCard" class="card" style="max-width: 400px; margin: 32px auto 24px; display: none;">
   <div style="display: flex; gap: 8px; margin-bottom: 18px;">
