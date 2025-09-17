@@ -28,12 +28,16 @@ let currentDreamId = null; // id текущего сна в кабинете, с
 /* ====== Утилиты DOM ====== */
 function byId(id) { return document.getElementById(id); }
 function onClick(id, handler) {
-  const el = byId(id);
+  const el = document.getElementById(id);
   if (el) {
-    el.onclick = null;
-    el.removeEventListener('click', el._handler);
+    if (el._handler) {
+      el.removeEventListener('click', el._handler);
+    }
     el._handler = handler;
     el.addEventListener('click', handler);
+  } else {
+    // Для отладки — чтобы сразу увидеть ошибку
+    console.warn('Нет элемента с id:', id);
   }
 }
 function onChange(id, handler) {
