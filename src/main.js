@@ -165,13 +165,11 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
 
 function showAuthCard() {
   byId('authCard').style.display = '';
-  byId('startTrialScreen').style.display = 'none';
-  byId('mainCenterWrap').style.display = 'none';
+  document.querySelector('.center-wrap').style.display = 'none';
 }
 function hideAuthCard() {
   byId('authCard').style.display = 'none';
-  byId('startTrialScreen').style.display = 'none';
-  byId('mainCenterWrap').style.display = '';
+  document.querySelector('.center-wrap').style.display = '';
 }
 
 function showHowToModal() {
@@ -1287,17 +1285,16 @@ byId('loginForm').onsubmit = async (e) => {
     });
     const data = await res.json();
     if (data.token) {
-  authToken = data.token;
-  localStorage.setItem('saviora_jwt', authToken);
-  checkTrialStatus(); // <-- ВСТАВЬ СЮДА!
-  byId('loginMsg').style.color = 'var(--success)';
-  byId('loginMsg').textContent = 'Вход выполнен!';
-  setTimeout(() => {
-    hideAuthCard();
-    // Загрузить сны пользователя
-    loadDreamsFromAPI();
-  }, 600);
-} else {
+      authToken = data.token;
+      localStorage.setItem('saviora_jwt', authToken);
+      byId('loginMsg').style.color = 'var(--success)';
+      byId('loginMsg').textContent = 'Вход выполнен!';
+      setTimeout(() => {
+        hideAuthCard();
+        // Загрузить сны пользователя
+        loadDreamsFromAPI();
+      }, 600);
+    } else {
       byId('loginMsg').style.color = 'var(--error)';
       byId('loginMsg').textContent = data.error || 'Ошибка входа';
     }
@@ -1436,7 +1433,6 @@ onClick('openCabinetBtn', () => {
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
-  checkTrialStatus(); // <-- Можно добавить сюда
 });
 onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
@@ -1589,6 +1585,15 @@ function updateStorageIndicator() {
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
+  // --- авторизация через email+пароль ---
+  authToken = localStorage.getItem('saviora_jwt');
+  if (!authToken) {
+    showAuthCard();
+  } else {
+    hideAuthCard();
+    loadDreamsFromAPI(); // <-- твоя функция загрузки снов с сервера
+  }
+
   // --- остальной твой код ---
   showStep(1);
   setStep1BtnToSave();
@@ -1677,58 +1682,3 @@ function addMessage(text, fromUser = false) {
   messagesContainer.appendChild(msg);
   scrollToBottom();
 }
-
-async function checkTrialStatus() {
-  const token = localStorage.getItem('saviora_jwt');
-  if (!token) return;
-  try {
-    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/me', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    if (!res.ok) {
-      console.log('checkTrialStatus: /me not ok', res.status);
-      return;
-    }
-    const data = await res.json();
-    console.log('checkTrialStatus: /me data', data);
-
-    // Приведение к числу и защита от undefined/null
-    const daysLeft = Number(data.trialDaysLeft);
-    if (isNaN(daysLeft)) {
-      showToastNotice('Ошибка: не удалось определить статус пробного периода');
-      return;
-    }
-
-    if (daysLeft <= 2 && daysLeft > 0) {
-      showToastNotice(`У вас осталось ${daysLeft} дня(дней) пробного периода!`);
-    }
-    if (daysLeft <= 0) {
-      showToastNotice('Пробный период истёк. Оформите подписку!');
-      // Можно тут же разлогинить пользователя:
-      // localStorage.removeItem('saviora_jwt');
-      // location.reload();
-    }
-  } catch (e) {
-    console.log('checkTrialStatus error', e);
-    showToastNotice('Ошибка проверки статуса trial');
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  byId('startTrialScreen').style.display = '';
-  byId('authCard').style.display = 'none';
-  byId('mainCenterWrap').style.display = 'none';
-
-  byId('startTrialBtn').onclick = () => {
-    byId('startTrialScreen').style.display = 'none';
-    byId('authCard').style.display = '';
-    byId('tabRegister').click();
-  };
-
-  byId('showLoginLink').onclick = (e) => {
-    e.preventDefault();
-    byId('startTrialScreen').style.display = 'none';
-    byId('authCard').style.display = '';
-    byId('tabLogin').click();
-  };
-});
