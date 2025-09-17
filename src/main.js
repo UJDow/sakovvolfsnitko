@@ -1477,25 +1477,32 @@ async function loadCabinet() {
 }
 
 // Сохранить новый сон (только текст)
-async function saveDreamToCabinetOnlyText(dreamText) {
-  if (!authToken) return null;
+async function saveDreamToCabinetOnlyText(text) {
+  if (!authToken) {
+    console.log('Нет токена!');
+    return null;
+  }
   try {
-    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/dreams', {
+    const resp = await fetch(apiUrl + '/dreams', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + authToken
       },
-      body: JSON.stringify({
-        dreamText: dreamText,
-        date: Date.now()
-      })
+      body: JSON.stringify({ dreamText: text })
     });
-    if (!res.ok) return null;
-    const entry = await res.json();
-    currentDreamId = entry.id;
-    return entry.id;
-  } catch {
+    if (!resp.ok) {
+      console.log('Ошибка ответа сервера:', resp.status, await resp.text());
+      return null;
+    }
+    const dream = await resp.json();
+    if (!dream.id) {
+      console.log('Нет id в ответе:', dream);
+      return null;
+    }
+    return dream.id;
+  } catch (e) {
+    console.log('Ошибка fetch:', e);
     return null;
   }
 }
