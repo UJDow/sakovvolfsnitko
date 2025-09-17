@@ -165,11 +165,13 @@ function renderMoonProgress(userAnswersCount = 0, max = 10, isFlash = false, the
 
 function showAuthCard() {
   byId('authCard').style.display = '';
-  document.querySelector('.center-wrap').style.display = 'none';
+  byId('startTrialScreen').style.display = 'none';
+  byId('mainCenterWrap').style.display = 'none';
 }
 function hideAuthCard() {
   byId('authCard').style.display = 'none';
-  document.querySelector('.center-wrap').style.display = '';
+  byId('startTrialScreen').style.display = 'none';
+  byId('mainCenterWrap').style.display = '';
 }
 
 function showHowToModal() {
@@ -1587,15 +1589,6 @@ function updateStorageIndicator() {
 
 /* ====== Boot ====== */
 window.addEventListener('DOMContentLoaded', () => {
-  // --- авторизация через email+пароль ---
-  authToken = localStorage.getItem('saviora_jwt');
-  if (!authToken) {
-    showAuthCard();
-  } else {
-    hideAuthCard();
-    loadDreamsFromAPI(); // <-- твоя функция загрузки снов с сервера
-  }
-
   // --- остальной твой код ---
   showStep(1);
   setStep1BtnToSave();
@@ -1724,7 +1717,7 @@ async function checkTrialStatus() {
 document.addEventListener('DOMContentLoaded', () => {
   byId('startTrialScreen').style.display = '';
   byId('authCard').style.display = 'none';
-  byId('mainCenterWrap') && (byId('mainCenterWrap').style.display = 'none');
+  byId('mainCenterWrap').style.display = 'none';
 
   byId('startTrialBtn').onclick = () => {
     byId('startTrialScreen').style.display = 'none';
