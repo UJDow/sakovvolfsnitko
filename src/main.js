@@ -23,25 +23,23 @@ const state = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Скрываем всё, кроме стартового экрана
-  document.getElementById('startTrialScreen').style.display = '';
-  document.getElementById('authCard').style.display = 'none';
-  document.querySelector('.center-wrap').style.display = 'none';
+  byId('startTrialScreen').style.display = '';
+  byId('authCard').style.display = 'none';
+  byId('mainCenterWrap') && (byId('mainCenterWrap').style.display = 'none');
 
   // Кнопка "Попробовать бесплатно 7 дней"
-  document.getElementById('startTrialBtn').onclick = () => {
-    document.getElementById('startTrialScreen').style.display = 'none';
-    document.getElementById('authCard').style.display = '';
-    // Открываем вкладку регистрации
-    document.getElementById('tabRegister').click();
+  byId('startTrialBtn').onclick = () => {
+    byId('startTrialScreen').style.display = 'none';
+    byId('authCard').style.display = '';
+    byId('tabRegister').click();
   };
 
   // Ссылка "Войти"
-  document.getElementById('showLoginLink').onclick = (e) => {
+  byId('showLoginLink').onclick = (e) => {
     e.preventDefault();
-    document.getElementById('startTrialScreen').style.display = 'none';
-    document.getElementById('authCard').style.display = '';
-    document.getElementById('tabLogin').click();
+    byId('startTrialScreen').style.display = 'none';
+    byId('authCard').style.display = '';
+    byId('tabLogin').click();
   };
 });
 
