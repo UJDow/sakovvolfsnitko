@@ -47,6 +47,10 @@
       --progress-completed: #10b981;
     }
 
+    #trialStartScreen { display: flex; }
+#authCard { display: none; }
+.center-wrap { display: none; }
+
     [data-theme="dark"] {
       --background: #0f172a;
       --card-bg: rgba(30, 41, 59, 0.92);
@@ -143,8 +147,6 @@
   font-size: 15px;
   font-weight: 400;
 }
-    .pre-auth .center-wrap { visibility: hidden; }
-    #auth { display: block; }
 
     h1 { font-size: clamp(1.5rem, 5vw, 2rem); margin: 0 0 20px; text-align: center; font-weight: 700; color: var(--text-primary); }
     h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: var(--text-primary); }
@@ -1250,7 +1252,7 @@ body.modal-open {
   </form>
 </div>
 
-  <div class="center-wrap">
+  <div class="center-wrap" style="display: none;">
     <h1>Saviora</h1>
     <div id="cabinetMenu" style="margin: 18px 0 0 0; display: flex; flex-direction: column; align-items: center;">
       <button id="openCabinetBtn" class="btn secondary" style="margin: 0 auto;">Личный кабинет</button>
