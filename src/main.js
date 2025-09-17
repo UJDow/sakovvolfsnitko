@@ -1715,20 +1715,32 @@ async function checkTrialStatus() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  byId('startTrialScreen').style.display = '';
-  byId('authCard').style.display = 'none';
-  byId('mainCenterWrap').style.display = 'none';
+  const startTrialScreen = document.getElementById('startTrialScreen');
+  const authCard = document.getElementById('authCard');
+  const mainCenterWrap = document.getElementById('mainCenterWrap');
+  const startTrialBtn = document.getElementById('startTrialBtn');
+  const showLoginLink = document.getElementById('showLoginLink');
+  const tabRegister = document.getElementById('tabRegister');
+  const tabLogin = document.getElementById('tabLogin');
 
-  byId('startTrialBtn').onclick = () => {
-    byId('startTrialScreen').style.display = 'none';
-    byId('authCard').style.display = '';
-    byId('tabRegister').click();
-  };
+  if (startTrialScreen) startTrialScreen.style.display = '';
+  if (authCard) authCard.style.display = 'none';
+  if (mainCenterWrap) mainCenterWrap.style.display = 'none';
 
-  byId('showLoginLink').onclick = (e) => {
-    e.preventDefault();
-    byId('startTrialScreen').style.display = 'none';
-    byId('authCard').style.display = '';
-    byId('tabLogin').click();
-  };
+  if (startTrialBtn) {
+    startTrialBtn.onclick = () => {
+      if (startTrialScreen) startTrialScreen.style.display = 'none';
+      if (authCard) authCard.style.display = '';
+      if (tabRegister) tabRegister.click();
+    };
+  }
+
+  if (showLoginLink) {
+    showLoginLink.onclick = (e) => {
+      e.preventDefault();
+      if (startTrialScreen) startTrialScreen.style.display = 'none';
+      if (authCard) authCard.style.display = '';
+      if (tabLogin) tabLogin.click();
+    };
+  }
 });
