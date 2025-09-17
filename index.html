@@ -1191,15 +1191,31 @@ body.modal-open {
 </head>
 <body>
   <div class="top-bar">
-  <button class="howto-toggle" id="howToBtn" title="Как?">
-    <span class="icon">❓</span>
-    <span class="text">Как?</span>
-  </button>
-  <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-    <span class="icon">🌙</span>
-    <span class="text">Тема</span>
-  </button>
-</div>
+    <button class="howto-toggle" id="howToBtn" title="Как?">
+      <span class="icon">❓</span>
+      <span class="text">Как?</span>
+    </button>
+    <button class="theme-toggle" id="themeToggle" title="Сменить тему">
+      <span class="icon">🌙</span>
+      <span class="text">Тема</span>
+    </button>
+  </div>
+
+  <div id="startTrialScreen" class="center-wrap" style="min-height: 80vh;">
+    <div class="card" style="max-width: 400px; margin: 32px auto;">
+      <h1 style="margin-bottom: 12px;">Saviora</h1>
+      <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 24px;">
+        Записывайте и анализируйте свои сны.<br>
+        <b>Попробуйте бесплатно 7 дней!</b>
+      </p>
+      <button id="startTrialBtn" class="btn primary" style="width:100%; font-size: 17px; margin-bottom: 12px;">
+        Попробовать бесплатно 7 дней
+      </button>
+      <div style="text-align:center; margin-top: 8px;">
+        Уже есть аккаунт? <a href="#" id="showLoginLink">Войти</a>
+      </div>
+    </div>
+  </div>
 
   <div id="howToModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.45);">
   <div style="
