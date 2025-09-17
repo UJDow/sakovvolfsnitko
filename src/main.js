@@ -22,27 +22,6 @@ const state = {
   userSelectedBlock: false
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  byId('startTrialScreen').style.display = '';
-  byId('authCard').style.display = 'none';
-  byId('mainCenterWrap') && (byId('mainCenterWrap').style.display = 'none');
-
-  // Кнопка "Попробовать бесплатно 7 дней"
-  byId('startTrialBtn').onclick = () => {
-    byId('startTrialScreen').style.display = 'none';
-    byId('authCard').style.display = '';
-    byId('tabRegister').click();
-  };
-
-  // Ссылка "Войти"
-  byId('showLoginLink').onclick = (e) => {
-    e.preventDefault();
-    byId('startTrialScreen').style.display = 'none';
-    byId('authCard').style.display = '';
-    byId('tabLogin').click();
-  };
-});
-
 let currentSelectionColor = null;
 let currentDreamId = null; // id текущего сна в кабинете, с которым сейчас работаем
 
@@ -1741,3 +1720,22 @@ async function checkTrialStatus() {
     showToastNotice('Ошибка проверки статуса trial');
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  byId('startTrialScreen').style.display = '';
+  byId('authCard').style.display = 'none';
+  byId('mainCenterWrap') && (byId('mainCenterWrap').style.display = 'none');
+
+  byId('startTrialBtn').onclick = () => {
+    byId('startTrialScreen').style.display = 'none';
+    byId('authCard').style.display = '';
+    byId('tabRegister').click();
+  };
+
+  byId('showLoginLink').onclick = (e) => {
+    e.preventDefault();
+    byId('startTrialScreen').style.display = 'none';
+    byId('authCard').style.display = '';
+    byId('tabLogin').click();
+  };
+});
