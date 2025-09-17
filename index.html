@@ -48,7 +48,11 @@
     }
 
     #trialStartScreen { display: flex; }
-#authCard { display: none; }
+#authCard {
+  margin: 0 auto; /* центрирует по горизонтали */
+  top: 50vh;
+  transform: translateY(-50%);
+}
 .center-wrap { display: none; }
 
     [data-theme="dark"] {
@@ -1188,6 +1192,10 @@ body.modal-open {
   outline: 2px solid var(--primary);
   border-color: var(--primary);
 }
+    #authCard input {
+  width: 100%;
+  box-sizing: border-box;
+}
   
   </style>
 </head>
@@ -1249,7 +1257,7 @@ body.modal-open {
     </div>
   </div>
 </div>
-   <div id="authCard" class="card" style="max-width: 400px; margin: 32px auto 24px; display: none;">
+   <div id="authCard" class="card" style="max-width: 400px; width: 100%; display: none;">
   <div style="display: flex; gap: 8px; margin-bottom: 18px;">
     <button id="tabLogin" class="btn primary" style="flex:1;">Вход</button>
     <button id="tabRegister" class="btn secondary" style="flex:1;">Регистрация</button>
