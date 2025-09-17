@@ -1285,16 +1285,17 @@ byId('loginForm').onsubmit = async (e) => {
     });
     const data = await res.json();
     if (data.token) {
-      authToken = data.token;
-      localStorage.setItem('saviora_jwt', authToken);
-      byId('loginMsg').style.color = 'var(--success)';
-      byId('loginMsg').textContent = 'Вход выполнен!';
-      setTimeout(() => {
-        hideAuthCard();
-        // Загрузить сны пользователя
-        loadDreamsFromAPI();
-      }, 600);
-    } else {
+  authToken = data.token;
+  localStorage.setItem('saviora_jwt', authToken);
+  checkTrialStatus(); // <-- ВСТАВЬ СЮДА!
+  byId('loginMsg').style.color = 'var(--success)';
+  byId('loginMsg').textContent = 'Вход выполнен!';
+  setTimeout(() => {
+    hideAuthCard();
+    // Загрузить сны пользователя
+    loadDreamsFromAPI();
+  }, 600);
+} else {
       byId('loginMsg').style.color = 'var(--error)';
       byId('loginMsg').textContent = data.error || 'Ошибка входа';
     }
@@ -1433,6 +1434,7 @@ onClick('openCabinetBtn', () => {
   renderCabinet();
   byId('cabinetModal').style.display = 'block';
   document.body.classList.add('modal-open');
+  checkTrialStatus(); // <-- Можно добавить сюда
 });
 onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
@@ -1681,4 +1683,25 @@ function addMessage(text, fromUser = false) {
   msg.textContent = text;
   messagesContainer.appendChild(msg);
   scrollToBottom();
+}
+
+async function checkTrialStatus() {
+  const token = localStorage.getItem('saviora_jwt');
+  if (!token) return;
+  try {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.trialDaysLeft <= 2 && data.trialDaysLeft > 0) {
+      showToastNotice(`У вас осталось ${data.trialDaysLeft} дня(дней) пробного периода!`);
+    }
+    if (data.trialDaysLeft <= 0) {
+      showToastNotice('Пробный период истёк. Оформите подписку!');
+      // Можно тут же разлогинить пользователя:
+      // localStorage.removeItem('saviora_jwt');
+      // location.reload();
+    }
+  } catch (e) {}
 }
