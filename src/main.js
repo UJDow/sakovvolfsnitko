@@ -78,7 +78,7 @@ function setStep1BtnToSave() {
   btn.textContent = 'Сохранить в кабинет';
   btn.classList.remove('secondary');
   btn.classList.add('primary');
-  btn.onclick = () => {
+  btn.onclick = async () => {
     const dreamEl = byId('dream');
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
@@ -86,7 +86,7 @@ function setStep1BtnToSave() {
       setStep1BtnToNext();
       return;
     }
-    currentDreamId = saveDreamToCabinetOnlyText(text);
+    currentDreamId = await saveDreamToCabinetOnlyText(text);
     gtag('event', 'save_dream', {
       event_category: 'dream',
       event_label: 'Сохранён сон',
@@ -860,30 +860,15 @@ async function blockInterpretation() {
   }
 }
 
-function renderCabinet() {
-  const info = document.getElementById('cabinetStorageInfo');
-  if (info) {
-    let used = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      const v = localStorage.getItem(k);
-      used += k.length + (v ? v.length : 0);
-    }
-    const SAFE_LS_LIMIT = 2 * 1024 * 1024;
-    const AVG_DREAM_SIZE = 1200;
-    const WAR_AND_PEACE_TOM_SIZE = 650000;
-    const dreamsLeft = Math.max(0, Math.ceil((SAFE_LS_LIMIT - used) / AVG_DREAM_SIZE));
-    const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
-    info.textContent = `Осталось записать ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
-  }
-
-  const list = loadCabinet();
+async function renderCabinet() {
   const wrap = document.getElementById('cabinetList');
   if (!wrap) return;
+  const list = await loadCabinet();
   if (!list.length) {
     wrap.innerHTML = '<div class="muted" style="margin:24px 0;">История пуста</div>';
     return;
   }
+  
   wrap.innerHTML = list.map((entry, idx) => {
     const date = new Date(entry.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const dreamPreview = escapeHTML((entry.dreamText || '').split(/\s+/).slice(0, 8).join(' ') + '...');
@@ -915,13 +900,13 @@ function renderCabinet() {
   });
 
   wrap.querySelectorAll('button[data-del]').forEach(btn => {
-    btn.onclick = function(e) {
-      e.stopPropagation();
-      if (confirm('Удалить запись?')) {
-        removeFromCabinet(+btn.dataset.del);
-        renderCabinet();
-      }
-    };
+    btn.onclick = async function(e) {
+  e.stopPropagation();
+  if (confirm('Удалить запись?')) {
+    await removeFromCabinet(+btn.dataset.del);
+    await renderCabinet();
+  }
+};
   });
 }
 
@@ -970,10 +955,9 @@ function showFinalDialog() {
   }
 }
 
-function showCabinetEntry(idx) {
+async function showCabinetEntry(idx) {
   isViewingFromCabinet = true;
-
-  const list = loadCabinet();
+  const list = await loadCabinet();
   const entry = list[idx];
   if (!entry) return;
   const cabinet = byId('cabinetModal');
@@ -1091,7 +1075,7 @@ async function finalInterpretation() {
   }
 }
 
-function saveCurrentSessionToCabinet() {
+async function saveCurrentSessionToCabinet() {
   const entry = {
     id: currentDreamId || (Date.now() + Math.floor(Math.random() * 10000)),
     date: Date.now(),
@@ -1099,16 +1083,14 @@ function saveCurrentSessionToCabinet() {
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
   };
-  const list = loadCabinet();
-  const idx = list.findIndex(e => e.id === entry.id);
-  if (idx !== -1) {
-    list[idx] = entry;
+  if (currentDreamId) {
+    await updateDreamInCabinet(currentDreamId, entry);
   } else {
-    list.unshift(entry);
+    currentDreamId = await saveDreamToCabinetOnlyText(state.dreamText);
+    entry.id = currentDreamId;
+    await updateDreamInCabinet(currentDreamId, entry);
   }
-  saveCabinet(list);
   showToastNotice('Сон сохранён в личный кабинет!');
-  currentDreamId = entry.id;
 }
 
 function exportFinalTXT(entry) {
@@ -1158,7 +1140,7 @@ onClick('closeFinalDialog', () => {
 });
 
 /* ====== Добавление блоков ====== */
-function addBlockFromSelection() {
+async function addBlockFromSelection() {
   const dv = byId('dreamView');
   if (!dv) return;
   const selected = Array.from(dv.querySelectorAll('.tile.selected'));
@@ -1195,7 +1177,7 @@ function addBlockFromSelection() {
 
   renderBlocksChips();
   resetSelectionColor();
-  syncCurrentDreamToCabinet();
+  await syncCurrentDreamToCabinet();
 }
 
 function refreshSelectedBlocks() {
@@ -1332,9 +1314,9 @@ function initHandlers() {
     if (b && !b.done && (!b.chat || b.chat.length === 0)) startOrContinue();
   });
 
-  onClick('menuSaveToCabinet', () => {
-    saveCurrentSessionToCabinet();
-  });
+  onClick('menuSaveToCabinet', async () => {
+  await saveCurrentSessionToCabinet();
+});
 
   onClick('backTo1Top', () => { startNewDream(); showStep(1); updateProgressIndicator(); });
   onClick('backTo2Top', () => { showStep(2); updateProgressIndicator(); });
@@ -1443,10 +1425,10 @@ onClick('closeCabinetBtn', () => {
   byId('cabinetModal').style.display = 'none';
   document.body.classList.remove('modal-open');
 });
-onClick('clearCabinetBtn', () => {
+onClick('clearCabinetBtn', async () => {
   if (confirm('Очистить всю историю?')) {
-    clearCabinet();
-    renderCabinet();
+    await clearCabinet();
+    await renderCabinet();
   }
 });
 
@@ -1478,59 +1460,91 @@ function styleDisplay(el, value) {
   if (el) el.style.display = value;
 }
 
-// ====== Кабинет: localStorage ======
-const CABINET_KEY = 'saviora_cabinet';
+// ====== Кабинет: Cloud API ======
 
-function loadCabinet() {
+// Получить все сны пользователя
+async function loadCabinet() {
+  if (!authToken) return [];
   try {
-    return JSON.parse(localStorage.getItem(CABINET_KEY)) || [];
-  } catch { return []; }
-}
-function saveCabinet(arr) {
-  localStorage.setItem(CABINET_KEY, JSON.stringify(arr));
-}
-function removeFromCabinet(idx) {
-  const arr = loadCabinet();
-  arr.splice(idx, 1);
-  saveCabinet(arr);
-  updateStorageIndicator();
-}
-function clearCabinet() {
-  localStorage.removeItem(CABINET_KEY);
-  updateStorageIndicator();
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/dreams', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    if (!res.ok) return [];
+    return await res.json(); // массив снов
+  } catch {
+    return [];
+  }
 }
 
-function saveDreamToCabinetOnlyText(dreamText) {
-  const list = loadCabinet();
-  const entry = {
-    id: Date.now() + Math.floor(Math.random() * 10000),
-    date: Date.now(),
-    dreamText,
-    blocks: [],
-    globalFinalInterpretation: null
-  };
-  list.unshift(entry);
-  saveCabinet(list);
-  updateStorageIndicator();
-  currentDreamId = entry.id;
-  return entry.id;
+// Сохранить новый сон (только текст)
+async function saveDreamToCabinetOnlyText(dreamText) {
+  if (!authToken) return null;
+  try {
+    const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/dreams', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: JSON.stringify({
+        text: dreamText,
+        title: '', // если нужно, можешь добавить поле title
+        blocks: [],
+        globalFinalInterpretation: null
+      })
+    });
+    if (!res.ok) return null;
+    const entry = await res.json();
+    currentDreamId = entry.id;
+    return entry.id;
+  } catch {
+    return null;
+  }
 }
 
-function updateDreamInCabinet(id, data) {
-  const list = loadCabinet();
-  const idx = list.findIndex(e => e.id === id);
-  if (idx === -1) return;
-  list[idx] = { ...list[idx], ...data };
-  saveCabinet(list);
+// Обновить существующий сон (по id)
+async function updateDreamInCabinet(id, data) {
+  if (!authToken || !id) return;
+  try {
+    await fetch(`https://deepseek-api-key.lexsnitko.workers.dev/dreams/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: JSON.stringify(data)
+    });
+  } catch {}
 }
 
-function syncCurrentDreamToCabinet() {
+// Синхронизировать текущий сон (обновить в облаке)
+async function syncCurrentDreamToCabinet() {
   if (!currentDreamId) return;
-  updateDreamInCabinet(currentDreamId, {
-    dreamText: state.dreamText,
+  await updateDreamInCabinet(currentDreamId, {
+    text: state.dreamText,
     blocks: state.blocks,
     globalFinalInterpretation: state.globalFinalInterpretation || null
   });
+}
+
+// Удалить сон по id
+async function removeFromCabinet(id) {
+  if (!authToken || !id) return;
+  try {
+    await fetch(`https://deepseek-api-key.lexsnitko.workers.dev/dreams/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    renderCabinet();
+  } catch {}
+}
+
+// Очистить весь кабинет (удалить все сны)
+async function clearCabinet() {
+  const dreams = await loadCabinet();
+  for (const dream of dreams) {
+    await removeFromCabinet(dream.id);
+  }renderCabinet();
 }
 
 function startNewDream() {
@@ -1544,48 +1558,6 @@ function startNewDream() {
   const dreamEl = byId('dream');
   if (dreamEl) dreamEl.value = '';
   setStep1BtnToSave();
-}
-
-// ====== Индикатор заполненности localStorage ======
-const SAFE_LS_LIMIT = 2 * 1024 * 1024;
-const WAR_AND_PEACE_TOM_SIZE = 650000;
-
-function getAvgDreamSize() {
-  const arr = loadCabinet();
-  if (!arr.length) return 1200;
-  const totalSize = arr.reduce((sum, entry) => sum + JSON.stringify(entry).length, 0);
-  return Math.ceil(totalSize / arr.length);
-}
-
-function getBarColor(percent) {
-  if (percent < 60) return '#22c55e';
-  if (percent < 90) return '#facc15';
-  return '#ef4444';
-}
-
-function updateStorageIndicator() {
-  let used = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    const v = localStorage.getItem(k);
-    used += k.length + (v ? v.length : 0);
-  }
-  const percent = Math.min(100, Math.round(used / SAFE_LS_LIMIT * 100));
-  const avgDreamSize = getAvgDreamSize();
-  const dreamsLeft = Math.max(0, Math.floor((SAFE_LS_LIMIT - used) / avgDreamSize));
-  const tomsLeft = Math.max(0, ((SAFE_LS_LIMIT - used) / WAR_AND_PEACE_TOM_SIZE));
-  const bar = document.getElementById('storageBar');
-  const text = document.getElementById('storageText');
-
-  if (bar) bar.style.width = percent + '%';
-  if (text) {
-    text.style.color = getBarColor(percent);
-    text.textContent = percent + '%';
-  }
-  const info = document.getElementById('cabinetStorageInfo');
-  if (info) {
-    info.textContent = `Осталось записать примерно ${dreamsLeft} снов = ${tomsLeft.toFixed(1)} тома «Войны и мира»`;
-  }
 }
 
 /* ====== Boot ====== */
@@ -1614,7 +1586,6 @@ window.addEventListener('DOMContentLoaded', () => {
   showStep(1);
   setStep1BtnToSave();
   updateProgressIndicator();
-  updateStorageIndicator();
 
   const btn = document.getElementById('openCabinetBtn');
   const barContainer = document.getElementById('storageBarContainer');
