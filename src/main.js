@@ -87,10 +87,7 @@ function setStep1BtnToSave() {
     const dreamEl = byId('dream');
     const text = dreamEl ? dreamEl.value.trim() : '';
     if (!text) { alert('Введите текст сна!'); return; }
-    if (currentDreamId) {
-      setStep1BtnToNext();
-      return;
-    }
+    // ВСЕГДА СОЗДАЁМ НОВЫЙ СОН!
     currentDreamId = await saveDreamToCabinetOnlyText(text);
     gtag('event', 'save_dream', {
       event_category: 'dream',
