@@ -6,8 +6,7 @@ let isViewingFromCabinet = false;
 
 let authToken = localStorage.getItem('saviora_jwt') || '';
 
-currentDreamId = null;
-localStorage.removeItem('currentDreamId');
+let currentDreamId = null;
 
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
