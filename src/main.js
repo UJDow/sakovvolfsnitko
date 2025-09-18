@@ -26,6 +26,10 @@ const state = {
 let currentSelectionColor = null;
 let currentDreamId = null; // id текущего сна в кабинете, с которым сейчас работаем
 
+function getToken() {
+  return localStorage.getItem('saviora_jwt') || '';
+}
+
 function showScreen(screen) {
   byId('trialStartScreen').style.display = 'none';
   byId('authCard').style.display = 'none';
@@ -65,7 +69,6 @@ function raf(fn){ return new Promise(r=>requestAnimationFrame(()=>{ fn(); r(); }
 
 function logout() {
   localStorage.removeItem('saviora_jwt');
-  authToken = null;
   showScreen('trial');
   showToastNotice('Вы вышли из аккаунта');
   const cabinet = document.getElementById('cabinetModal');
@@ -618,7 +621,7 @@ function importJSON(file) {
 async function loadDreamsFromAPI() {
   try {
     const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
+      headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     const data = await res.json();
     // data.dreams — массив снов пользователя
@@ -1274,8 +1277,7 @@ byId('loginForm').onsubmit = async (e) => {
     });
     const data = await res.json();
     if (data.token) {
-      authToken = data.token;
-      localStorage.setItem('saviora_jwt', authToken);
+      localStorage.setItem('saviora_jwt', data.token);
       byId('loginMsg').style.color = 'var(--success)';
       byId('loginMsg').textContent = 'Вход выполнен!';
       setTimeout(() => {
@@ -1465,10 +1467,10 @@ function styleDisplay(el, value) {
 
 // Получить все сны пользователя
 async function loadCabinet() {
-  if (!authToken) return [];
+  if (!getToken()) return [];
   try {
     const res = await fetch('https://deepseek-api-key.lexsnitko.workers.dev/dreams', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
+      headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     if (!res.ok) return [];
     return await res.json(); // массив снов
@@ -1479,7 +1481,7 @@ async function loadCabinet() {
 
 // Сохранить новый сон (только текст)
 async function saveDreamToCabinetOnlyText(text) {
-  if (!authToken) {
+  if (!getToken()) {
     console.log('Нет токена!');
     return null;
   }
@@ -1488,7 +1490,7 @@ async function saveDreamToCabinetOnlyText(text) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': 'Bearer ' + getToken()
       },
       body: JSON.stringify({ dreamText: text })
     });
@@ -1510,13 +1512,13 @@ async function saveDreamToCabinetOnlyText(text) {
 
 // Обновить существующий сон (по id)
 async function updateDreamInCabinet(id, data) {
-  if (!authToken || !id) return;
+  if (!getToken() || !id) return;
   try {
     await fetch(`https://deepseek-api-key.lexsnitko.workers.dev/dreams/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': 'Bearer ' + getToken()
       },
       body: JSON.stringify({
         dreamText: data.dreamText,
@@ -1541,11 +1543,11 @@ async function syncCurrentDreamToCabinet() {
 
 // Удалить сон по id
 async function removeFromCabinet(id) {
-  if (!authToken || !id) return;
+  if (!getToken() || !id) return;
   try {
     await fetch(`https://deepseek-api-key.lexsnitko.workers.dev/dreams/${id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + authToken }
+      headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     renderCabinet();
   } catch {}
@@ -1585,14 +1587,13 @@ window.addEventListener('DOMContentLoaded', () => {
     byId('tabLogin').click();
   });
 
-  authToken = localStorage.getItem('saviora_jwt');
-  if (!authToken) {
-    showScreen('trial');
-  } else {
-    showScreen('main');
-    loadDreamsFromAPI();
-    fetchAndShowTrialWarning(); // предупреждение о триале
-  }
+  if (!getToken()) {
+  showScreen('trial');
+} else {
+  showScreen('main');
+  loadDreamsFromAPI();
+  fetchAndShowTrialWarning(); // предупреждение о триале
+}
 
   // --- остальной твой код ---
   showStep(1);
