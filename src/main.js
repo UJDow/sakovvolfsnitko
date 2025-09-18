@@ -1571,7 +1571,6 @@ async function clearCabinet() {
 
 function startNewDream() {
   currentDreamId = null;
-  localStorage.removeItem('currentDreamId');
   state.dreamText = '';
   state.blocks = [];
   state.currentBlockId = null;
