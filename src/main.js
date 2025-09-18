@@ -1606,7 +1606,6 @@ window.addEventListener('DOMContentLoaded', () => {
   startNewDream();
   // --- остальной твой код ---
   showStep(1);
-  setStep1BtnToSave();
   updateProgressIndicator();
 
   const btn = document.getElementById('openCabinetBtn');
