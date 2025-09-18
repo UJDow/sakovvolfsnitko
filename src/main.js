@@ -6,6 +6,8 @@ let isViewingFromCabinet = false;
 
 let authToken = localStorage.getItem('saviora_jwt') || '';
 
+let currentDreamId = localStorage.getItem('currentDreamId') || null;
+
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
 
@@ -24,7 +26,6 @@ const state = {
 };
 
 let currentSelectionColor = null;
-let currentDreamId = null; // id текущего сна в кабинете, с которым сейчас работаем
 
 function getToken() {
   return localStorage.getItem('saviora_jwt') || '';
@@ -1001,6 +1002,7 @@ async function showCabinetEntry(idx) {
     saveBtn.onclick = function() {
       // --- Вот тут state и currentDreamId заполняются ---
       currentDreamId = entry.id;
+      localStorage.setItem('currentDreamId', currentDreamId);
       state.dreamText = entry.dreamText || '';
       state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
         ...b,
@@ -1509,6 +1511,8 @@ async function saveDreamToCabinetOnlyText(text) {
       console.log('Нет id в ответе:', dream);
       return null;
     }
+    currentDreamId = dream.id;
+localStorage.setItem('currentDreamId', currentDreamId);
     return dream.id;
   } catch (e) {
     console.log('Ошибка fetch:', e);
@@ -1569,6 +1573,7 @@ async function clearCabinet() {
 
 function startNewDream() {
   currentDreamId = null;
+  localStorage.removeItem('currentDreamId');
   state.dreamText = '';
   state.blocks = [];
   state.currentBlockId = null;
