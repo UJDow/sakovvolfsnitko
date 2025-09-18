@@ -1511,7 +1511,6 @@ async function saveDreamToCabinetOnlyText(text) {
       return null;
     }
     currentDreamId = dream.id;
-localStorage.setItem('currentDreamId', currentDreamId);
     return dream.id;
   } catch (e) {
     console.log('Ошибка fetch:', e);
