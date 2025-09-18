@@ -1002,7 +1002,6 @@ async function showCabinetEntry(idx) {
     saveBtn.onclick = function() {
       // --- Вот тут state и currentDreamId заполняются ---
       currentDreamId = entry.id;
-      localStorage.setItem('currentDreamId', currentDreamId);
       state.dreamText = entry.dreamText || '';
       state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
         ...b,
