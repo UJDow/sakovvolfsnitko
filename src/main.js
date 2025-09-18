@@ -1602,7 +1602,8 @@ window.addEventListener('DOMContentLoaded', () => {
   loadDreamsFromAPI();
   fetchAndShowTrialWarning(); // предупреждение о триале
 }
-
+// --- СБРОС СОСТОЯНИЯ: всегда начинаем с чистого сна ---
+  startNewDream();
   // --- остальной твой код ---
   showStep(1);
   setStep1BtnToSave();
