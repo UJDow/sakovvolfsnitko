@@ -982,22 +982,24 @@ async function showCabinetEntry(idx) {
   ).join('');
   dialog.style.display = 'block';
 
-  // Меняем поведение и текст кнопки экспорта
+  // Кнопка экспорта
   const exportBtn = byId('exportFinalDialogBtn');
   if (exportBtn) {
     exportBtn.textContent = '⬇️ Экспорт';
     exportBtn.onclick = function() {
-      exportFinalTXT(entry); // Экспортируем именно этот сон
+      exportFinalTXT(entry);
     };
     exportBtn.style.display = '';
   }
 
+  // Кнопка "Загрузить для толкования"
   const saveBtn = byId('saveToCabinetBtn');
   if (saveBtn) {
     saveBtn.textContent = 'Загрузить Сновидение для толкования';
     saveBtn.classList.remove('secondary');
     saveBtn.classList.add('primary');
     saveBtn.onclick = function() {
+      // --- Вот тут state и currentDreamId заполняются ---
       currentDreamId = entry.id;
       state.dreamText = entry.dreamText || '';
       state.blocks = Array.isArray(entry.blocks) ? entry.blocks.map(b => ({
@@ -1011,12 +1013,16 @@ async function showCabinetEntry(idx) {
       state.nextBlockId = state.blocks.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
       state.currentBlockId = null;
       state.userSelectedBlock = false;
+
+      // --- UI обновляется ---
       const dreamEl = byId('dream');
       if (dreamEl) dreamEl.value = state.dreamText;
       showStep(2);
       renderBlocksChips();
       resetSelectionColor();
       updateProgressIndicator();
+
+      // Закрываем диалог
       const dialog = byId('finalDialog');
       if (dialog) dialog.style.display = 'none';
       isViewingFromCabinet = false;
@@ -1572,6 +1578,8 @@ function startNewDream() {
   const dreamEl = byId('dream');
   if (dreamEl) dreamEl.value = '';
   setStep1BtnToSave();
+  renderBlocksChips();
+  updateProgressIndicator();
 }
 
 /* ====== Boot ====== */
