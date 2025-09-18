@@ -1602,14 +1602,20 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   if (!getToken()) {
-  showScreen('trial');
-} else {
-  showScreen('main');
-  loadDreamsFromAPI();
-  fetchAndShowTrialWarning(); // предупреждение о триале
-}
-// --- СБРОС СОСТОЯНИЯ: всегда начинаем с чистого сна ---
-  startNewDream();
+    showScreen('trial');
+  } else {
+    showScreen('main');
+    loadDreamsFromAPI();
+    fetchAndShowTrialWarning(); // предупреждение о триале
+  }
+
+  // --- ВОССТАНОВЛЕНИЕ ТЕКУЩЕГО СНА ---
+  if (!currentDreamId) {
+    // Если нет текущего сна — начинаем новый
+    startNewDream();
+  }
+  // Если есть currentDreamId — ничего не сбрасываем, продолжаем работу с этим сном
+
   // --- остальной твой код ---
   showStep(1);
   updateProgressIndicator();
@@ -1652,6 +1658,7 @@ window.addEventListener('DOMContentLoaded', () => {
       authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
     }
   }
+});
 
   initHandlers();
 
