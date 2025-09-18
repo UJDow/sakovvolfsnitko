@@ -7,6 +7,8 @@ let isViewingFromCabinet = false;
 let authToken = localStorage.getItem('saviora_jwt') || '';
 
 let currentDreamId = localStorage.getItem('currentDreamId');
+if (currentDreamId === 'null' || !currentDreamId) currentDreamId = null;
+
 /* ====== Палитра блоков ====== */
 const BLOCK_COLORS = ['#ffd966', '#a4c2f4', '#b6d7a8', '#f4cccc', '#d9d2e9'];
 
@@ -1600,20 +1602,14 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   if (!getToken()) {
-    showScreen('trial');
-  } else {
-    showScreen('main');
-    loadDreamsFromAPI();
-    fetchAndShowTrialWarning(); // предупреждение о триале
-  }
-
-  // --- ВОССТАНОВЛЕНИЕ ТЕКУЩЕГО СНА ---
-  if (!currentDreamId) {
-    // Если нет текущего сна — начинаем новый
-    startNewDream();
-  }
-  // Если есть currentDreamId — ничего не сбрасываем, продолжаем работу с этим сном
-
+  showScreen('trial');
+} else {
+  showScreen('main');
+  loadDreamsFromAPI();
+  fetchAndShowTrialWarning(); // предупреждение о триале
+}
+// --- СБРОС СОСТОЯНИЯ: всегда начинаем с чистого сна ---
+  startNewDream();
   // --- остальной твой код ---
   showStep(1);
   updateProgressIndicator();
@@ -1656,7 +1652,6 @@ window.addEventListener('DOMContentLoaded', () => {
       authPass.addEventListener('keydown', e => { if (e.key === 'Enter' && authBtn) authBtn.click(); });
     }
   }
-});
 
   initHandlers();
 
