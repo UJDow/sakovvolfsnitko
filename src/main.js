@@ -493,6 +493,7 @@ const ui = {
   updateBlocks() {
   const blocksDiv = document.getElementById('blocks');
   blocksDiv.innerHTML = '';
+
   state.blocks.forEach(b => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
