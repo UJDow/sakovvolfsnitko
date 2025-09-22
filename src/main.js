@@ -802,7 +802,7 @@ function bindEvents() {
   };
 };
 
- // --- ШАГ 2 ---
+// --- ШАГ 2 ---
 document.getElementById('addBlock').onclick = () => {
   blocks.addFromTiles();
 };
@@ -816,6 +816,16 @@ document.getElementById('toStep3').onclick = () => {
 };
 document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
 ui.renderDreamTiles();
+
+// refreshInline — прямой обработчик
+const refreshBtn = document.getElementById('refreshInline');
+if (refreshBtn) {
+  refreshBtn.onclick = () => {
+    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
+    ui.renderDreamTiles();
+    utils.showToast('Блоки обновлены', 'success');
+  };
+}
 
   // --- ШАГ 3 ---
   document.getElementById('backTo2Top').onclick = () => {
@@ -930,12 +940,16 @@ ui.renderDreamTiles();
   };
 }
 
-document.body.addEventListener('click', function(e) {
-  if (e.target.closest('#refreshInline')) {
-    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
-    ui.renderDreamTiles();
-    utils.showToast('Блоки обновлены', 'success');
+// === ИНИЦИАЛИЗАЦИЯ === //
+async function init() {
+  bindEvents();
+  if (await auth.tryAutoLogin()) {
+    await dreams.load();
+    ui.showMain();
+  } else {
+    ui.showAuth();
   }
-});
+}
+
 
 init();
