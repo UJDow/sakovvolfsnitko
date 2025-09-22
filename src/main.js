@@ -285,11 +285,20 @@ const blocks = {
     return true;
   },
   addWhole() {
-    const text = document.getElementById('dream').value.trim();
-    if (!text) return;
-    state.blocks = [];
-    blocks.add(0, text.length, text);
-  },
+  const el = document.getElementById('dream');
+  if (!el) return;
+  // Берём текст как есть, без trim
+  const text = el.value;
+  if (!text) return;
+
+  // На всякий случай очистим существующие блоки перед созданием “весь текст”
+  state.blocks = [];
+
+  // Один блок от начала до полной длины
+  const start = 0;
+  const end = text.length;
+  blocks.add(start, end, text);
+},
   addFromTiles() {
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
@@ -493,16 +502,22 @@ const ui = {
 
   // Обновить dreamView
   const dreamView = document.getElementById('dreamView');
-  const text = document.getElementById('dream').value;
+  const text = document.getElementById('dream').value; // берём как есть, без trim
   dreamView.innerHTML = '';
   let last = 0;
-  state.blocks.sort((a, b) => a.start - b.start);
-  state.blocks.forEach(b => {
+
+  // не мутируем исходный массив при каждом рендере
+  const sorted = [...state.blocks].sort((a, b) => a.start - b.start);
+
+  sorted.forEach(b => {
+    // обычный текст до блока
     if (b.start > last) {
       const span = document.createElement('span');
       span.textContent = text.slice(last, b.start);
       dreamView.appendChild(span);
     }
+
+    // сам блок
     const blockSpan = document.createElement('span');
     blockSpan.className = 'chip active';
     blockSpan.style.background = BLOCK_COLORS[b.colorIndex];
@@ -532,8 +547,16 @@ const ui = {
       };
       dreamView.appendChild(addBtn);
     }
+
     last = b.end;
   });
+
+  // ДОБАВЛЯЕМ остаток текста после последнего блока, если он есть
+  if (last < text.length) {
+    const span = document.createElement('span');
+    span.textContent = text.slice(last);
+    dreamView.appendChild(span);
+  }
 },
   renderDreamTiles() {
   const dreamView = document.getElementById('dreamView');
