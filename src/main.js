@@ -483,13 +483,10 @@ updateCabinetList() {
       <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
     `;
     // Клик по плитке (кроме кнопки "Удалить")
-    tile.onclick = e => {
-      if (e.target.closest('button')) return;
-      dreams.loadToEditor(d);
-      ui.setStep(2);
-      document.getElementById('dreamView').textContent = d.dreamText || '';
-      ui.closeCabinetModal();
-    };
+tile.onclick = e => {
+  if (e.target.closest('button')) return;
+  ui.showDreamPreviewModal(d);
+};
     // Кнопка "Удалить"
     tile.querySelector('[data-del]').onclick = async e => {
       e.stopPropagation();
@@ -533,6 +530,30 @@ updateCabinetList() {
   closeCabinetModal() {
     document.getElementById('cabinetModal').style.display = 'none';
     document.body.classList.remove('modal-open');
+  },
+  // --- МОДАЛКА ПРОСМОТРА СНА ---
+  showDreamPreviewModal(dream) {
+    const modal = document.getElementById('dreamPreviewModal');
+    const textDiv = document.getElementById('dreamPreviewText');
+    const interpDiv = document.getElementById('dreamPreviewInterpret');
+    textDiv.textContent = dream.dreamText || '';
+    // Итоговое толкование
+    if (dream.globalFinalInterpretation) {
+      interpDiv.style.display = 'block';
+      interpDiv.textContent = dream.globalFinalInterpretation;
+    } else {
+      interpDiv.style.display = 'none';
+      interpDiv.textContent = '';
+    }
+    // Сохраняем текущий просмотренный сон для кнопок
+    state._previewedDream = dream;
+    modal.style.display = 'block';
+    document.body.classList.add('modal-open');
+  },
+  closeDreamPreviewModal() {
+    document.getElementById('dreamPreviewModal').style.display = 'none';
+    document.body.classList.remove('modal-open');
+    state._previewedDream = null;
   }
 };
 
@@ -738,6 +759,35 @@ function bindEvents() {
     reader.onload = ev => session.import(ev.target.result);
     reader.readAsText(file);
   });
+  // --- МОДАЛКА ПРОСМОТРА СНА ---
+  document.getElementById('closeDreamPreviewBtn').onclick = () => ui.closeDreamPreviewModal();
+
+  document.getElementById('loadDreamToEditorBtn').onclick = () => {
+    const dream = state._previewedDream;
+    if (!dream) return;
+    dreams.loadToEditor(dream);
+    ui.setStep(2);
+    document.getElementById('dreamView').textContent = dream.dreamText || '';
+    ui.closeDreamPreviewModal();
+    ui.closeCabinetModal();
+  };
+
+  document.getElementById('downloadDreamBtn').onclick = () => {
+    const dream = state._previewedDream;
+    if (!dream) return;
+    // Формируем txt
+    let content = `Сон: ${dream.dreamText || ''}\n\n`;
+    if (dream.globalFinalInterpretation) {
+      content += `Итоговое толкование: ${dream.globalFinalInterpretation}\n`;
+    }
+    const filename = 'saviora_dream.txt';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
 }
 
 ///////////////////////
