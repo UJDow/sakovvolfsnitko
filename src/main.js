@@ -483,10 +483,10 @@ updateCabinetList() {
       <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
     `;
     // Клик по плитке (кроме кнопки "Удалить")
-tile.onclick = e => {
-  if (e.target.closest('button')) return;
-  ui.showDreamPreviewModal(d);
-};
+    tile.onclick = e => {
+      if (e.target.closest('button')) return;
+      ui.showDreamPreviewModal(d);
+    };
     // Кнопка "Удалить"
     tile.querySelector('[data-del]').onclick = async e => {
       e.stopPropagation();
@@ -538,16 +538,13 @@ tile.onclick = e => {
   const interpDiv = document.getElementById('dreamPreviewInterpret');
   const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
   textDiv.textContent = dream.dreamText || '';
-  // Итоговое толкование
   interpWrap.style.display = 'block';
-  interpDiv.textContent = dream.globalFinalInterpretation
-    ? dream.globalFinalInterpretation
-    : 'нет';
-    // Сохраняем текущий просмотренный сон для кнопок
-    state._previewedDream = dream;
-    modal.style.display = 'block';
-    document.body.classList.add('modal-open');
-  },
+  interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
+  interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
+  state._previewedDream = dream;
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
+},
   closeDreamPreviewModal() {
     document.getElementById('dreamPreviewModal').style.display = 'none';
     document.body.classList.remove('modal-open');
