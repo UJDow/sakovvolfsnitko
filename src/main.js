@@ -802,25 +802,27 @@ function bindEvents() {
   };
 };
 
-  // --- ШАГ 2 ---
-  document.getElementById('addBlock').onclick = () => {
+ // --- ШАГ 2 ---
+document.getElementById('addBlock').onclick = () => {
   blocks.addFromTiles();
 };
-  document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
-  document.getElementById('refreshInline').onclick = () => {
-    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
-    ui.renderDreamTiles();
-    utils.showToast('Блоки обновлены', 'success');
-  };
-  document.getElementById('toStep3').onclick = () => {
-    if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
-    state.currentBlock = state.blocks[0];
-    ui.setStep(3);
-    ui.updateChat();
-    ui.updateProgressMoon();
-  };
-  document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
+document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
+document.getElementById('toStep3').onclick = () => {
+  if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
+  state.currentBlock = state.blocks[0];
+  ui.setStep(3);
+  ui.updateChat();
+  ui.updateProgressMoon();
+};
+document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
+ui.renderDreamTiles();
+
+// --- РЕФРЕШ БЛОКОВ ---
+document.getElementById('refreshInline').onclick = () => {
+  document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
   ui.renderDreamTiles();
+  utils.showToast('Блоки обновлены', 'success');
+};
 
   // --- ШАГ 3 ---
   document.getElementById('backTo2Top').onclick = () => {
