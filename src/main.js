@@ -533,18 +533,16 @@ tile.onclick = e => {
   },
   // --- МОДАЛКА ПРОСМОТРА СНА ---
   showDreamPreviewModal(dream) {
-    const modal = document.getElementById('dreamPreviewModal');
-    const textDiv = document.getElementById('dreamPreviewText');
-    const interpDiv = document.getElementById('dreamPreviewInterpret');
-    textDiv.textContent = dream.dreamText || '';
-    // Итоговое толкование
-    if (dream.globalFinalInterpretation) {
-      interpDiv.style.display = 'block';
-      interpDiv.textContent = dream.globalFinalInterpretation;
-    } else {
-      interpDiv.style.display = 'none';
-      interpDiv.textContent = '';
-    }
+  const modal = document.getElementById('dreamPreviewModal');
+  const textDiv = document.getElementById('dreamPreviewText');
+  const interpDiv = document.getElementById('dreamPreviewInterpret');
+  const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
+  textDiv.textContent = dream.dreamText || '';
+  // Итоговое толкование
+  interpWrap.style.display = 'block';
+  interpDiv.textContent = dream.globalFinalInterpretation
+    ? dream.globalFinalInterpretation
+    : 'нет';
     // Сохраняем текущий просмотренный сон для кнопок
     state._previewedDream = dream;
     modal.style.display = 'block';
