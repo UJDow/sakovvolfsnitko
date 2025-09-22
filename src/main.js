@@ -281,37 +281,35 @@ const blocks = {
     blocks.add(0, text.length, text);
   },
   addFromTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
-
-  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (!selected.length) {
+  // Берём выбранные позиции из state.selectedTiles (а не из DOM)
+  const startsArr = Array.from(state.selectedTiles);
+  if (!startsArr.length) {
     utils.showToast('Выделите плиточки для блока', 'error');
     return;
   }
 
-  // Старт — минимальный start среди выбранных слов
-  let start = Infinity;
-  // Конец считаем как data-end у слова с максимальным start
-  let lastStart = -Infinity;
-  let end = -1;
+  const text = document.getElementById('dream').value || '';
 
-  for (const s of selected) {
-    const sStart = parseInt(s.dataset.start, 10);
-    const sEnd = parseInt(s.dataset.end, 10);
-    if (Number.isFinite(sStart) && sStart < start) start = sStart;
-    if (Number.isFinite(sStart) && sStart > lastStart) {
-      lastStart = sStart;
-      end = sEnd; // именно конец последнего слова
+  // Построим карту start->end для слов
+  const tokens = text.match(/\S+|\s+/g) || [];
+  let pos = 0;
+  const wordEnds = new Map(); // start -> end
+  tokens.forEach(tok => {
+    if (/\S/.test(tok)) {
+      wordEnds.set(pos, pos + tok.length);
     }
-  }
+    pos += tok.length;
+  });
 
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+  const start = Math.min(...startsArr);
+  const lastStart = Math.max(...startsArr);
+  const end = wordEnds.get(lastStart);
+  if (end == null || end <= start) {
     utils.showToast('Не удалось определить диапазон выделения', 'error');
     return;
   }
 
-  // Проверка пересечений
+  // Проверка пересечений с существующими блоками
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
@@ -319,8 +317,7 @@ const blocks = {
     }
   }
 
-  const fullText = document.getElementById('dream').value;
-  const fragment = fullText.slice(start, end);
+  const fragment = text.slice(start, end);
   if (!fragment.trim()) {
     utils.showToast('Пустой фрагмент — выберите слова', 'error');
     return;
@@ -328,8 +325,8 @@ const blocks = {
 
   blocks.add(start, end, fragment);
 
-  // Снять визуальное выделение
-  selected.forEach(s => s.classList.remove('selected'));
+  // Очистить выбранные плитки и перерисовать
+  state.selectedTiles.clear();
   ui.renderDreamTiles();
   utils.showToast('Блок добавлен', 'success');
 },
