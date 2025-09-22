@@ -492,9 +492,6 @@ if (!Array.isArray(state.selectedTiles)) state.selectedTiles = [];
     }
   });
 
-  // Цвет для будущего блока (следующий по кругу)
-  const nextColor = BLOCK_COLORS[state.blocks.length % BLOCK_COLORS.length];
-
  const tokens = text.match(/\S+|\s+/g) || [];
 let pos = 0;
 tokens.forEach(token => {
