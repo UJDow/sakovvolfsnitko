@@ -561,17 +561,35 @@ const ui = {
   renderDreamTiles() {
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
-  const text = document.getElementById('dream').value || '';
+
+  const textEl = document.getElementById('dream');
+  const text = (textEl && textEl.value) || '';
   dreamView.innerHTML = '';
   if (!text) return;
 
+  // FIX: если есть блок, который покрывает весь текст, рисуем одним цельным блоком и выходим
+  const fullBlock = state.blocks.find(b => b.start === 0 && b.end === text.length);
+  if (fullBlock) {
+    const span = document.createElement('span');
+    span.className = 'chip active';
+    span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
+    span.style.color = '#fff';
+    span.onclick = () => blocks.select(fullBlock.id);
+    span.textContent = text; // весь текст целиком
+    dreamView.appendChild(span);
+
+    // опционально: обновим состояние кнопки "Весь текст", если есть такая функция
+    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+    return;
+  }
+
   let pos = 0;
   // Сортируем блоки по start
-  const sortedBlocks = [...state.blocks].sort((a, b) => a.start - b.start);
+  const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
 
   while (pos < text.length) {
     // Проверяем, начинается ли тут блок
-    const block = sortedBlocks.find(b => b.start === pos);
+    const block = sortedBlocksArr.find(b => b.start === pos);
     if (block) {
       // Один span на весь блок
       const span = document.createElement('span');
@@ -584,11 +602,14 @@ const ui = {
       pos = block.end;
     } else {
       // Обычный текст (не в блоке)
-      let nextBlockStart = Math.min(...sortedBlocks.map(b => b.start).filter(s => s > pos).concat([text.length]));
+      const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
+      const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
+
       // Разбиваем на слова и пробелы, чтобы плитки для выделения работали как раньше
       const chunk = text.slice(pos, nextBlockStart);
       const tokens = chunk.match(/\S+|\s+/g) || [];
       let localPos = pos;
+
       tokens.forEach(token => {
         const isWord = /\S/.test(token);
         if (isWord) {
@@ -600,7 +621,7 @@ const ui = {
           span.onclick = function(e) {
             e.preventDefault();
             span.classList.toggle('selected');
-            // Подсвечиваем выделенные мягким цветом будущего блока
+            // Подсветка выделенных плиток мягким цветом будущего блока
             const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
             const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
             document.querySelectorAll('.tile.selected').forEach(sel => {
@@ -611,6 +632,9 @@ const ui = {
               sel.style.background = '';
               sel.style.color = '';
             });
+
+            // опционально: обновляем доступность кнопки "Весь текст"
+            if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
           };
           dreamView.appendChild(span);
         } else {
@@ -629,6 +653,9 @@ const ui = {
     sel.style.background = nextColor;
     sel.style.color = '#fff';
   });
+
+  // опционально: синхронизируем состояние кнопки "Весь текст"
+  if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
 },
   updateChat() {
     const chatDiv = document.getElementById('chat');
