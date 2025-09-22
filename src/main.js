@@ -492,88 +492,51 @@ if (!Array.isArray(state.selectedTiles)) state.selectedTiles = [];
     }
   });
 
-  // Если есть выделенные плитки — определим их диапазон
-  let selectionStart = null, selectionEnd = null;
-  const selectedTiles = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (selectedTiles.length) {
-    const starts = selectedTiles.map(s => parseInt(s.dataset.start, 10));
-    const ends = selectedTiles.map(s => parseInt(s.dataset.end, 10));
-    selectionStart = Math.min(...starts);
-    selectionEnd = Math.max(...ends);
-  }
-
   // Цвет для будущего блока (следующий по кругу)
   const nextColor = BLOCK_COLORS[state.blocks.length % BLOCK_COLORS.length];
 
-  // Разбиваем на токены (слова и пробелы)
-  const tokens = text.match(/\S+|\s+/g) || [];
-  let pos = 0;
-  tokens.forEach(token => {
-    const isWord = /\S/.test(token);
-    if (isWord) {
-      const span = document.createElement('span');
-      span.textContent = token;
-      span.dataset.start = String(pos);
-      span.dataset.end = String(pos + token.length);
+ const tokens = text.match(/\S+|\s+/g) || [];
+let pos = 0;
+tokens.forEach(token => {
+  const isWord = /\S/.test(token);
+  if (isWord) {
+    const span = document.createElement('span');
+    span.textContent = token;
+    span.dataset.start = String(pos);
+    span.dataset.end = String(pos + token.length);
 
-      // Если это часть уже добавленного блока
-      if (blockColors[pos]) {
-  span.className = 'tile block-tile';
-  span.style.background = blockColors[pos];
-  span.style.color = getBlockTextColor(blockColors[pos]);
-  span.style.border = 'none';
-  span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
-    ? '0 1px 2px rgba(0,0,0,0.18)' : '';
-  span.onclick = () => {}; // Не кликается
-}
-      // Если это выделение для нового блока
-      else if (
-  selectionStart !== null &&
-  pos >= selectionStart && pos + token.length <= selectionEnd + 1
-) {
-  span.className = 'tile selected';
-  // Первое и последнее слово выделения — ярко, остальные — чуть светлее
-  if (pos === selectionStart || pos + token.length - 1 === selectionEnd) {
-    span.style.background = nextColor;
-    span.style.color = getBlockTextColor(nextColor);
-    span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
-      ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+    // Если это часть уже добавленного блока
+    if (blockColors[pos]) {
+      span.className = 'tile block-tile';
+      span.style.background = blockColors[pos];
+      span.style.color = getBlockTextColor(blockColors[pos]);
+      span.style.border = 'none';
+      span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
+        ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+      span.onclick = () => {}; // Не кликается
+    }
+    // Обычная плитка (можно выделять)
+    else {
+      span.className = 'tile';
+      if (state.selectedTiles.includes(pos)) {
+        span.classList.add('selected');
+      }
+      span.onclick = function(e) {
+        e.preventDefault();
+        if (state.selectedTiles.includes(pos)) {
+          state.selectedTiles = state.selectedTiles.filter(i => i !== pos);
+        } else {
+          state.selectedTiles.push(pos);
+        }
+        ui.renderDreamTiles();
+      };
+    }
+    dreamView.appendChild(span);
   } else {
-    span.style.background = nextColor + "22"; // прозрачнее
-    span.style.color = getBlockTextColor(nextColor);
-    span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
-      ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+    dreamView.appendChild(document.createTextNode(token));
   }
-  span.onclick = function(e) {
-    e.preventDefault();
-    span.classList.toggle('selected');
-    ui.renderDreamTiles();
-  };
-}
-      // Обычная плитка
-      else {
-  span.className = 'tile';
-  if (state.selectedTiles.includes(pos)) {
-    span.classList.add('selected');
-  }
-  span.onclick = function(e) {
-    e.preventDefault();
-    // Добавить или убрать индекс из state.selectedTiles
-    if (state.selectedTiles.includes(pos)) {
-      state.selectedTiles = state.selectedTiles.filter(i => i !== pos);
-    } else {
-      state.selectedTiles.push(pos);
-    }
-    ui.renderDreamTiles();
-  };
-}
-      dreamView.appendChild(span);
-    } else {
-      dreamView.appendChild(document.createTextNode(token));
-    }
-    pos += token.length;
-  });
-},
+  pos += token.length;
+});
   updateChat() {
     const chatDiv = document.getElementById('chat');
     chatDiv.innerHTML = '';
