@@ -849,7 +849,20 @@ function bindEvents() {
 document.getElementById('addBlock').onclick = () => {
   blocks.addFromTiles();
 };
-document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
+document.getElementById('addWholeBlock').onclick = () => {
+  // 1) Запрет, если уже есть хотя бы один блок
+  if (state.blocks.length > 0) {
+    utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+    return;
+  }
+  // 2) Дополнительно запретим, если сейчас выделены плитки (начато выделение)
+  const dreamView = document.getElementById('dreamView');
+  if (dreamView && dreamView.querySelector('.tile.selected')) {
+    utils.showToast('Сначала снимите выделение плиток', 'error');
+    return;
+  }
+  blocks.addWhole();
+};
 document.getElementById('toStep3').onclick = () => {
   if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
   state.currentBlock = state.blocks[0];
