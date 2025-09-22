@@ -16,6 +16,7 @@ const state = {
   trialDaysLeft: null,
   globalFinalInterpretation: null,
   importSession: null,
+  selectedTiles: new Set(),
 };
 
 const BLOCK_COLORS = [
@@ -30,6 +31,7 @@ const BLOCK_COLORS = [
   "#43E97B", // салатовый
   "#FF5E62"  // розовый
 ];
+
 
 ///////////////////////
 // === УТИЛИТЫ === //
@@ -279,17 +281,13 @@ const blocks = {
     blocks.add(0, text.length, text);
   },
   addFromTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
-  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (!selected.length) {
+  const starts = Array.from(state.selectedTiles);
+  if (!starts.length) {
     utils.showToast('Выделите плиточки для блока', 'error');
     return;
   }
-  const starts = selected.map(s => parseInt(s.dataset.start, 10));
-  const ends = selected.map(s => parseInt(s.dataset.end, 10));
   const start = Math.min(...starts);
-  const end = Math.max(...ends);
+  const end = Math.max(...starts) + 1;
 
   // Проверка на пересечение диапазонов
   for (const b of state.blocks) {
@@ -301,6 +299,12 @@ const blocks = {
 
   const text = document.getElementById('dream').value.slice(start, end);
   blocks.add(start, end, text);
+
+  // --- Очищаем выделение и обновляем плитки ---
+  state.selectedTiles.clear();
+  ui.renderDreamTiles();
+  utils.showToast('Блок добавлен', 'success');
+}
 
   // Снять выделение
   selected.forEach(s => s.classList.remove('selected'));
@@ -529,13 +533,22 @@ const ui = {
       }
       // Обычная плитка
       else {
-        span.className = 'tile';
-        span.onclick = function(e) {
-          e.preventDefault();
-          span.classList.toggle('selected');
-          ui.renderDreamTiles();
-        };
-      }
+  span.className = state.selectedTiles.has(pos) ? 'tile selected' : 'tile';
+  if (state.selectedTiles.has(pos)) {
+    span.style.background = nextColor;
+    span.style.color = '#fff';
+    span.style.borderColor = nextColor;
+  }
+  span.onclick = function(e) {
+    e.preventDefault();
+    if (state.selectedTiles.has(pos)) {
+      state.selectedTiles.delete(pos);
+    } else {
+      state.selectedTiles.add(pos);
+    }
+    ui.renderDreamTiles();
+  };
+}
       dreamView.appendChild(span);
     } else {
       dreamView.appendChild(document.createTextNode(token));
