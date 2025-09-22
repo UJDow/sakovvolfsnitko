@@ -470,7 +470,7 @@ const ui = {
       }, 1600);
     }
   },
- updateCabinetList() {
+updateCabinetList() {
   const listDiv = document.getElementById('cabinetList');
   if (!listDiv) return;
   listDiv.innerHTML = '';
