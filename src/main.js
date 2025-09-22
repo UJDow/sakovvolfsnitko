@@ -532,7 +532,7 @@ const ui = {
     }
     pos += token.length;
   });
-}
+},
   updateChat() {
     const chatDiv = document.getElementById('chat');
     chatDiv.innerHTML = '';
