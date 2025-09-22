@@ -613,14 +613,23 @@ function bindEvents() {
   document.getElementById('registerForm').onsubmit = e => { e.preventDefault(); auth.register(); };
 
   // --- ШАГ 1 ---
-  document.getElementById('step1MainBtn').onclick = async () => {
-    const text = document.getElementById('dream').value.trim();
-    if (!text) { utils.showToast('Введите текст сна', 'error'); return; }
-    state.currentDream = { dreamText: text, title: '', blocks: [], globalFinalInterpretation: null };
-    state.blocks = [];
-    await dreams.saveCurrent();
+  document.getElementById('step1MainBtn').onclick = async function() {
+  const text = document.getElementById('dream').value.trim();
+  if (!text) { utils.showToast('Введите текст сна', 'error'); return; }
+  state.currentDream = { dreamText: text, title: '', blocks: [], globalFinalInterpretation: null };
+  state.blocks = [];
+  await dreams.saveCurrent();
+
+  // Заменяем кнопку на "Далее →"
+  const controls = document.getElementById('step1Controls');
+  controls.innerHTML = `<button id="step1NextBtn" class="btn primary">Далее →</button>`;
+  utils.showToast('Сон сохранён в кабинет', 'success');
+
+  // Навешиваем обработчик на новую кнопку
+  document.getElementById('step1NextBtn').onclick = function() {
     ui.setStep(2);
   };
+};
 
   // --- ШАГ 2 ---
   document.getElementById('addBlock').onclick = () => {
