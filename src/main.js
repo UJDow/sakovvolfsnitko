@@ -77,6 +77,17 @@ const utils = {
     utils.showToast('Скопировано!', 'success');
   }
 };
+utils.lighten = function(hex, percent = 20) {
+  // hex: "#RRGGBB"
+  let num = parseInt(hex.replace('#',''),16);
+  let r = (num >> 16) + Math.round(2.55 * percent);
+  let g = (num >> 8 & 0x00FF) + Math.round(2.55 * percent);
+  let b = (num & 0x0000FF) + Math.round(2.55 * percent);
+  r = Math.min(255, r);
+  g = Math.min(255, g);
+  b = Math.min(255, b);
+  return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
+};
 
 ///////////////////////
 // === API === //
@@ -432,7 +443,7 @@ const ui = {
     chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
     chip.textContent = b.text.length > 40 ? b.text.slice(0, 40) + '…' : b.text;
     chip.onclick = () => blocks.select(b.id);
-    chip.style.background = BLOCK_COLORS[b.colorIndex];
+    chip.style.background = utils.lighten(BLOCK_COLORS[b.colorIndex], 20);
     chip.style.color = '#fff';
     blocksDiv.appendChild(chip);
   });
@@ -488,52 +499,66 @@ const ui = {
   dreamView.innerHTML = '';
   if (!text) return;
 
-  // Разбиваем на токены (слова и пробелы)
-  const tokens = text.match(/\S+|\s+/g) || [];
   let pos = 0;
-  tokens.forEach(token => {
-    const isWord = /\S/.test(token);
-    if (isWord) {
-      // Проверяем, входит ли токен в существующий блок
-      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
-      const span = document.createElement('span');
-      span.textContent = token;
-      span.dataset.start = String(pos);
-      span.dataset.end = String(pos + token.length);
+  // Сортируем блоки по start
+  const sortedBlocks = [...state.blocks].sort((a, b) => a.start - b.start);
 
-      if (block) {
-        span.className = 'chip active';
-        span.style.background = BLOCK_COLORS[block.colorIndex];
-        span.style.color = '#fff';
-        span.onclick = () => blocks.select(block.id);
-      } else {
-        span.className = 'tile';
-        span.onclick = function(e) {
-          e.preventDefault();
-          span.classList.toggle('selected');
-          // После клика обновляем цвет выделенных
-          const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-          const nextColor = BLOCK_COLORS[nextColorIndex];
-          document.querySelectorAll('.tile.selected').forEach(sel => {
-            sel.style.background = nextColor;
-            sel.style.color = '#fff';
-          });
-          document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
-            sel.style.background = '';
-            sel.style.color = '';
-          });
-        };
-      }
+  while (pos < text.length) {
+    // Проверяем, начинается ли тут блок
+    const block = sortedBlocks.find(b => b.start === pos);
+    if (block) {
+      // Один span на весь блок
+      const span = document.createElement('span');
+      span.className = 'chip active';
+      span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+      span.style.color = '#fff';
+      span.onclick = () => blocks.select(block.id);
+      span.textContent = text.slice(block.start, block.end);
       dreamView.appendChild(span);
+      pos = block.end;
     } else {
-      dreamView.appendChild(document.createTextNode(token));
+      // Обычный текст (не в блоке)
+      let nextBlockStart = Math.min(...sortedBlocks.map(b => b.start).filter(s => s > pos).concat([text.length]));
+      // Разбиваем на слова и пробелы, чтобы плитки для выделения работали как раньше
+      const chunk = text.slice(pos, nextBlockStart);
+      const tokens = chunk.match(/\S+|\s+/g) || [];
+      let localPos = pos;
+      tokens.forEach(token => {
+        const isWord = /\S/.test(token);
+        if (isWord) {
+          const span = document.createElement('span');
+          span.className = 'tile';
+          span.textContent = token;
+          span.dataset.start = String(localPos);
+          span.dataset.end = String(localPos + token.length);
+          span.onclick = function(e) {
+            e.preventDefault();
+            span.classList.toggle('selected');
+            // Подсвечиваем выделенные мягким цветом будущего блока
+            const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+            const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+            document.querySelectorAll('.tile.selected').forEach(sel => {
+              sel.style.background = nextColor;
+              sel.style.color = '#fff';
+            });
+            document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
+              sel.style.background = '';
+              sel.style.color = '';
+            });
+          };
+          dreamView.appendChild(span);
+        } else {
+          dreamView.appendChild(document.createTextNode(token));
+        }
+        localPos += token.length;
+      });
+      pos = nextBlockStart;
     }
-    pos += token.length;
-  });
+  }
 
   // После рендера всех плиток (на случай если выделение уже есть)
   const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-  const nextColor = BLOCK_COLORS[nextColorIndex];
+  const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
   document.querySelectorAll('.tile.selected').forEach(sel => {
     sel.style.background = nextColor;
     sel.style.color = '#fff';
