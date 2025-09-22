@@ -281,30 +281,30 @@ const blocks = {
     blocks.add(0, text.length, text);
   },
   addFromTiles() {
-  const starts = Array.from(state.selectedTiles);
-  if (!starts.length) {
-    utils.showToast('Выделите плиточки для блока', 'error');
-    return;
-  }
-  const start = Math.min(...starts);
-  const end = Math.max(...starts) + 1;
-
-  // Проверка на пересечение диапазонов
-  for (const b of state.blocks) {
-    if (!(end <= b.start || start >= b.end)) {
-      utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+    const starts = Array.from(state.selectedTiles);
+    if (!starts.length) {
+      utils.showToast('Выделите плиточки для блока', 'error');
       return;
     }
-  }
+    const start = Math.min(...starts);
+    const end = Math.max(...starts) + 1;
 
-  const text = document.getElementById('dream').value.slice(start, end);
-  blocks.add(start, end, text);
+    // Проверка на пересечение диапазонов
+    for (const b of state.blocks) {
+      if (!(end <= b.start || start >= b.end)) {
+        utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+        return;
+      }
+    }
 
-  // --- Очищаем выделение и обновляем плитки ---
-  state.selectedTiles.clear();
-  ui.renderDreamTiles();
-  utils.showToast('Блок добавлен', 'success');
-}
+    const text = document.getElementById('dream').value.slice(start, end);
+    blocks.add(start, end, text);
+
+    // --- Очищаем выделение и обновляем плитки ---
+    state.selectedTiles.clear();
+    ui.renderDreamTiles();
+    utils.showToast('Блок добавлен', 'success');
+  }, // ← ЗАПЯТАЯ!
   remove(id) {
     state.blocks = state.blocks.filter(b => b.id !== id);
     delete state.chatHistory[id];
@@ -317,7 +317,6 @@ const blocks = {
     ui.updateChat();
   }
 };
-
 ///////////////////////
 // === ЧАТ И AI === //
 ///////////////////////
