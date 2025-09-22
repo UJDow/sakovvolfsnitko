@@ -930,18 +930,6 @@ ui.renderDreamTiles();
   };
 }
 
-// === ИНИЦИАЛИЗАЦИЯ === //
-async function init() {
-  bindEvents();
-  if (await auth.tryAutoLogin()) {
-    await dreams.load();
-    ui.showMain();
-  } else {
-    ui.showAuth();
-  }
-}
-
-// Делегирование клика для refreshInline
 document.body.addEventListener('click', function(e) {
   if (e.target.closest('#refreshInline')) {
     document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
