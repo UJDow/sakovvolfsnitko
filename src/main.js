@@ -287,17 +287,20 @@ const blocks = {
   addWhole() {
   const el = document.getElementById('dream');
   if (!el) return;
-  // Берём текст как есть, без trim
-  const text = el.value;
+  const text = el.value; // без trim, берём как есть
   if (!text) return;
 
-  // На всякий случай очистим существующие блоки перед созданием “весь текст”
+  // Чистим существующие блоки
   state.blocks = [];
 
   // Один блок от начала до полной длины
   const start = 0;
   const end = text.length;
-  blocks.add(start, end, text);
+  const ok = blocks.add(start, end, text);
+  if (ok) {
+    // ВАЖНО: сразу перерисовать область текста плитками
+    if (typeof ui.renderDreamTiles === 'function') ui.renderDreamTiles();
+  }
 },
   addFromTiles() {
   const dreamView = document.getElementById('dreamView');
@@ -490,7 +493,6 @@ const ui = {
   updateBlocks() {
   const blocksDiv = document.getElementById('blocks');
   blocksDiv.innerHTML = '';
-
   state.blocks.forEach(b => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
@@ -568,18 +570,16 @@ const ui = {
   dreamView.innerHTML = '';
   if (!text) return;
 
-  // FIX: если есть блок, который покрывает весь текст, рисуем одним цельным блоком и выходим
-  const fullBlock = state.blocks.find(b => b.start === 0 && b.end === text.length);
-  if (fullBlock) {
+  // Страховка: fullBlock, если покрывает весь диапазон (с допуском)
+  const fullBlock = state.blocks.find(b => b.start === 0 && b.end >= text.length);
+  if (fullBlock && state.blocks.length === 1) {
     const span = document.createElement('span');
     span.className = 'chip active';
     span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
     span.style.color = '#fff';
     span.onclick = () => blocks.select(fullBlock.id);
-    span.textContent = text; // весь текст целиком
+    span.textContent = text; // рисуем всё содержимое textarea
     dreamView.appendChild(span);
-
-    // опционально: обновим состояние кнопки "Весь текст", если есть такая функция
     if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
     return;
   }
