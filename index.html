@@ -353,7 +353,7 @@
   
     .chip {
   box-sizing: border-box;
-  display: inline;
+  display: inline-block;
   padding: 4px 12px;
   margin: 2px 2px 2px 0;
   border-radius: 16px;
@@ -361,12 +361,13 @@
   color: #fff;
   font-size: 1em;
   cursor: pointer;
-  white-space: pre-wrap;
+  white-space: pre-line;
   word-break: break-word;
   max-width: 90vw;
   line-height: 1.6;
   text-align: left;
   vertical-align: baseline;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
   
     .chip:hover { background: #bae6fd; transform: translateY(-1px); }
@@ -1019,22 +1020,14 @@
     }
 
 .chip.active {
-  display: inline;
-  white-space: pre-wrap;
-  word-break: break-word;
-  border-radius: 16px;
-  padding: 4px 12px;
+  background: var(--primary);
+  color: white;
   outline: 2.5px solid #22d3ee;
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(34,211,238,0.13);
   position: relative;
   z-index: 2;
-  transition: outline 0.15s, box-shadow 0.15s;
   animation: chipSelectPulse 0.5s;
-  vertical-align: baseline;
-  margin: 2px 2px 2px 0;
-  font-size: 1em;
-  line-height: 1.6;
 }
 [data-theme="dark"] .chip.active {
   outline: 3px solid #fff; /* белый */
