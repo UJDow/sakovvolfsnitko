@@ -31,6 +31,21 @@ const BLOCK_COLORS = [
   "#FF5E62"  // розовый
 ];
 
+function getBlockTextColor(bgColor) {
+  if (!bgColor) return '#fff';
+  const hex = bgColor.replace('#', '');
+  const r = parseInt(hex.substr(0,2),16);
+  const g = parseInt(hex.substr(2,2),16);
+  const b = parseInt(hex.substr(4,2),16);
+  const brightness = (r*299 + g*587 + b*114) / 1000;
+  // В тёмной теме делаем текст тёмным на светлых цветах, белым на тёмных
+  if (document.documentElement.getAttribute('data-theme') === 'dark') {
+    return brightness > 170 ? '#222' : '#fff';
+  }
+  // В светлой теме — белый на тёмных цветах, чёрный на светлых
+  return brightness > 170 ? '#222' : '#fff';
+}
+
 ///////////////////////
 // === УТИЛИТЫ === //
 ///////////////////////
@@ -423,7 +438,6 @@ const ui = {
   const filled = document.getElementById('progress-line-filled');
   filled.style.width = ((step - 1) * 50) + '%';
 
-  // <--- ВОТ ЭТА СТРОКА
   if (step === 2) ui.renderDreamTiles();
 },
   updateBlocks() {
@@ -504,32 +518,38 @@ const ui = {
 
       // Если это часть уже добавленного блока
       if (blockColors[pos]) {
-        span.className = 'tile block-tile';
-        span.style.background = blockColors[pos];
-        span.style.color = '#fff';
-        span.style.border = 'none';
-        span.onclick = () => {}; // Не кликается
-      }
+  span.className = 'tile block-tile';
+  span.style.background = blockColors[pos];
+  span.style.color = getBlockTextColor(blockColors[pos]);
+  span.style.border = 'none';
+  span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
+    ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+  span.onclick = () => {}; // Не кликается
+}
       // Если это выделение для нового блока
       else if (
-        selectionStart !== null &&
-        pos >= selectionStart && pos + token.length <= selectionEnd + 1
-      ) {
-        span.className = 'tile selected';
-        // Первое и последнее слово выделения — ярко, остальные — чуть светлее
-        if (pos === selectionStart || pos + token.length - 1 === selectionEnd) {
-          span.style.background = nextColor;
-          span.style.color = '#fff';
-        } else {
-          span.style.background = nextColor + "22"; // прозрачнее
-          span.style.color = '#fff';
-        }
-        span.onclick = function(e) {
-          e.preventDefault();
-          span.classList.toggle('selected');
-          ui.renderDreamTiles();
-        };
-      }
+  selectionStart !== null &&
+  pos >= selectionStart && pos + token.length <= selectionEnd + 1
+) {
+  span.className = 'tile selected';
+  // Первое и последнее слово выделения — ярко, остальные — чуть светлее
+  if (pos === selectionStart || pos + token.length - 1 === selectionEnd) {
+    span.style.background = nextColor;
+    span.style.color = getBlockTextColor(nextColor);
+    span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
+      ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+  } else {
+    span.style.background = nextColor + "22"; // прозрачнее
+    span.style.color = getBlockTextColor(nextColor);
+    span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
+      ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+  }
+  span.onclick = function(e) {
+    e.preventDefault();
+    span.classList.toggle('selected');
+    ui.renderDreamTiles();
+  };
+}
       // Обычная плитка
       else {
         span.className = 'tile';
@@ -786,6 +806,9 @@ function bindEvents() {
 
   // --- ШАГ 2 ---
   document.getElementById('addBlock').onclick = () => {
+  const dreamView = document.getElementById('dreamView');
+  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+  console.log('selected tiles:', selected);
   blocks.addFromTiles();
 };
   document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
