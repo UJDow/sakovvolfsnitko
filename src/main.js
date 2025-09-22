@@ -265,6 +265,35 @@ const blocks = {
     state.blocks = [];
     blocks.add(0, text.length, text);
   },
+  addFromTiles() {
+  const dreamView = document.getElementById('dreamView');
+  if (!dreamView) return;
+  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+  if (!selected.length) {
+    utils.showToast('Выделите плиточки для блока', 'error');
+    return;
+  }
+  const starts = selected.map(s => parseInt(s.dataset.start, 10));
+  const ends = selected.map(s => parseInt(s.dataset.end, 10));
+  const start = Math.min(...starts);
+  const end = Math.max(...ends);
+
+  // Проверка на пересечение диапазонов
+  for (const b of state.blocks) {
+    if (!(end <= b.start || start >= b.end)) {
+      utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+      return;
+    }
+  }
+
+  const text = document.getElementById('dream').value.slice(start, end);
+  blocks.add(start, end, text);
+
+  // Снять выделение
+  selected.forEach(s => s.classList.remove('selected'));
+  ui.renderDreamTiles();
+  utils.showToast('Блок добавлен', 'success');
+},
   remove(id) {
     state.blocks = state.blocks.filter(b => b.id !== id);
     delete state.chatHistory[id];
@@ -416,6 +445,43 @@ const ui = {
       dreamView.appendChild(span);
     }
   },
+  renderDreamTiles() {
+  const dreamView = document.getElementById('dreamView');
+  if (!dreamView) return;
+  const text = document.getElementById('dream').value || '';
+  dreamView.innerHTML = '';
+  if (!text) return;
+
+  // Разбиваем на токены (слова и пробелы)
+  const tokens = text.match(/\S+|\s+/g) || [];
+  let pos = 0;
+  tokens.forEach(token => {
+    const isWord = /\S/.test(token);
+    if (isWord) {
+      // Проверяем, входит ли токен в существующий блок
+      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
+      const span = document.createElement('span');
+      span.textContent = token;
+      span.dataset.start = String(pos);
+      span.dataset.end = String(pos + token.length);
+
+      if (block) {
+        span.className = 'chip active';
+        span.onclick = () => blocks.select(block.id);
+      } else {
+        span.className = 'tile';
+        span.onclick = function(e) {
+          e.preventDefault();
+          span.classList.toggle('selected');
+        };
+      }
+      dreamView.appendChild(span);
+    } else {
+      dreamView.appendChild(document.createTextNode(token));
+    }
+    pos += token.length;
+  });
+},
   updateChat() {
     const chatDiv = document.getElementById('chat');
     chatDiv.innerHTML = '';
@@ -650,21 +716,14 @@ function bindEvents() {
   // Навешиваем обработчик на новую кнопку
   document.getElementById('step1NextBtn').onclick = function() {
     ui.setStep(2);
+    ui.renderDreamTiles();
   };
 };
 
   // --- ШАГ 2 ---
   document.getElementById('addBlock').onclick = () => {
-    const el = document.getElementById('dreamView');
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    const text = document.getElementById('dream').value;
-    const start = range.startOffset, end = range.endOffset;
-    if (start === end) { utils.showToast('Выделите фрагмент', 'error'); return; }
-    const frag = text.slice(start, end);
-    if (blocks.add(start, end, frag)) utils.showToast('Блок добавлен', 'success');
-  };
+  blocks.addFromTiles();
+};
   document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
   document.getElementById('toStep3').onclick = () => {
     if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
@@ -674,9 +733,13 @@ function bindEvents() {
     ui.updateProgressMoon();
   };
   document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
+  ui.renderDreamTiles();
 
   // --- ШАГ 3 ---
-  document.getElementById('backTo2Top').onclick = () => ui.setStep(2);
+  document.getElementById('backTo2Top').onclick = () => {
+  ui.setStep(2);
+  ui.renderDreamTiles();
+};
   document.getElementById('sendAnswerBtn').onclick = async () => {
     const input = document.getElementById('userInput');
     const msg = input.value.trim();
@@ -758,14 +821,14 @@ function bindEvents() {
   document.getElementById('closeDreamPreviewBtn').onclick = () => ui.closeDreamPreviewModal();
 
   document.getElementById('loadDreamToEditorBtn').onclick = () => {
-    const dream = state._previewedDream;
-    if (!dream) return;
-    dreams.loadToEditor(dream);
-    ui.setStep(2);
-    document.getElementById('dreamView').textContent = dream.dreamText || '';
-    ui.closeDreamPreviewModal();
-    ui.closeCabinetModal();
-  };
+  const dream = state._previewedDream;
+  if (!dream) return;
+  dreams.loadToEditor(dream);
+  ui.setStep(2);
+  ui.renderDreamTiles();
+  ui.closeDreamPreviewModal();
+  ui.closeCabinetModal();
+};
 
   document.getElementById('downloadDreamBtn').onclick = () => {
     const dream = state._previewedDream;
