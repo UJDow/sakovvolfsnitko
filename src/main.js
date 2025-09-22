@@ -1,4 +1,3 @@
-
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
 
@@ -281,66 +280,75 @@ const blocks = {
     const block = { id, start, end, text, chat: [], finalInterpretation: null, colorIndex };
     state.blocks.push(block);
     state.chatHistory[id] = [];
-    ui.updateBlocks();
+    ui.updateBlocks();       // только чипсы
     return true;
   },
+
   addWhole() {
-  const el = document.getElementById('dream');
-  if (!el) return;
-  const text = el.value; // без trim, берём как есть
-  if (!text) return;
+    const el = document.getElementById('dream');
+    if (!el) return;
+    const text = el.value; // без trim, берём как есть
+    if (!text) return;
 
-  // Чистим существующие блоки
-  state.blocks = [];
+    // Чистим существующие блоки
+    state.blocks = [];
 
-  // Один блок от начала до полной длины
-  const start = 0;
-  const end = text.length;
-  const ok = blocks.add(start, end, text);
-  if (ok) {
-    // ВАЖНО: сразу перерисовать область текста плитками
-    if (typeof ui.renderDreamTiles === 'function') ui.renderDreamTiles();
-  }
-},
+    // Один блок от начала до полной длины
+    const start = 0;
+    const end = text.length;
+    const ok = blocks.add(start, end, text);
+    if (ok) {
+      // ВАЖНО: сразу перерисовать dreamView
+      if (typeof ui.renderDreamTiles === 'function') ui.renderDreamTiles();
+    }
+  },
+
   addFromTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
-  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (!selected.length) {
-    utils.showToast('Выделите плиточки для блока', 'error');
-    return;
-  }
-  const starts = selected.map(s => parseInt(s.dataset.start, 10));
-  const ends = selected.map(s => parseInt(s.dataset.end, 10));
-  const start = Math.min(...starts);
-  const end = Math.max(...ends);
-
-  // Проверка на пересечение диапазонов
-  for (const b of state.blocks) {
-    if (!(end <= b.start || start >= b.end)) {
-      utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+    const dreamView = document.getElementById('dreamView');
+    if (!dreamView) return;
+    const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+    if (!selected.length) {
+      utils.showToast('Выделите плиточки для блока', 'error');
       return;
     }
-  }
+    const starts = selected.map(s => parseInt(s.dataset.start, 10));
+    const ends = selected.map(s => parseInt(s.dataset.end, 10));
+    const start = Math.min(...starts);
+    const end = Math.max(...ends);
 
-  const text = document.getElementById('dream').value.slice(start, end);
-  blocks.add(start, end, text);
+    // Проверка на пересечение диапазонов
+    for (const b of state.blocks) {
+      if (!(end <= b.start || start >= b.end)) {
+        utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+        return;
+      }
+    }
 
-  // Снять выделение
-  selected.forEach(s => s.classList.remove('selected'));
-  ui.renderDreamTiles();
-  utils.showToast('Блок добавлен', 'success');
-},
+    const text = document.getElementById('dream').value.slice(start, end);
+    const ok = blocks.add(start, end, text);
+    if (!ok) return;
+
+    // Снять выделение
+    selected.forEach(s => s.classList.remove('selected'));
+
+    ui.renderDreamTiles(); // перерисовать dreamView после добавления
+    utils.showToast('Блок добавлен', 'success');
+  },
+
   remove(id) {
     state.blocks = state.blocks.filter(b => b.id !== id);
     delete state.chatHistory[id];
     if (state.currentBlock && state.currentBlock.id === id) state.currentBlock = null;
-    ui.updateBlocks();
+    ui.updateBlocks();       // только чипсы
+    ui.renderDreamTiles();   // обновить dreamView после удаления
+    ui.updateChat();         // обновить чат, если удалили текущий блок
   },
+
   select(id) {
-    state.currentBlock = state.blocks.find(b => b.id === id);
-    ui.updateBlocks();
-    ui.updateChat();
+    state.currentBlock = state.blocks.find(b => b.id === id) || null;
+    ui.updateBlocks();       // только панель чипсов
+    ui.renderDreamTiles();   // отдельно — только dreamView
+    ui.updateChat();         // обновить чат
   }
 };
 
@@ -490,174 +498,113 @@ const ui = {
     const filled = document.getElementById('progress-line-filled');
     filled.style.width = ((step - 1) * 50) + '%';
   },
+
+  // Только чипсы
   updateBlocks() {
-  const blocksDiv = document.getElementById('blocks');
-  blocksDiv.innerHTML = '';
-  state.blocks.forEach(b => {
-    const chip = document.createElement('div');
-    chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
-    chip.textContent = b.text.length > 40 ? b.text.slice(0, 40) + '…' : b.text;
-    chip.onclick = () => blocks.select(b.id);
-    chip.style.background = utils.lighten(BLOCK_COLORS[b.colorIndex], 20);
-    chip.style.color = '#fff';
-    blocksDiv.appendChild(chip);
-  });
+    const blocksDiv = document.getElementById('blocks');
+    blocksDiv.innerHTML = '';
+    state.blocks.forEach(b => {
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
+      chip.textContent = b.text.length > 40 ? b.text.slice(0, 40) + '…' : b.text;
+      chip.onclick = () => blocks.select(b.id);
+      chip.style.background = utils.lighten(BLOCK_COLORS[b.colorIndex], 20);
+      chip.style.color = '#fff';
+      blocksDiv.appendChild(chip);
+    });
+  },
 
-  // Обновить dreamView
-  const dreamView = document.getElementById('dreamView');
-  const text = document.getElementById('dream').value; // берём как есть, без trim
-  dreamView.innerHTML = '';
-  let last = 0;
-
-  // не мутируем исходный массив при каждом рендере
-  const sorted = [...state.blocks].sort((a, b) => a.start - b.start);
-
-  sorted.forEach(b => {
-    // обычный текст до блока
-    if (b.start > last) {
-      const span = document.createElement('span');
-      span.textContent = text.slice(last, b.start);
-      dreamView.appendChild(span);
-    }
-
-    // сам блок
-    const blockSpan = document.createElement('span');
-    blockSpan.className = 'chip active';
-    blockSpan.style.background = BLOCK_COLORS[b.colorIndex];
-    blockSpan.style.color = '#fff';
-    blockSpan.onclick = () => blocks.select(b.id);
-
-    const blockText = text.slice(b.start, b.end);
-    const words = blockText.match(/\S+|\s+/g) || [];
-    blockSpan.innerHTML = words.map((w, i) => {
-      if (!/\S/.test(w)) return w;
-      if (i === 0 || i === words.length - 1) {
-        return `<span style="color:${BLOCK_COLORS[b.colorIndex]};font-weight:bold;">${utils.escapeHtml(w)}</span>`;
-      }
-      return utils.escapeHtml(w);
-    }).join('');
-    dreamView.appendChild(blockSpan);
-
-    // Кнопка "Добавить блок" для выбранного блока
-    if (state.currentBlock && state.currentBlock.id === b.id) {
-      const addBtn = document.createElement('button');
-      addBtn.textContent = 'Добавить блок';
-      addBtn.className = 'btn secondary';
-      addBtn.style.marginLeft = '8px';
-      addBtn.onclick = (e) => {
-        e.stopPropagation();
-        blocks.addFromTiles();
-      };
-      dreamView.appendChild(addBtn);
-    }
-
-    last = b.end;
-  });
-
-  // ДОБАВЛЯЕМ остаток текста после последнего блока, если он есть
-  if (last < text.length) {
-    const span = document.createElement('span');
-    span.textContent = text.slice(last);
-    dreamView.appendChild(span);
-  }
-},
+  // Единственное место, которое рендерит dreamView
   renderDreamTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
+    const dreamView = document.getElementById('dreamView');
+    if (!dreamView) return;
 
-  const textEl = document.getElementById('dream');
-  const text = (textEl && textEl.value) || '';
-  dreamView.innerHTML = '';
-  if (!text) return;
+    const textEl = document.getElementById('dream');
+    const text = (textEl && textEl.value) || '';
+    dreamView.innerHTML = '';
+    if (!text) return;
 
-  // Страховка: fullBlock, если покрывает весь диапазон (с допуском)
-  const fullBlock = state.blocks.find(b => b.start === 0 && b.end >= text.length);
-  if (fullBlock && state.blocks.length === 1) {
-    const span = document.createElement('span');
-    span.className = 'chip active';
-    span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
-    span.style.color = '#fff';
-    span.onclick = () => blocks.select(fullBlock.id);
-    span.textContent = text; // рисуем всё содержимое textarea
-    dreamView.appendChild(span);
-    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-    return;
-  }
-
-  let pos = 0;
-  // Сортируем блоки по start
-  const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
-
-  while (pos < text.length) {
-    // Проверяем, начинается ли тут блок
-    const block = sortedBlocksArr.find(b => b.start === pos);
-    if (block) {
-      // Один span на весь блок
+    // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
+    const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
+    if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
       const span = document.createElement('span');
-      span.className = 'chip active';
-      span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
+      span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
       span.style.color = '#fff';
-      span.onclick = () => blocks.select(block.id);
-      span.textContent = text.slice(block.start, block.end);
+      span.onclick = () => blocks.select(fullBlock.id);
+      span.textContent = text; // весь текст, без разрезов
       dreamView.appendChild(span);
-      pos = block.end;
-    } else {
-      // Обычный текст (не в блоке)
-      const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
-      const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
-
-      // Разбиваем на слова и пробелы, чтобы плитки для выделения работали как раньше
-      const chunk = text.slice(pos, nextBlockStart);
-      const tokens = chunk.match(/\S+|\s+/g) || [];
-      let localPos = pos;
-
-      tokens.forEach(token => {
-        const isWord = /\S/.test(token);
-        if (isWord) {
-          const span = document.createElement('span');
-          span.className = 'tile';
-          span.textContent = token;
-          span.dataset.start = String(localPos);
-          span.dataset.end = String(localPos + token.length);
-          span.onclick = function(e) {
-            e.preventDefault();
-            span.classList.toggle('selected');
-            // Подсветка выделенных плиток мягким цветом будущего блока
-            const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-            const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-            document.querySelectorAll('.tile.selected').forEach(sel => {
-              sel.style.background = nextColor;
-              sel.style.color = '#fff';
-            });
-            document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
-              sel.style.background = '';
-              sel.style.color = '';
-            });
-
-            // опционально: обновляем доступность кнопки "Весь текст"
-            if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-          };
-          dreamView.appendChild(span);
-        } else {
-          dreamView.appendChild(document.createTextNode(token));
-        }
-        localPos += token.length;
-      });
-      pos = nextBlockStart;
+      if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+      return;
     }
-  }
 
-  // После рендера всех плиток (на случай если выделение уже есть)
-  const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-  const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-  document.querySelectorAll('.tile.selected').forEach(sel => {
-    sel.style.background = nextColor;
-    sel.style.color = '#fff';
-  });
+    // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
+    let pos = 0;
+    const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
 
-  // опционально: синхронизируем состояние кнопки "Весь текст"
-  if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-},
+    while (pos < text.length) {
+      const block = sortedBlocksArr.find(b => b.start === pos);
+      if (block) {
+        const span = document.createElement('span');
+        span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
+        span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+        span.style.color = '#fff';
+        span.onclick = () => blocks.select(block.id);
+        span.textContent = text.slice(block.start, block.end);
+        dreamView.appendChild(span);
+        pos = block.end;
+      } else {
+        // свободный участок текста до следующего блока
+        const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
+        const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
+        const chunk = text.slice(pos, nextBlockStart);
+        const tokens = chunk.match(/\S+|\s+/g) || [];
+        let localPos = pos;
+
+        tokens.forEach(token => {
+          const isWord = /\S/.test(token);
+          if (isWord) {
+            const span = document.createElement('span');
+            span.className = 'tile';
+            span.textContent = token;
+            span.dataset.start = String(localPos);
+            span.dataset.end = String(localPos + token.length);
+            span.onclick = function(e) {
+              e.preventDefault();
+              span.classList.toggle('selected');
+              const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+              const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+              document.querySelectorAll('.tile.selected').forEach(sel => {
+                sel.style.background = nextColor;
+                sel.style.color = '#fff';
+              });
+              document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
+                sel.style.background = '';
+                sel.style.color = '';
+              });
+              if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+            };
+            dreamView.appendChild(span);
+          } else {
+            dreamView.appendChild(document.createTextNode(token));
+          }
+          localPos += token.length;
+        });
+        pos = nextBlockStart;
+      }
+    }
+
+    // Синхронизировать цвет уже выделенных плиток
+    const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+    const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+    document.querySelectorAll('.tile.selected').forEach(sel => {
+      sel.style.background = nextColor;
+      sel.style.color = '#fff';
+    });
+
+    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+  },
+
   updateChat() {
     const chatDiv = document.getElementById('chat');
     chatDiv.innerHTML = '';
@@ -682,9 +629,11 @@ const ui = {
     chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
     chatDiv.scrollTop = chatDiv.scrollHeight;
   },
+
   setThinking(isThinking) {
     document.getElementById('thinking').style.display = isThinking ? 'block' : 'none';
   },
+
   updateProgressMoon(flash = false) {
     // Анимация луны (SVG) — flash при flash=true
     const moonBtn = document.getElementById('moonBtn');
@@ -712,31 +661,33 @@ const ui = {
       }, 1600);
     }
   },
-updateCabinetList() {
-  const listDiv = document.getElementById('cabinetList');
-  if (!listDiv) return;
-  listDiv.innerHTML = '';
-  state.dreams.forEach(d => {
-    const tile = document.createElement('div');
-    tile.className = 'cabinet-tile';
-    tile.innerHTML = `
-      <span class="cabinet-date">${utils.formatDate(d.date)}</span>
-      <span class="cabinet-preview">${utils.escapeHtml((d.dreamText || '').slice(0, 40))}</span>
-      <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
-    `;
-    // Клик по плитке (кроме кнопки "Удалить")
-    tile.onclick = e => {
-      if (e.target.closest('button')) return;
-      ui.showDreamPreviewModal(d);
-    };
-    // Кнопка "Удалить"
-    tile.querySelector('[data-del]').onclick = async e => {
-      e.stopPropagation();
-      if (confirm('Удалить этот сон?')) await dreams.delete(d.id);
-    };
-    listDiv.appendChild(tile);
-  });
-},
+
+  updateCabinetList() {
+    const listDiv = document.getElementById('cabinetList');
+    if (!listDiv) return;
+    listDiv.innerHTML = '';
+    state.dreams.forEach(d => {
+      const tile = document.createElement('div');
+      tile.className = 'cabinet-tile';
+      tile.innerHTML = `
+        <span class="cabinet-date">${utils.formatDate(d.date)}</span>
+        <span class="cabinet-preview">${utils.escapeHtml((d.dreamText || '').slice(0, 40))}</span>
+        <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
+      `;
+      // Клик по плитке (кроме кнопки "Удалить")
+      tile.onclick = e => {
+        if (e.target.closest('button')) return;
+        ui.showDreamPreviewModal(d);
+      };
+      // Кнопка "Удалить"
+      tile.querySelector('[data-del]').onclick = async e => {
+        e.stopPropagation();
+        if (confirm('Удалить этот сон?')) await dreams.delete(d.id);
+      };
+      listDiv.appendChild(tile);
+    });
+  },
+
   updateStorageBar() {
     const bar = document.getElementById('storageBar');
     const txt = document.getElementById('storageText');
@@ -746,6 +697,7 @@ updateCabinetList() {
     txt.textContent = `${used}/50`;
     txt.style.color = percent > 90 ? '#ef4444' : (percent > 60 ? '#f59e0b' : '#22c55e');
   },
+
   showFinalDialog() {
     const dlg = document.getElementById('finalDialog');
     dlg.style.display = 'block';
@@ -760,33 +712,38 @@ updateCabinetList() {
       blocksDiv.appendChild(div);
     });
   },
+
   closeFinalDialog() {
     document.getElementById('finalDialog').style.display = 'none';
     document.body.classList.remove('modal-open');
   },
+
   showCabinetModal() {
     document.getElementById('cabinetModal').style.display = 'block';
     document.body.classList.add('modal-open');
     ui.updateCabinetList();
   },
+
   closeCabinetModal() {
     document.getElementById('cabinetModal').style.display = 'none';
     document.body.classList.remove('modal-open');
   },
+
   // --- МОДАЛКА ПРОСМОТРА СНА ---
   showDreamPreviewModal(dream) {
-  const modal = document.getElementById('dreamPreviewModal');
-  const textDiv = document.getElementById('dreamPreviewText');
-  const interpDiv = document.getElementById('dreamPreviewInterpret');
-  const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
-  textDiv.textContent = dream.dreamText || '';
-  interpWrap.style.display = 'block';
-  interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
-  interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
-  state._previewedDream = dream;
-  modal.style.display = 'block';
-  document.body.classList.add('modal-open');
-},
+    const modal = document.getElementById('dreamPreviewModal');
+    const textDiv = document.getElementById('dreamPreviewText');
+    const interpDiv = document.getElementById('dreamPreviewInterpret');
+    const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
+    textDiv.textContent = dream.dreamText || '';
+    interpWrap.style.display = 'block';
+    interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
+    interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
+    state._previewedDream = dream;
+    modal.style.display = 'block';
+    document.body.classList.add('modal-open');
+  },
+
   closeDreamPreviewModal() {
     document.getElementById('dreamPreviewModal').style.display = 'none';
     document.body.classList.remove('modal-open');
@@ -878,63 +835,63 @@ function bindEvents() {
 
   // --- ШАГ 1 ---
   document.getElementById('step1MainBtn').onclick = async function() {
-  const text = document.getElementById('dream').value.trim();
-  if (!text) { utils.showToast('Введите текст сна', 'error'); return; }
-  state.currentDream = { dreamText: text, title: '', blocks: [], globalFinalInterpretation: null };
-  state.blocks = [];
-  await dreams.saveCurrent();
+    const text = document.getElementById('dream').value.trim();
+    if (!text) { utils.showToast('Введите текст сна', 'error'); return; }
+    state.currentDream = { dreamText: text, title: '', blocks: [], globalFinalInterpretation: null };
+    state.blocks = [];
+    await dreams.saveCurrent();
 
-  // Заменяем кнопку на "Далее →"
-  const controls = document.getElementById('step1Controls');
-  controls.innerHTML = `<button id="step1NextBtn" class="btn primary">Далее →</button>`;
-  utils.showToast('Сон сохранён в кабинет', 'success');
+    // Заменяем кнопку на "Далее →"
+    const controls = document.getElementById('step1Controls');
+    controls.innerHTML = `<button id="step1NextBtn" class="btn primary">Далее →</button>`;
+    utils.showToast('Сон сохранён в кабинет', 'success');
 
-  // Навешиваем обработчик на новую кнопку
-  document.getElementById('step1NextBtn').onclick = function() {
-    ui.setStep(2);
-    ui.renderDreamTiles();
+    // Навешиваем обработчик на новую кнопку
+    document.getElementById('step1NextBtn').onclick = function() {
+      ui.setStep(2);
+      ui.renderDreamTiles();
+    };
   };
-};
 
-// --- ШАГ 2 ---
-document.getElementById('addBlock').onclick = () => {
-  blocks.addFromTiles();
-};
-document.getElementById('addWholeBlock').onclick = () => {
-  // 1) Запрет, если уже есть хотя бы один блок
-  if (state.blocks.length > 0) {
-    utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
-    return;
-  }
-  // 2) Дополнительно запретим, если сейчас выделены плитки (начато выделение)
-  const dreamView = document.getElementById('dreamView');
-  if (dreamView && dreamView.querySelector('.tile.selected')) {
-    utils.showToast('Сначала снимите выделение плиток', 'error');
-    return;
-  }
-  blocks.addWhole();
-};
-document.getElementById('toStep3').onclick = () => {
-  if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
-  state.currentBlock = state.blocks[0];
-  ui.setStep(3);
-  ui.updateChat();
-  ui.updateProgressMoon();
-};
-document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
-ui.renderDreamTiles();
+  // --- ШАГ 2 ---
+  document.getElementById('addBlock').onclick = () => {
+    blocks.addFromTiles();
+  };
+  document.getElementById('addWholeBlock').onclick = () => {
+    // 1) Запрет, если уже есть хотя бы один блок
+    if (state.blocks.length > 0) {
+      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+      return;
+    }
+    // 2) Дополнительно запретим, если сейчас выделены плитки (начато выделение)
+    const dreamView = document.getElementById('dreamView');
+    if (dreamView && dreamView.querySelector('.tile.selected')) {
+      utils.showToast('Сначала снимите выделение плиток', 'error');
+      return;
+    }
+    blocks.addWhole();
+  };
+  document.getElementById('toStep3').onclick = () => {
+    if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
+    state.currentBlock = state.blocks[0];
+    ui.setStep(3);
+    ui.updateChat();
+    ui.updateProgressMoon();
+  };
+  document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
+  ui.renderDreamTiles();
 
-// refreshInline — прямой обработчик
-const refreshBtn = document.getElementById('refreshInline');
-if (refreshBtn) {
-  refreshBtn.onclick = refreshSelectedBlocksUnified;
-}
+  // refreshInline — прямой обработчик
+  const refreshBtn = document.getElementById('refreshInline');
+  if (refreshBtn) {
+    refreshBtn.onclick = refreshSelectedBlocksUnified;
+  }
 
   // --- ШАГ 3 ---
   document.getElementById('backTo2Top').onclick = () => {
-  ui.setStep(2);
-  ui.renderDreamTiles();
-};
+    ui.setStep(2);
+    ui.renderDreamTiles();
+  };
   document.getElementById('sendAnswerBtn').onclick = async () => {
     const input = document.getElementById('userInput');
     const msg = input.value.trim();
@@ -1012,18 +969,19 @@ if (refreshBtn) {
     reader.onload = ev => session.import(ev.target.result);
     reader.readAsText(file);
   });
+
   // --- МОДАЛКА ПРОСМОТРА СНА ---
   document.getElementById('closeDreamPreviewBtn').onclick = () => ui.closeDreamPreviewModal();
 
   document.getElementById('loadDreamToEditorBtn').onclick = () => {
-  const dream = state._previewedDream;
-  if (!dream) return;
-  dreams.loadToEditor(dream);
-  ui.setStep(2);
-  ui.renderDreamTiles();
-  ui.closeDreamPreviewModal();
-  ui.closeCabinetModal();
-};
+    const dream = state._previewedDream;
+    if (!dream) return;
+    dreams.loadToEditor(dream);
+    ui.setStep(2);
+    ui.renderDreamTiles();
+    ui.closeDreamPreviewModal();
+    ui.closeCabinetModal();
+  };
 
   document.getElementById('downloadDreamBtn').onclick = () => {
     const dream = state._previewedDream;
@@ -1053,6 +1011,5 @@ async function init() {
     ui.showAuth();
   }
 }
-
 
 init();
