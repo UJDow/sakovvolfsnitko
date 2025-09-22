@@ -16,6 +16,7 @@ const state = {
   trialDaysLeft: null,
   globalFinalInterpretation: null,
   importSession: null,
+  selectedTilePositions: [],
 };
 
 const BLOCK_COLORS = [
@@ -279,17 +280,19 @@ const blocks = {
     blocks.add(0, text.length, text);
   },
   addFromTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
-  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (!selected.length) {
+  const selectedPositions = state.selectedTilePositions;
+  if (!selectedPositions.length) {
     utils.showToast('Выделите плиточки для блока', 'error');
     return;
   }
-  const starts = selected.map(s => parseInt(s.dataset.start, 10));
-  const ends = selected.map(s => parseInt(s.dataset.end, 10));
-  const start = Math.min(...starts);
-  const end = Math.max(...ends);
+  const text = document.getElementById('dream').value;
+  const start = Math.min(...selectedPositions);
+
+  // Найдём конец последнего выделенного слова
+  const maxPos = Math.max(...selectedPositions);
+  // Найдём длину слова, начиная с maxPos
+  const match = text.slice(maxPos).match(/^\S+/);
+  const end = match ? maxPos + match[0].length : maxPos + 1;
 
   // Проверка на пересечение диапазонов
   for (const b of state.blocks) {
@@ -299,26 +302,12 @@ const blocks = {
     }
   }
 
-  const text = document.getElementById('dream').value.slice(start, end);
-  blocks.add(start, end, text);
-
-  // Снять выделение
-  selected.forEach(s => s.classList.remove('selected'));
+  const blockText = text.slice(start, end);
+  blocks.add(start, end, blockText);
+  state.selectedTilePositions = [];
   ui.renderDreamTiles();
   utils.showToast('Блок добавлен', 'success');
 },
-  remove(id) {
-    state.blocks = state.blocks.filter(b => b.id !== id);
-    delete state.chatHistory[id];
-    if (state.currentBlock && state.currentBlock.id === id) state.currentBlock = null;
-    ui.updateBlocks();
-  },
-  select(id) {
-    state.currentBlock = state.blocks.find(b => b.id === id);
-    ui.updateBlocks();
-    ui.updateChat();
-  }
-};
 
 ///////////////////////
 // === ЧАТ И AI === //
@@ -477,16 +466,6 @@ const ui = {
     }
   });
 
-  // Определяем выделение пользователя
-  let selectionStart = null, selectionEnd = null;
-  const selectedTiles = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (selectedTiles.length) {
-    const starts = selectedTiles.map(s => parseInt(s.dataset.start, 10));
-    const ends = selectedTiles.map(s => parseInt(s.dataset.end, 10));
-    selectionStart = Math.min(...starts);
-    selectionEnd = Math.max(...ends);
-  }
-
   // Цвет для будущего блока (следующий по кругу)
   const nextColor = BLOCK_COLORS[state.blocks.length % BLOCK_COLORS.length];
 
@@ -508,23 +487,20 @@ const ui = {
         span.style.color = '#fff';
         span.style.borderColor = blockColors[pos];
         span.onclick = () => {
-          // Найти блок по позиции
           const block = state.blocks.find(b => pos >= b.start && pos < b.end);
           if (block) blocks.select(block.id);
         };
       }
       // Если это выделение для нового блока
-      else if (
-        selectionStart !== null &&
-        pos >= selectionStart && pos + token.length <= selectionEnd + 1
-      ) {
+      else if (state.selectedTilePositions.includes(pos)) {
         span.className = 'tile selected';
         span.style.background = nextColor;
         span.style.color = '#fff';
         span.style.borderColor = nextColor;
         span.onclick = function(e) {
           e.preventDefault();
-          span.classList.toggle('selected');
+          // Убрать из выделения
+          state.selectedTilePositions = state.selectedTilePositions.filter(p => p !== pos);
           ui.renderDreamTiles();
         };
       }
@@ -533,7 +509,8 @@ const ui = {
         span.className = 'tile';
         span.onclick = function(e) {
           e.preventDefault();
-          span.classList.toggle('selected');
+          // Добавить в выделение
+          state.selectedTilePositions.push(pos);
           ui.renderDreamTiles();
         };
       }
