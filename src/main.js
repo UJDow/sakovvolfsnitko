@@ -461,11 +461,12 @@ const ui = {
   renderDreamTiles() {
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
+
   const text = document.getElementById('dream').value || '';
   dreamView.innerHTML = '';
   if (!text) return;
 
-  // Собираем цвета для блоков
+  // 1) Карта цветов уже добавленных блоков
   const blockColors = {};
   state.blocks.forEach((b, i) => {
     const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
@@ -474,22 +475,13 @@ const ui = {
     }
   });
 
-  // Определяем выделение пользователя
-  let selectionStart = null, selectionEnd = null;
-  const selectedTiles = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (selectedTiles.length) {
-    const starts = selectedTiles.map(s => parseInt(s.dataset.start, 10));
-    const ends = selectedTiles.map(s => parseInt(s.dataset.end, 10));
-    selectionStart = Math.min(...starts);
-    selectionEnd = Math.max(...ends);
-  }
-
-  // Цвет для будущего блока (следующий по кругу)
+  // 2) Цвет для будущего блока (по числу уже добавленных блоков)
   const nextColor = BLOCK_COLORS[state.blocks.length % BLOCK_COLORS.length];
 
-  // Разбиваем на токены (слова и пробелы)
+  // 3) Токенизация: слова и пробелы
   const tokens = text.match(/\S+|\s+/g) || [];
   let pos = 0;
+
   tokens.forEach(token => {
     const isWord = /\S/.test(token);
     if (isWord) {
@@ -498,57 +490,49 @@ const ui = {
       span.dataset.start = String(pos);
       span.dataset.end = String(pos + token.length);
 
-      // Если это часть уже добавленного блока
-      if (blockColors[pos]) {
+      const isInExistingBlock = !!blockColors[pos];
+      const isSelected = state.selectedTiles.has(pos);
+
+      // В плитках, покрытых существующим блоком — показываем цвет блока и кликом выбираем этот блок
+      if (isInExistingBlock) {
         span.className = 'tile block-tile';
         span.style.background = blockColors[pos];
         span.style.color = '#fff';
         span.style.borderColor = blockColors[pos];
+
         span.onclick = () => {
-          // Найти блок по позиции
           const block = state.blocks.find(b => pos >= b.start && pos < b.end);
           if (block) blocks.select(block.id);
         };
-      }
-      // Если это выделение для нового блока
-      else if (
-        selectionStart !== null &&
-        pos >= selectionStart && pos + token.length <= selectionEnd + 1
-      ) {
-        span.className = 'tile selected';
-        span.style.background = nextColor;
-        span.style.color = '#fff';
-        span.style.borderColor = nextColor;
-        span.onclick = function(e) {
+      } else {
+        // Плитки, которые пользователь отметил для нового блока
+        span.className = isSelected ? 'tile selected' : 'tile';
+        if (isSelected) {
+          span.style.background = nextColor;
+          span.style.color = '#fff';
+          span.style.borderColor = nextColor;
+        }
+
+        span.onclick = (e) => {
           e.preventDefault();
-          span.classList.toggle('selected');
+          if (state.selectedTiles.has(pos)) {
+            state.selectedTiles.delete(pos);
+          } else {
+            state.selectedTiles.add(pos);
+          }
+          // ЛОГ ДЛЯ ДЕБАГА (можно оставить временно)
+          // console.log('selectedTiles:', Array.from(state.selectedTiles).sort((a,b)=>a-b));
+          ui.renderDreamTiles();
         };
       }
-      // Обычная плитка
-      else {
-  span.className = state.selectedTiles.has(pos) ? 'tile selected' : 'tile';
-  if (state.selectedTiles.has(pos)) {
-    span.style.background = nextColor;
-    span.style.color = '#fff';
-    span.style.borderColor = nextColor;
-  }
-  span.onclick = function(e) {
-    e.preventDefault();
-    if (state.selectedTiles.has(pos)) {
-      state.selectedTiles.delete(pos);
-    } else {
-      state.selectedTiles.add(pos);
-    }
-    ui.renderDreamTiles();
-  };
-}
+
       dreamView.appendChild(span);
     } else {
       dreamView.appendChild(document.createTextNode(token));
     }
     pos += token.length;
   });
-},
+}
   updateChat() {
     const chatDiv = document.getElementById('chat');
     chatDiv.innerHTML = '';
