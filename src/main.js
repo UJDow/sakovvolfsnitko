@@ -468,17 +468,16 @@ const ui = {
   dreamView.innerHTML = '';
   if (!text) return;
 
-  // Собираем все блоки с их цветом
+  // Собираем цвета для блоков
   const blockColors = {};
   state.blocks.forEach((b, i) => {
     const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
-    for (let pos = b.start; pos < b.end;) {
+    for (let pos = b.start; pos < b.end; pos++) {
       blockColors[pos] = color;
-      pos++;
     }
   });
 
-  // Если есть выделенные плитки — определим их диапазон
+  // Определяем выделение пользователя
   let selectionStart = null, selectionEnd = null;
   const selectedTiles = Array.from(dreamView.querySelectorAll('.tile.selected'));
   if (selectedTiles.length) {
@@ -507,8 +506,12 @@ const ui = {
         span.className = 'tile block-tile';
         span.style.background = blockColors[pos];
         span.style.color = '#fff';
-        span.style.border = 'none';
-        span.onclick = () => {}; // Не кликается
+        span.style.borderColor = blockColors[pos];
+        span.onclick = () => {
+          // Найти блок по позиции
+          const block = state.blocks.find(b => pos >= b.start && pos < b.end);
+          if (block) blocks.select(block.id);
+        };
       }
       // Если это выделение для нового блока
       else if (
@@ -516,14 +519,9 @@ const ui = {
         pos >= selectionStart && pos + token.length <= selectionEnd + 1
       ) {
         span.className = 'tile selected';
-        // Первое и последнее слово выделения — ярко, остальные — чуть светлее
-        if (pos === selectionStart || pos + token.length - 1 === selectionEnd) {
-          span.style.background = nextColor;
-          span.style.color = '#fff';
-        } else {
-          span.style.background = nextColor + "22"; // прозрачнее
-          span.style.color = '#fff';
-        }
+        span.style.background = nextColor;
+        span.style.color = '#fff';
+        span.style.borderColor = nextColor;
         span.onclick = function(e) {
           e.preventDefault();
           span.classList.toggle('selected');
