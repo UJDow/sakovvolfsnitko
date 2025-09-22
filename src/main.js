@@ -301,8 +301,19 @@ const blocks = {
     utils.showToast('Выделите плиточки для блока', 'error');
     return;
   }
-  const start = Math.min(...state.selectedTiles);
-  const end = Math.max(...state.selectedTiles) + 1;
+  const starts = state.selectedTiles.map(t => t.start);
+  const ends = state.selectedTiles.map(t => t.end);
+  const start = Math.min(...starts);
+  const end = Math.max(...ends);
+
+  // Проверка на смежность выделения
+  const sorted = state.selectedTiles.slice().sort((a, b) => a.start - b.start);
+  for (let i = 1; i < sorted.length; ++i) {
+    if (sorted[i].start !== sorted[i - 1].end) {
+      utils.showToast('Выделяйте только подряд идущие плитки', 'error');
+      return;
+    }
+  }
 
   // Проверка на пересечение диапазонов
   for (const b of state.blocks) {
@@ -514,18 +525,20 @@ const ui = {
         // Обычная плитка (можно выделять)
         else {
           span.className = 'tile';
-          if (state.selectedTiles.includes(pos)) {
-            span.classList.add('selected');
-          }
-          span.onclick = function(e) {
-            e.preventDefault();
-            if (state.selectedTiles.includes(pos)) {
-              state.selectedTiles = state.selectedTiles.filter(i => i !== pos);
-            } else {
-              state.selectedTiles.push(pos);
-            }
-            ui.renderDreamTiles();
-          };
+          if (state.selectedTiles.some(t => t.start === pos && t.end === pos + token.length)) {
+  span.classList.add('selected');
+}
+span.onclick = function(e) {
+  e.preventDefault();
+  const tileObj = { start: pos, end: pos + token.length };
+  const idx = state.selectedTiles.findIndex(t => t.start === tileObj.start && t.end === tileObj.end);
+  if (idx >= 0) {
+    state.selectedTiles.splice(idx, 1);
+  } else {
+    state.selectedTiles.push(tileObj);
+  }
+  ui.renderDreamTiles();
+};
         }
         dreamView.appendChild(span);
       } else {
