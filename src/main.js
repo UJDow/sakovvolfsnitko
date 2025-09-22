@@ -18,6 +18,19 @@ const state = {
   importSession: null,
 };
 
+const BLOCK_COLORS = [
+  "#6C63FF", // фиолетовый
+  "#00B894", // зелёный
+  "#00BFFF", // голубой
+  "#FFA500", // оранжевый
+  "#FF6F61", // коралловый
+  "#FFD700", // жёлтый
+  "#FF8C00", // тёмно-оранжевый
+  "#A259F7", // сиреневый
+  "#43E97B", // салатовый
+  "#FF5E62"  // розовый
+];
+
 ///////////////////////
 // === УТИЛИТЫ === //
 ///////////////////////
@@ -400,16 +413,19 @@ const ui = {
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
   setStep(step) {
-    state.uiStep = step;
-    for (let i = 1; i <= 3; ++i) {
-      document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
-      document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
-      document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
-    }
-    // Прогресс-бар
-    const filled = document.getElementById('progress-line-filled');
-    filled.style.width = ((step - 1) * 50) + '%';
-  },
+  state.uiStep = step;
+  for (let i = 1; i <= 3; ++i) {
+    document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
+    document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
+    document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
+  }
+  // Прогресс-бар
+  const filled = document.getElementById('progress-line-filled');
+  filled.style.width = ((step - 1) * 50) + '%';
+
+  // <--- ВОТ ЭТА СТРОКА
+  if (step === 2) ui.renderDreamTiles();
+},
   updateBlocks() {
     const blocksDiv = document.getElementById('blocks');
     blocksDiv.innerHTML = '';
@@ -452,27 +468,75 @@ const ui = {
   dreamView.innerHTML = '';
   if (!text) return;
 
+  // Собираем все блоки с их цветом
+  const blockColors = {};
+  state.blocks.forEach((b, i) => {
+    const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
+    for (let pos = b.start; pos < b.end;) {
+      blockColors[pos] = color;
+      pos++;
+    }
+  });
+
+  // Если есть выделенные плитки — определим их диапазон
+  let selectionStart = null, selectionEnd = null;
+  const selectedTiles = Array.from(dreamView.querySelectorAll('.tile.selected'));
+  if (selectedTiles.length) {
+    const starts = selectedTiles.map(s => parseInt(s.dataset.start, 10));
+    const ends = selectedTiles.map(s => parseInt(s.dataset.end, 10));
+    selectionStart = Math.min(...starts);
+    selectionEnd = Math.max(...ends);
+  }
+
+  // Цвет для будущего блока (следующий по кругу)
+  const nextColor = BLOCK_COLORS[state.blocks.length % BLOCK_COLORS.length];
+
   // Разбиваем на токены (слова и пробелы)
   const tokens = text.match(/\S+|\s+/g) || [];
   let pos = 0;
   tokens.forEach(token => {
     const isWord = /\S/.test(token);
     if (isWord) {
-      // Проверяем, входит ли токен в существующий блок
-      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
       const span = document.createElement('span');
       span.textContent = token;
       span.dataset.start = String(pos);
       span.dataset.end = String(pos + token.length);
 
-      if (block) {
-        span.className = 'chip active';
-        span.onclick = () => blocks.select(block.id);
-      } else {
+      // Если это часть уже добавленного блока
+      if (blockColors[pos]) {
+        span.className = 'tile block-tile';
+        span.style.background = blockColors[pos];
+        span.style.color = '#fff';
+        span.style.border = 'none';
+        span.onclick = () => {}; // Не кликается
+      }
+      // Если это выделение для нового блока
+      else if (
+        selectionStart !== null &&
+        pos >= selectionStart && pos + token.length <= selectionEnd + 1
+      ) {
+        span.className = 'tile selected';
+        // Первое и последнее слово выделения — ярко, остальные — чуть светлее
+        if (pos === selectionStart || pos + token.length - 1 === selectionEnd) {
+          span.style.background = nextColor;
+          span.style.color = '#fff';
+        } else {
+          span.style.background = nextColor + "22"; // прозрачнее
+          span.style.color = '#fff';
+        }
+        span.onclick = function(e) {
+          e.preventDefault();
+          span.classList.toggle('selected');
+          ui.renderDreamTiles();
+        };
+      }
+      // Обычная плитка
+      else {
         span.className = 'tile';
         span.onclick = function(e) {
           e.preventDefault();
           span.classList.toggle('selected');
+          ui.renderDreamTiles();
         };
       }
       dreamView.appendChild(span);
