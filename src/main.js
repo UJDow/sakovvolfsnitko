@@ -332,6 +332,49 @@ const blocks = {
   }
 };
 
+function refreshSelectedBlocksUnified() {
+  const dreamView = document.getElementById('dreamView');
+  const hadSelection = dreamView ? dreamView.querySelectorAll('.tile.selected').length > 0 : false;
+
+  const confirmMsg = hadSelection
+    ? 'Обновить выбранные блоки? Текущие блоки будут очищены, а выделения сброшены.'
+    : 'Очистить все блоки и сбросить выделения?';
+
+  if (!confirm(confirmMsg)) return;
+
+  // 1) Полностью очистить блоки и текущий выбор/чаты/итог
+  state.blocks = [];
+  state.currentBlock = null;
+  state.chatHistory = {};
+  state.globalFinalInterpretation = null;
+
+  // 2) Снять выделение и стили с плиток, если отрисованы
+  if (dreamView) {
+    dreamView.querySelectorAll('.tile.selected').forEach(s => {
+      s.classList.remove('selected');
+      s.style.background = '';
+      s.style.color = '';
+      s.style.borderRadius = '';
+      s.style.boxShadow = '';
+      s.style.margin = '';
+      s.style.padding = '';
+    });
+  }
+
+  // 3) Перерисовать UI
+  if (typeof ui.updateBlocks === 'function') ui.updateBlocks();
+  if (typeof ui.renderDreamTiles === 'function') ui.renderDreamTiles();
+  if (typeof ui.updateChat === 'function') ui.updateChat();
+  if (typeof ui.updateProgressMoon === 'function') ui.updateProgressMoon();
+
+  // Если были на шаге 3, а блоков больше нет — вернём на шаг 2
+  if (typeof ui.setStep === 'function' && state.uiStep === 3) {
+    ui.setStep(2);
+  }
+
+  utils.showToast('Блоки очищены и выделение сброшено', 'success');
+}
+
 ///////////////////////
 // === ЧАТ И AI === //
 ///////////////////////
@@ -820,11 +863,7 @@ ui.renderDreamTiles();
 // refreshInline — прямой обработчик
 const refreshBtn = document.getElementById('refreshInline');
 if (refreshBtn) {
-  refreshBtn.onclick = () => {
-    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
-    ui.renderDreamTiles();
-    utils.showToast('Блоки обновлены', 'success');
-  };
+  refreshBtn.onclick = refreshSelectedBlocksUnified;
 }
 
   // --- ШАГ 3 ---
