@@ -266,7 +266,8 @@ const blocks = {
       }
     }
     const id = utils.uuid();
-    const block = { id, start, end, text, chat: [], finalInterpretation: null };
+    const colorIndex = state.blocks.length % BLOCK_COLORS.length;
+    const block = { id, start, end, text, chat: [], finalInterpretation: null, colorIndex };
     state.blocks.push(block);
     state.chatHistory[id] = [];
     ui.updateBlocks();
@@ -424,40 +425,62 @@ const ui = {
     filled.style.width = ((step - 1) * 50) + '%';
   },
   updateBlocks() {
-    const blocksDiv = document.getElementById('blocks');
-    blocksDiv.innerHTML = '';
-    state.blocks.forEach(b => {
-      const chip = document.createElement('div');
-      chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
-      chip.textContent = b.text.length > 40 ? b.text.slice(0, 40) + '…' : b.text;
-      chip.onclick = () => blocks.select(b.id);
-      blocksDiv.appendChild(chip);
-    });
-    // Обновить dreamView
-    const dreamView = document.getElementById('dreamView');
-    const text = document.getElementById('dream').value;
-    dreamView.innerHTML = '';
-    let last = 0;
-    state.blocks.sort((a, b) => a.start - b.start);
-    state.blocks.forEach(b => {
-      if (b.start > last) {
-        const span = document.createElement('span');
-        span.textContent = text.slice(last, b.start);
-        dreamView.appendChild(span);
-      }
-      const blockSpan = document.createElement('span');
-      blockSpan.textContent = text.slice(b.start, b.end);
-      blockSpan.className = 'chip active';
-      blockSpan.onclick = () => blocks.select(b.id);
-      dreamView.appendChild(blockSpan);
-      last = b.end;
-    });
-    if (last < text.length) {
+  const blocksDiv = document.getElementById('blocks');
+  blocksDiv.innerHTML = '';
+  state.blocks.forEach(b => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
+    chip.textContent = b.text.length > 40 ? b.text.slice(0, 40) + '…' : b.text;
+    chip.onclick = () => blocks.select(b.id);
+    chip.style.background = BLOCK_COLORS[b.colorIndex];
+    chip.style.color = '#fff';
+    blocksDiv.appendChild(chip);
+  });
+
+  // Обновить dreamView
+  const dreamView = document.getElementById('dreamView');
+  const text = document.getElementById('dream').value;
+  dreamView.innerHTML = '';
+  let last = 0;
+  state.blocks.sort((a, b) => a.start - b.start);
+  state.blocks.forEach(b => {
+    if (b.start > last) {
       const span = document.createElement('span');
-      span.textContent = text.slice(last);
+      span.textContent = text.slice(last, b.start);
       dreamView.appendChild(span);
     }
-  },
+    const blockSpan = document.createElement('span');
+    blockSpan.className = 'chip active';
+    blockSpan.style.background = BLOCK_COLORS[b.colorIndex];
+    blockSpan.style.color = '#fff';
+    blockSpan.onclick = () => blocks.select(b.id);
+
+    const blockText = text.slice(b.start, b.end);
+    const words = blockText.match(/\S+|\s+/g) || [];
+    blockSpan.innerHTML = words.map((w, i) => {
+      if (!/\S/.test(w)) return w;
+      if (i === 0 || i === words.length - 1) {
+        return `<span style="color:${BLOCK_COLORS[b.colorIndex]};font-weight:bold;">${utils.escapeHtml(w)}</span>`;
+      }
+      return utils.escapeHtml(w);
+    }).join('');
+    dreamView.appendChild(blockSpan);
+
+    // Кнопка "Добавить блок" для выбранного блока
+    if (state.currentBlock && state.currentBlock.id === b.id) {
+      const addBtn = document.createElement('button');
+      addBtn.textContent = 'Добавить блок';
+      addBtn.className = 'btn secondary';
+      addBtn.style.marginLeft = '8px';
+      addBtn.onclick = (e) => {
+        e.stopPropagation();
+        blocks.addFromTiles();
+      };
+      dreamView.appendChild(addBtn);
+    }
+    last = b.end;
+  });
+},
   renderDreamTiles() {
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
