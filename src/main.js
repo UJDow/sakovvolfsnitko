@@ -16,6 +16,7 @@ const state = {
   trialDaysLeft: null,
   globalFinalInterpretation: null,
   importSession: null,
+  selectedTiles: [],
 };
 
 const BLOCK_COLORS = [
@@ -296,15 +297,12 @@ const blocks = {
   addFromTiles() {
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
-  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  if (!selected.length) {
+  if (!state.selectedTiles.length) {
     utils.showToast('Выделите плиточки для блока', 'error');
     return;
   }
-  const starts = selected.map(s => parseInt(s.dataset.start, 10));
-  const ends = selected.map(s => parseInt(s.dataset.end, 10));
-  const start = Math.min(...starts);
-  const end = Math.max(...ends);
+  const start = Math.min(...state.selectedTiles);
+  const end = Math.max(...state.selectedTiles) + 1;
 
   // Проверка на пересечение диапазонов
   for (const b of state.blocks) {
@@ -318,7 +316,7 @@ const blocks = {
   blocks.add(start, end, text);
 
   // Снять выделение
-  selected.forEach(s => s.classList.remove('selected'));
+  state.selectedTiles = [];
   ui.renderDreamTiles();
   utils.showToast('Блок добавлен', 'success');
 },
@@ -476,6 +474,8 @@ const ui = {
     }
   },
   renderDreamTiles() {
+    // Если выделение не инициализировано — сбросить
+if (!Array.isArray(state.selectedTiles)) state.selectedTiles = [];
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
   const text = document.getElementById('dream').value || '';
@@ -552,13 +552,21 @@ const ui = {
 }
       // Обычная плитка
       else {
-        span.className = 'tile';
-        span.onclick = function(e) {
-          e.preventDefault();
-          span.classList.toggle('selected');
-          ui.renderDreamTiles();
-        };
-      }
+  span.className = 'tile';
+  if (state.selectedTiles.includes(pos)) {
+    span.classList.add('selected');
+  }
+  span.onclick = function(e) {
+    e.preventDefault();
+    // Добавить или убрать индекс из state.selectedTiles
+    if (state.selectedTiles.includes(pos)) {
+      state.selectedTiles = state.selectedTiles.filter(i => i !== pos);
+    } else {
+      state.selectedTiles.push(pos);
+    }
+    ui.renderDreamTiles();
+  };
+}
       dreamView.appendChild(span);
     } else {
       dreamView.appendChild(document.createTextNode(token));
@@ -806,9 +814,6 @@ function bindEvents() {
 
   // --- ШАГ 2 ---
   document.getElementById('addBlock').onclick = () => {
-  const dreamView = document.getElementById('dreamView');
-  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-  console.log('selected tiles:', selected);
   blocks.addFromTiles();
 };
   document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
