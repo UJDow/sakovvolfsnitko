@@ -1257,53 +1257,42 @@ body.modal-open {
   white-space: pre-wrap;
   margin-bottom: 18px;
 }
-/* Плитки для выделения текста (ШАГ 2) */
 .tile {
   display: inline-block;
-  border: 1.5px solid #bdbdbd;
-  border-radius: 7px;
-  padding: 0 4px;
-  margin: 0 1.5px;
-  background: transparent;
-  color: inherit;
-  font-size: 1em;
+  padding: 4px 10px;
+  margin: 2px 2px;
+  border-radius: 16px;
+  background: #f3f4f6;
+  color: #06213a;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  border: 1.5px solid #e0e7ef;
+  font-size: 1em;
   user-select: none;
-  line-height: 1.7;
-  position: relative;
-  z-index: 1;
 }
 
 .tile.selected {
-  /* Цвет фона и текста задаёт JS через style.background/style.color */
-  border: 2px solid #ffd600 !important;
-  box-shadow: 0 1px 6px 0 rgba(255, 214, 0, 0.10);
-  font-weight: 600;
-  z-index: 2;
+  background: #6C63FF;
+  color: #fff;
+  border: 1.5px solid #6C63FF;
+  box-shadow: 0 2px 8px #6c63ff22;
 }
 
 .tile.block-tile {
-  /* Цвет фона и текста задаёт JS через style.background/style.color */
-  border: none !important;
-  font-weight: 600;
-  z-index: 2;
-  cursor: default;
-  pointer-events: none;
+  background: #00B894;
+  color: #fff;
+  border: 1.5px solid #00B894;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-[data-theme="dark"] .tile {
-  border-color: #444c5e;
-  background: transparent;
-  color: #e0e7ef;
+.tile.block-tile.active {
+  box-shadow: 0 2px 12px #00b89455;
+  border: 2px solid #00B894;
 }
-[data-theme="dark"] .tile.selected {
-  border-color: #ffe066 !important;
-  color: #222 !important;
-}
-[data-theme="dark"] .tile.block-tile {
-  border: none !important;
-  color: #fff !important;
+
+.tile:not(.block-tile):hover {
+  background: #e0e7ef;
 }
 
   
