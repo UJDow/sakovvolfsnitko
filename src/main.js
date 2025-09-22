@@ -525,7 +525,6 @@ const ui = {
         span.onclick = function(e) {
           e.preventDefault();
           span.classList.toggle('selected');
-          ui.renderDreamTiles();
         };
       }
       // Обычная плитка
