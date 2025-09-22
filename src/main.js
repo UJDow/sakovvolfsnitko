@@ -1,5 +1,3 @@
-// main.js для Saviora SPA
-// © 2024, без сторонних библиотек, только vanilla JS
 
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
@@ -472,26 +470,34 @@ const ui = {
       }, 1600);
     }
   },
-  updateCabinetList() {
-    const listDiv = document.getElementById('cabinetList');
-    if (!listDiv) return;
-    listDiv.innerHTML = '';
-    state.dreams.forEach(d => {
-      const tile = document.createElement('div');
-      tile.className = 'cabinet-tile';
-      tile.innerHTML = `
-        <span class="cabinet-date">${utils.formatDate(d.date)}</span>
-        <span class="cabinet-preview">${utils.escapeHtml((d.dreamText || '').slice(0, 40))}</span>
-        <button class="btn secondary" data-id="${d.id}">Загрузить</button>
-        <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
-      `;
-      tile.querySelector('[data-id]').onclick = () => dreams.loadToEditor(d);
-      tile.querySelector('[data-del]').onclick = async () => {
-        if (confirm('Удалить этот сон?')) await dreams.delete(d.id);
-      };
-      listDiv.appendChild(tile);
-    });
-  },
+ updateCabinetList() {
+  const listDiv = document.getElementById('cabinetList');
+  if (!listDiv) return;
+  listDiv.innerHTML = '';
+  state.dreams.forEach(d => {
+    const tile = document.createElement('div');
+    tile.className = 'cabinet-tile';
+    tile.innerHTML = `
+      <span class="cabinet-date">${utils.formatDate(d.date)}</span>
+      <span class="cabinet-preview">${utils.escapeHtml((d.dreamText || '').slice(0, 40))}</span>
+      <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
+    `;
+    // Клик по плитке (кроме кнопки "Удалить")
+    tile.onclick = e => {
+      if (e.target.closest('button')) return;
+      dreams.loadToEditor(d);
+      ui.setStep(2);
+      document.getElementById('dreamView').textContent = d.dreamText || '';
+      ui.closeCabinetModal();
+    };
+    // Кнопка "Удалить"
+    tile.querySelector('[data-del]').onclick = async e => {
+      e.stopPropagation();
+      if (confirm('Удалить этот сон?')) await dreams.delete(d.id);
+    };
+    listDiv.appendChild(tile);
+  });
+},
   updateStorageBar() {
     const bar = document.getElementById('storageBar');
     const txt = document.getElementById('storageText');
