@@ -305,12 +305,6 @@ const blocks = {
   ui.renderDreamTiles();
   utils.showToast('Блок добавлен', 'success');
 }
-
-  // Снять выделение
-  selected.forEach(s => s.classList.remove('selected'));
-  ui.renderDreamTiles();
-  utils.showToast('Блок добавлен', 'success');
-},
   remove(id) {
     state.blocks = state.blocks.filter(b => b.id !== id);
     delete state.chatHistory[id];
