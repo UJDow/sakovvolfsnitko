@@ -817,13 +817,6 @@ document.getElementById('toStep3').onclick = () => {
 document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
 ui.renderDreamTiles();
 
-// --- РЕФРЕШ БЛОКОВ ---
-document.getElementById('refreshInline').onclick = () => {
-  document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
-  ui.renderDreamTiles();
-  utils.showToast('Блоки обновлены', 'success');
-};
-
   // --- ШАГ 3 ---
   document.getElementById('backTo2Top').onclick = () => {
   ui.setStep(2);
@@ -937,9 +930,7 @@ document.getElementById('refreshInline').onclick = () => {
   };
 }
 
-///////////////////////
 // === ИНИЦИАЛИЗАЦИЯ === //
-///////////////////////
 async function init() {
   bindEvents();
   if (await auth.tryAutoLogin()) {
@@ -949,5 +940,14 @@ async function init() {
     ui.showAuth();
   }
 }
+
+// Делегирование клика для refreshInline
+document.body.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'refreshInline') {
+    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
+    ui.renderDreamTiles();
+    utils.showToast('Блоки обновлены', 'success');
+  }
+});
 
 init();
