@@ -475,65 +475,66 @@ const ui = {
   },
   renderDreamTiles() {
     // Если выделение не инициализировано — сбросить
-if (!Array.isArray(state.selectedTiles)) state.selectedTiles = [];
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
-  const text = document.getElementById('dream').value || '';
-  dreamView.innerHTML = '';
-  if (!text) return;
+    if (!Array.isArray(state.selectedTiles)) state.selectedTiles = [];
+    const dreamView = document.getElementById('dreamView');
+    if (!dreamView) return;
+    const text = document.getElementById('dream').value || '';
+    dreamView.innerHTML = '';
+    if (!text) return;
 
-  // Собираем все блоки с их цветом
-  const blockColors = {};
-  state.blocks.forEach((b, i) => {
-    const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
-    for (let pos = b.start; pos < b.end;) {
-      blockColors[pos] = color;
-      pos++;
-    }
-  });
-
- const tokens = text.match(/\S+|\s+/g) || [];
-let pos = 0;
-tokens.forEach(token => {
-  const isWord = /\S/.test(token);
-  if (isWord) {
-    const span = document.createElement('span');
-    span.textContent = token;
-    span.dataset.start = String(pos);
-    span.dataset.end = String(pos + token.length);
-
-    // Если это часть уже добавленного блока
-    if (blockColors[pos]) {
-      span.className = 'tile block-tile';
-      span.style.background = blockColors[pos];
-      span.style.color = getBlockTextColor(blockColors[pos]);
-      span.style.border = 'none';
-      span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
-        ? '0 1px 2px rgba(0,0,0,0.18)' : '';
-      span.onclick = () => {}; // Не кликается
-    }
-    // Обычная плитка (можно выделять)
-    else {
-      span.className = 'tile';
-      if (state.selectedTiles.includes(pos)) {
-        span.classList.add('selected');
+    // Собираем все блоки с их цветом
+    const blockColors = {};
+    state.blocks.forEach((b, i) => {
+      const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
+      for (let pos = b.start; pos < b.end; pos++) {
+        blockColors[pos] = color;
       }
-      span.onclick = function(e) {
-        e.preventDefault();
-        if (state.selectedTiles.includes(pos)) {
-          state.selectedTiles = state.selectedTiles.filter(i => i !== pos);
-        } else {
-          state.selectedTiles.push(pos);
+    });
+
+    const tokens = text.match(/\S+|\s+/g) || [];
+    let pos = 0;
+    tokens.forEach(token => {
+      const isWord = /\S/.test(token);
+      if (isWord) {
+        const span = document.createElement('span');
+        span.textContent = token;
+        span.dataset.start = String(pos);
+        span.dataset.end = String(pos + token.length);
+
+        // Если это часть уже добавленного блока
+        if (blockColors[pos]) {
+          span.className = 'tile block-tile';
+          span.style.background = blockColors[pos];
+          span.style.color = getBlockTextColor(blockColors[pos]);
+          span.style.border = 'none';
+          span.style.textShadow = (document.documentElement.getAttribute('data-theme') === 'dark')
+            ? '0 1px 2px rgba(0,0,0,0.18)' : '';
+          span.onclick = () => {}; // Не кликается
         }
-        ui.renderDreamTiles();
-      };
-    }
-    dreamView.appendChild(span);
-  } else {
-    dreamView.appendChild(document.createTextNode(token));
-  }
-  pos += token.length;
-});
+        // Обычная плитка (можно выделять)
+        else {
+          span.className = 'tile';
+          if (state.selectedTiles.includes(pos)) {
+            span.classList.add('selected');
+          }
+          span.onclick = function(e) {
+            e.preventDefault();
+            if (state.selectedTiles.includes(pos)) {
+              state.selectedTiles = state.selectedTiles.filter(i => i !== pos);
+            } else {
+              state.selectedTiles.push(pos);
+            }
+            ui.renderDreamTiles();
+          };
+        }
+        dreamView.appendChild(span);
+      } else {
+        dreamView.appendChild(document.createTextNode(token));
+      }
+      pos += token.length;
+    });
+  },
+
   updateChat() {
     const chatDiv = document.getElementById('chat');
     chatDiv.innerHTML = '';
