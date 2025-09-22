@@ -16,22 +16,7 @@ const state = {
   trialDaysLeft: null,
   globalFinalInterpretation: null,
   importSession: null,
-  selectedTiles: new Set(),
 };
-
-const BLOCK_COLORS = [
-  "#6C63FF", // фиолетовый
-  "#00B894", // зелёный
-  "#00BFFF", // голубой
-  "#FFA500", // оранжевый
-  "#FF6F61", // коралловый
-  "#FFD700", // жёлтый
-  "#FF8C00", // тёмно-оранжевый
-  "#A259F7", // сиреневый
-  "#43E97B", // салатовый
-  "#FF5E62"  // розовый
-];
-
 
 ///////////////////////
 // === УТИЛИТЫ === //
@@ -281,35 +266,19 @@ const blocks = {
     blocks.add(0, text.length, text);
   },
   addFromTiles() {
-  // Берём выбранные позиции из state.selectedTiles (а не из DOM)
-  const startsArr = Array.from(state.selectedTiles);
-  if (!startsArr.length) {
+  const dreamView = document.getElementById('dreamView');
+  if (!dreamView) return;
+  const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+  if (!selected.length) {
     utils.showToast('Выделите плиточки для блока', 'error');
     return;
   }
+  const starts = selected.map(s => parseInt(s.dataset.start, 10));
+  const ends = selected.map(s => parseInt(s.dataset.end, 10));
+  const start = Math.min(...starts);
+  const end = Math.max(...ends);
 
-  const text = document.getElementById('dream').value || '';
-
-  // Построим карту start->end для слов
-  const tokens = text.match(/\S+|\s+/g) || [];
-  let pos = 0;
-  const wordEnds = new Map(); // start -> end
-  tokens.forEach(tok => {
-    if (/\S/.test(tok)) {
-      wordEnds.set(pos, pos + tok.length);
-    }
-    pos += tok.length;
-  });
-
-  const start = Math.min(...startsArr);
-  const lastStart = Math.max(...startsArr);
-  const end = wordEnds.get(lastStart);
-  if (end == null || end <= start) {
-    utils.showToast('Не удалось определить диапазон выделения', 'error');
-    return;
-  }
-
-  // Проверка пересечений с существующими блоками
+  // Проверка на пересечение диапазонов
   for (const b of state.blocks) {
     if (!(end <= b.start || start >= b.end)) {
       utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
@@ -317,16 +286,11 @@ const blocks = {
     }
   }
 
-  const fragment = text.slice(start, end);
-  if (!fragment.trim()) {
-    utils.showToast('Пустой фрагмент — выберите слова', 'error');
-    return;
-  }
+  const text = document.getElementById('dream').value.slice(start, end);
+  blocks.add(start, end, text);
 
-  blocks.add(start, end, fragment);
-
-  // Очистить выбранные плитки и перерисовать
-  state.selectedTiles.clear();
+  // Снять выделение
+  selected.forEach(s => s.classList.remove('selected'));
   ui.renderDreamTiles();
   utils.showToast('Блок добавлен', 'success');
 },
@@ -342,6 +306,7 @@ const blocks = {
     ui.updateChat();
   }
 };
+
 ///////////////////////
 // === ЧАТ И AI === //
 ///////////////////////
@@ -435,19 +400,16 @@ const ui = {
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
   setStep(step) {
-  state.uiStep = step;
-  for (let i = 1; i <= 3; ++i) {
-    document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
-    document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
-    document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
-  }
-  // Прогресс-бар
-  const filled = document.getElementById('progress-line-filled');
-  filled.style.width = ((step - 1) * 50) + '%';
-
-  // <--- ВОТ ЭТА СТРОКА
-  if (step === 2) ui.renderDreamTiles();
-},
+    state.uiStep = step;
+    for (let i = 1; i <= 3; ++i) {
+      document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
+      document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
+      document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
+    }
+    // Прогресс-бар
+    const filled = document.getElementById('progress-line-filled');
+    filled.style.width = ((step - 1) * 50) + '%';
+  },
   updateBlocks() {
     const blocksDiv = document.getElementById('blocks');
     blocksDiv.innerHTML = '';
@@ -486,74 +448,37 @@ const ui = {
   renderDreamTiles() {
   const dreamView = document.getElementById('dreamView');
   if (!dreamView) return;
-
   const text = document.getElementById('dream').value || '';
   dreamView.innerHTML = '';
   if (!text) return;
 
-  // Карта цветов уже добавленных блоков (по позициям)
-  const blockColors = {};
-  state.blocks.forEach((b, i) => {
-    const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
-    for (let p = b.start; p < b.end; p++) blockColors[p] = color;
-  });
-
-  // Цвет для будущего блока (по количеству уже добавленных)
-  const nextColor = BLOCK_COLORS[state.blocks.length % BLOCK_COLORS.length];
-
-  // Токенизация на слова и пробелы
+  // Разбиваем на токены (слова и пробелы)
   const tokens = text.match(/\S+|\s+/g) || [];
   let pos = 0;
-
   tokens.forEach(token => {
     const isWord = /\S/.test(token);
-
     if (isWord) {
+      // Проверяем, входит ли токен в существующий блок
+      const block = state.blocks.find(b => pos >= b.start && pos + token.length <= b.end);
       const span = document.createElement('span');
       span.textContent = token;
       span.dataset.start = String(pos);
       span.dataset.end = String(pos + token.length);
 
-      const inExistingBlock = !!blockColors[pos];
-      const isSelected = state.selectedTiles.has(pos);
-
-      if (inExistingBlock) {
-        // Слова внутри существующих блоков — окрашиваем цветом блока и по клику выбираем этот блок
-        const c = blockColors[pos];
-        span.className = 'tile block-tile';
-        span.style.background = c;
-        span.style.color = '#fff';
-        span.style.borderColor = c;
-        span.onclick = () => {
-          const block = state.blocks.find(b => pos >= b.start && pos < b.end);
-          if (block) blocks.select(block.id);
-        };
+      if (block) {
+        span.className = 'chip active';
+        span.onclick = () => blocks.select(block.id);
       } else {
-        // Слова вне блоков — подсвечиваем, если есть в выбранных плитках
-        span.className = isSelected ? 'tile selected' : 'tile';
-        if (isSelected) {
-          span.style.background = nextColor;
-          span.style.color = '#fff';
-          span.style.borderColor = nextColor;
-        }
-
-        span.onclick = (e) => {
+        span.className = 'tile';
+        span.onclick = function(e) {
           e.preventDefault();
-          if (state.selectedTiles.has(pos)) {
-            state.selectedTiles.delete(pos);
-          } else {
-            state.selectedTiles.add(pos);
-          }
-          ui.renderDreamTiles();
+          span.classList.toggle('selected');
         };
       }
-
       dreamView.appendChild(span);
     } else {
-      // Пробелы/знаки препинания — как есть
       dreamView.appendChild(document.createTextNode(token));
     }
-
     pos += token.length;
   });
 },
