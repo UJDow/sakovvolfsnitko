@@ -807,6 +807,11 @@ function bindEvents() {
   blocks.addFromTiles();
 };
   document.getElementById('addWholeBlock').onclick = () => blocks.addWhole();
+  document.getElementById('refreshInline').onclick = () => {
+    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
+    ui.renderDreamTiles();
+    utils.showToast('Блоки обновлены', 'success');
+  };
   document.getElementById('toStep3').onclick = () => {
     if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
     state.currentBlock = state.blocks[0];
