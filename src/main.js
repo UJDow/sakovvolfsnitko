@@ -503,12 +503,25 @@ const ui = {
 
       if (block) {
         span.className = 'chip active';
+        span.style.background = BLOCK_COLORS[block.colorIndex];
+        span.style.color = '#fff';
         span.onclick = () => blocks.select(block.id);
       } else {
         span.className = 'tile';
         span.onclick = function(e) {
           e.preventDefault();
           span.classList.toggle('selected');
+          // После клика обновляем цвет выделенных
+          const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+          const nextColor = BLOCK_COLORS[nextColorIndex];
+          document.querySelectorAll('.tile.selected').forEach(sel => {
+            sel.style.background = nextColor;
+            sel.style.color = '#fff';
+          });
+          document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
+            sel.style.background = '';
+            sel.style.color = '';
+          });
         };
       }
       dreamView.appendChild(span);
@@ -516,6 +529,14 @@ const ui = {
       dreamView.appendChild(document.createTextNode(token));
     }
     pos += token.length;
+  });
+
+  // После рендера всех плиток (на случай если выделение уже есть)
+  const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+  const nextColor = BLOCK_COLORS[nextColorIndex];
+  document.querySelectorAll('.tile.selected').forEach(sel => {
+    sel.style.background = nextColor;
+    sel.style.color = '#fff';
   });
 },
   updateChat() {
