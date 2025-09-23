@@ -1,3 +1,131 @@
+// ====== ТЕМЫ ======
+const THEMES = [
+  {
+    key: "mint",
+    name: "Мятный рассвет",
+    day: {
+      "--primary": "#2dd4bf",
+      "--accent": "#a7f3d0",
+      "--background": "#e0fdfa",
+      "--card-bg": "#f0fdfa",
+      "--text-primary": "#134e4a",
+      "--text-secondary": "#5eead4"
+    },
+    night: {
+      "--primary": "#14b8a6",
+      "--accent": "#0f766e",
+      "--background": "#134e4a",
+      "--card-bg": "#115e59",
+      "--text-primary": "#a7f3d0",
+      "--text-secondary": "#5eead4"
+    }
+  },
+  {
+    key: "sakura",
+    name: "Цветущая сакура",
+    day: {
+      "--primary": "#f472b6",
+      "--accent": "#f9a8d4",
+      "--background": "#fff1f2",
+      "--card-bg": "#ffe4e6",
+      "--text-primary": "#831843",
+      "--text-secondary": "#f472b6"
+    },
+    night: {
+      "--primary": "#be185d",
+      "--accent": "#f472b6",
+      "--background": "#831843",
+      "--card-bg": "#9d174d",
+      "--text-primary": "#f9a8d4",
+      "--text-secondary": "#f472b6"
+    }
+  },
+  {
+    key: "amber",
+    name: "Тёплый янтарь",
+    day: {
+      "--primary": "#f59e42",
+      "--accent": "#fde68a",
+      "--background": "#fff7ed",
+      "--card-bg": "#ffedd5",
+      "--text-primary": "#78350f",
+      "--text-secondary": "#fbbf24"
+    },
+    night: {
+      "--primary": "#b45309",
+      "--accent": "#f59e42",
+      "--background": "#78350f",
+      "--card-bg": "#92400e",
+      "--text-primary": "#fde68a",
+      "--text-secondary": "#fbbf24"
+    }
+  },
+  {
+    key: "forest",
+    name: "Глубокий лес",
+    day: {
+      "--primary": "#22c55e",
+      "--accent": "#bbf7d0",
+      "--background": "#f0fdf4",
+      "--card-bg": "#dcfce7",
+      "--text-primary": "#14532d",
+      "--text-secondary": "#22c55e"
+    },
+    night: {
+      "--primary": "#166534",
+      "--accent": "#22c55e",
+      "--background": "#14532d",
+      "--card-bg": "#166534",
+      "--text-primary": "#bbf7d0",
+      "--text-secondary": "#22c55e"
+    }
+  },
+  {
+    key: "fire",
+    name: "Вечерний костёр",
+    day: {
+      "--primary": "#ef4444",
+      "--accent": "#fca5a5",
+      "--background": "#fff7f0",
+      "--card-bg": "#ffe4e6",
+      "--text-primary": "#7f1d1d",
+      "--text-secondary": "#ef4444"
+    },
+    night: {
+      "--primary": "#b91c1c",
+      "--accent": "#ef4444",
+      "--background": "#7f1d1d",
+      "--card-bg": "#991b1b",
+      "--text-primary": "#fca5a5",
+      "--text-secondary": "#ef4444"
+    }
+  },
+  {
+    key: "aurora",
+    name: "Северное сияние",
+    day: {
+      "--primary": "#6366f1",
+      "--accent": "#a5b4fc",
+      "--background": "#f0f5ff",
+      "--card-bg": "#e0e7ff",
+      "--text-primary": "#312e81",
+      "--text-secondary": "#6366f1"
+    },
+    night: {
+      "--primary": "#3730a3",
+      "--accent": "#6366f1",
+      "--background": "#312e81",
+      "--card-bg": "#3730a3",
+      "--text-primary": "#a5b4fc",
+      "--text-secondary": "#6366f1"
+    }
+  }
+];
+
+const THEME_STORAGE_KEY = "saviora_theme_v2";
+const THEME_MODE_KEY = "saviora_theme_mode_v2"; // day/night
+const THEME_STD = "std"; // стандартная (системная)
+
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
 
@@ -1113,6 +1241,149 @@ if (addWholeFromHint) {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 }
+
+// ====== ТЕМЫ: UI и логика ======
+function applyTheme(themeKey, mode) {
+  // std = system
+  if (themeKey === THEME_STD) {
+    document.documentElement.removeAttribute("data-theme-custom");
+    document.documentElement.setAttribute("data-theme", mode === "night" ? "dark" : "light");
+    // Сбросить кастомные переменные
+    Object.keys(THEMES[0].day).forEach(k => document.documentElement.style.removeProperty(k));
+    return;
+  }
+  const theme = THEMES.find(t => t.key === themeKey);
+  if (!theme) return;
+  const vars = mode === "night" ? theme.night : theme.day;
+  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+  document.documentElement.setAttribute("data-theme-custom", themeKey);
+  document.documentElement.setAttribute("data-theme", mode === "night" ? "dark" : "light");
+}
+
+function saveTheme(themeKey, mode) {
+  localStorage.setItem(THEME_STORAGE_KEY, themeKey);
+  localStorage.setItem(THEME_MODE_KEY, mode);
+}
+
+function getSavedTheme() {
+  const theme = localStorage.getItem(THEME_STORAGE_KEY) || THEME_STD;
+  const mode = localStorage.getItem(THEME_MODE_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? "night" : "day");
+  return { theme, mode };
+}
+
+function updateThemeButton(themeKey, mode) {
+  const btn = document.getElementById("themeToggle");
+  if (themeKey === THEME_STD) {
+    btn.innerHTML = `<span class="icon">${mode === "night" ? "🌙" : "☀️"}</span><span class="text">Тема</span>`;
+    btn.classList.remove("theme-selected");
+  } else {
+    const theme = THEMES.find(t => t.key === themeKey);
+    btn.innerHTML = `<span class="icon">${mode === "night" ? "🌙" : "☀️"}</span><span class="text">${theme?.name || "Тема"}</span>`;
+    btn.classList.add("theme-selected");
+  }
+}
+
+function renderThemeMenu(selectedKey, selectedMode) {
+  const menu = document.getElementById("themeMenuList");
+  menu.innerHTML = "";
+
+  // Стандарт
+  const std = document.createElement("div");
+  std.className = "theme-chip" + (selectedKey === THEME_STD ? " active" : "");
+  std.innerHTML = `<span class="chip-preview"><div class="half left" style="background:#bdcff1"></div><div class="half right" style="background:#0f172a"></div></span><span class="chip-title">Стандарт</span><span class="chip-std">Системная</span>`;
+  std.onclick = () => {
+    saveTheme(THEME_STD, selectedMode);
+    applyTheme(THEME_STD, selectedMode);
+    updateThemeButton(THEME_STD, selectedMode);
+    document.getElementById("themeMenu").style.display = "none";
+  };
+  menu.appendChild(std);
+
+  // Темы
+  THEMES.forEach(theme => {
+    const chip = document.createElement("div");
+    chip.className = "theme-chip" + (selectedKey === theme.key ? " active" : "");
+    chip.innerHTML = `
+      <span class="chip-preview">
+        <div class="half left" style="background:${theme.day["--background"]};"></div>
+        <div class="half right" style="background:${theme.night["--background"]};"></div>
+      </span>
+      <span class="chip-title">${theme.name}</span>
+    `;
+    chip.onclick = () => {
+      saveTheme(theme.key, "day");
+      applyTheme(theme.key, "day");
+      updateThemeButton(theme.key, "day");
+      document.getElementById("themeMenu").style.display = "none";
+      showThemeSlider(theme.key, "day");
+    };
+    menu.appendChild(chip);
+  });
+}
+
+function showThemeSlider(themeKey, mode) {
+  const btn = document.getElementById("themeToggle");
+  btn.innerHTML = `
+    <div class="theme-slider">
+      <button class="theme-slider-btn${mode === "day" ? " active" : ""}" id="themeDayBtn">☀️</button>
+      <button class="theme-slider-btn${mode === "night" ? " active" : ""}" id="themeNightBtn">🌙</button>
+      <span style="margin-left:8px; font-weight:500;">${THEMES.find(t => t.key === themeKey)?.name || ""}</span>
+    </div>
+  `;
+  document.getElementById("themeDayBtn").onclick = () => {
+    saveTheme(themeKey, "day");
+    applyTheme(themeKey, "day");
+    showThemeSlider(themeKey, "day");
+  };
+  document.getElementById("themeNightBtn").onclick = () => {
+    saveTheme(themeKey, "night");
+    applyTheme(themeKey, "night");
+    showThemeSlider(themeKey, "night");
+  };
+}
+
+function initThemeUI() {
+  const btn = document.getElementById("themeToggle");
+  const menu = document.getElementById("themeMenu");
+  let { theme, mode } = getSavedTheme();
+
+  // Применить тему при загрузке
+  applyTheme(theme, mode);
+  updateThemeButton(theme, mode);
+
+  // Клик по кнопке — открыть меню
+  btn.onclick = e => {
+    e.stopPropagation();
+    if (theme === THEME_STD) {
+      renderThemeMenu(theme, mode);
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    } else {
+      // Если выбрана тема — показать слайдер ☀️/🌙
+      showThemeSlider(theme, mode);
+      // Клик по названию — снова открыть меню
+      btn.onclick = e2 => {
+        e2.stopPropagation();
+        renderThemeMenu(theme, mode);
+        menu.style.display = "block";
+        // Вернуть обработчик
+        btn.onclick = arguments.callee;
+      };
+    }
+  };
+
+  // Клик вне меню — закрыть
+  document.addEventListener("click", e => {
+    if (!menu.contains(e.target) && e.target !== btn) {
+      menu.style.display = "none";
+    }
+  });
+
+  // При загрузке, если выбрана тема — сразу слайдер
+  if (theme !== THEME_STD) showThemeSlider(theme, mode);
+}
+
+// Вызвать после DOMContentLoaded
+document.addEventListener("DOMContentLoaded", initThemeUI);
 
 // === ИНИЦИАЛИЗАЦИЯ === //
 async function init() {
