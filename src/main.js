@@ -528,7 +528,6 @@ const ui = {
     ui.renderDreamTiles();
   };
   wholeTextBtn.style.marginRight = '12px';
-  dreamView.appendChild(wholeTextBtn);
 
   if (!text) return;
 
