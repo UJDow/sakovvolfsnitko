@@ -1430,9 +1430,9 @@ body.modal-open {
     <span class="text">Тема</span>
   </button>
   <!-- Меню тем — отдельный элемент, не внутри кнопки! -->
-  <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0;">
-    <div id="themeMenuList"></div>
-  </div>
+  <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
+  <div id="themeMenuList"></div>
+</div>
 </div>
 
   <div id="howToModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.45);">
