@@ -83,6 +83,21 @@ utils.lighten = function(hex, percent = 20) {
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
 
+// === Автостарт диалога по первому блоку на 3 шаге ===
+function autoStartBlockChatOnStep3() {
+  if (state.uiStep !== 3) return;
+  if (!state.blocks || state.blocks.length === 0) return;
+  // Берём первый блок (или текущий, если уже выбран)
+  let block = state.currentBlock || state.blocks[0];
+  state.currentBlock = block;
+  // Если чата по блоку нет или он пустой — стартуем диалог
+  if (!state.chatHistory[block.id] || state.chatHistory[block.id].length === 0) {
+    state.chatHistory[block.id] = [{ role: 'user', content: 'Начать анализ блока' }];
+    chat.sendToAI(block.id);
+  }
+  ui.updateChat();
+}
+
 ///////////////////////
 // === API === //
 ///////////////////////
@@ -571,16 +586,21 @@ const ui = {
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
   setStep(step) {
-    state.uiStep = step;
-    for (let i = 1; i <= 3; ++i) {
-      document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
-      document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
-      document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
-    }
-    // Прогресс-бар
-    const filled = document.getElementById('progress-line-filled');
-    filled.style.width = ((step - 1) * 50) + '%';
-  },
+  state.uiStep = step;
+  for (let i = 1; i <= 3; ++i) {
+    document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
+    document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
+    document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
+  }
+  // Прогресс-бар
+  const filled = document.getElementById('progress-line-filled');
+  filled.style.width = ((step - 1) * 50) + '%';
+
+  // === АВТОСТАРТ ДИАЛОГА НА 3 ШАГЕ ===
+  if (step === 3) {
+    autoStartBlockChatOnStep3();
+  }
+},
 
   updateBlocks() {
   // Не рендерим чипсы, просто очищаем
