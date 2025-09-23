@@ -570,38 +570,6 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 #userInput::-webkit-scrollbar { width: 4px; }
 #userInput::-webkit-scrollbar-thumb { background-color: var(--primary); border-radius: 2px; }
 
-.send-icon-btn, .attach-icon-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  bottom: auto;
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: none;
-  transition: all 0.15s ease;
-}
-
-.attach-icon-btn {
-  right: 60px;
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-  font-size: 18px;
-}
-
-.send-icon-btn {
-  right: 12px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  font-size: 16px;
-}
-
 #moonBtn.attach-icon-btn {
   position: absolute;
   right: 56px;
@@ -1417,40 +1385,128 @@ body.modal-open {
   border-color: var(--primary);
 }
 
-/* ——— Чистые иконки без “пластин” ——— */
-.theme-toggle-plain {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 6px !important;
-  height: 40px !important;
-  gap: 8px !important;
-}
-.theme-toggle-plain .text { display: none !important; }
+/* === 1) Убрать синий системный highlight и стандартизировать клики === */
+* { -webkit-tap-highlight-color: rgba(0,0,0,0); }
 
-.theme-mode-btn,
+button, .btn, [role="button"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background-clip: padding-box;
+  outline: none;
+}
+
+button:focus-visible, .btn:focus-visible {
+  /* кольцо фокуса управляем переменной темы */
+  box-shadow: 0 0 0 3px var(--focus-ring, rgba(37,99,235,0.28)) !important;
+}
+
+/* Принудительно уберём системную синюю заливку при active */
+button:active, .btn:active {
+  filter: none !important;
+  background-color: inherit;
+}
+
+/* Единые состояния для primary-кнопок */
+.btn.primary {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn.primary:hover { background: var(--primary-hover) !important; }
+.btn.primary:active { transform: translateY(1px); }
+
+/* Обновим цвета кольца фокуса под темы */
+:root[data-theme="light"] { --focus-ring: rgba(37,99,235,0.28); }
+:root[data-theme="dark"]  { --focus-ring: rgba(99,102,241,0.35); }
+
+/* === 2) Компактные иконки-переключатели в шапке === */
+.theme-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0; /* сам контейнер-Button уже стилизован у вас */
+}
+
 .theme-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  font-size: 20px;
-  line-height: 1;
-  border: none;
-  background: transparent;
+  width: 44px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-primary);
   cursor: pointer;
-  padding: 0;
-  border-radius: 6px;
-  color: currentColor;
-  transition: transform 0.12s ease, opacity 0.12s ease;
+  transition: background .15s, transform .12s, border-color .15s;
+  user-select: none;
+  font-size: 18px;
 }
-.theme-mode-btn:hover,
-.theme-icon-btn:hover { transform: scale(1.08); }
-.theme-mode-btn:active,
-.theme-icon-btn:active { transform: scale(0.96); }
+.theme-icon-btn:hover { transform: translateY(-1px); }
+.theme-icon-btn:active { transform: translateY(0); }
+.theme-icon-btn.active { border-color: var(--primary); }
 
-/* Поддержка тёмной темы — ничего не перекрываем, иконки остаются “чистыми” */
+/* Меню тем держим справа */
+#themeMenu {
+  position: absolute !important;
+  right: 18px !important;
+  top: 56px !important;
+  min-width: 220px !important;
+  background: var(--menu-bg) !important;
+  color: var(--menu-text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15) !important;
+  display: none;
+  z-index: 2000;
+}
+
+.btn.secondary:active {
+  transform: translateY(1px);
+  background: rgba(0,0,0,0.04);
+}
+
+/* Компактные чипы тем без названия */
+.theme-chip-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--menu-text);
+  transition: background .15s, transform .12s, border-color .15s;
+  border-left: 4px solid transparent;
+}
+.theme-chip-mini:hover, .theme-chip-mini.active {
+  background: rgba(37,99,235,0.07);
+  border-left: 4px solid var(--primary);
+}
+.theme-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+[data-theme="dark"] .theme-dot {
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* === 3) Скрыть текст возле переключателя темы в шапке === */
+button.theme-toggle .text { display: none !important; }
+
+/* Чтобы сама кнопка выглядела как контейнер для иконок */
+button.theme-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px !important;
+}
+
+/* === 4) Внутри нового меню используем компактные чипы === */
+#themeMenu .theme-chip { display: none !important; } /* прячем старые */
   
   </style>
 </head>
@@ -1460,12 +1516,12 @@ body.modal-open {
     <span class="icon">❓</span>
     <span class="text">Как?</span>
   </button>
-  <button class="theme-toggle theme-toggle-plain" id="themeToggle" title="Тема" aria-label="Тема">
-  <span id="themeModeBtn" class="theme-mode-btn" title="День/Ночь" aria-label="День/Ночь">☀️</span>
-  <span id="themeIconBtn" class="theme-icon-btn" title="Выбор темы" aria-label="Выбор темы">🎛️</span>
-</button>
+  <button class="theme-toggle" id="themeToggle" title="Сменить тему">
+    <span class="icon">🌙</span>
+    <span class="text">Тема</span>
+  </button>
   <!-- Меню тем — отдельный элемент, не внутри кнопки! -->
-  <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
+  <div id="themeMenu" style="display:none; pointer-events:auto;">
   <div id="themeMenuList"></div>
 </div>
 </div>
