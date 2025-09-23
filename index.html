@@ -1345,78 +1345,6 @@ body.modal-open {
   border-bottom: 1px solid #1d4ed8;
 }
 
-    .custom-input-bar {
-  display: flex;
-  align-items: center;
-  background: var(--card-bg);
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-  padding: 8px 12px;
-  gap: 8px;
-  margin: 0 0 8px 0;
-  position: relative;
-}
-
-.input-chips {
-  display: flex;
-  gap: 8px;
-}
-
-.custom-input {
-  flex: 1 1 auto;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 16px;
-  padding: 10px 8px;
-  color: var(--text-primary);
-  border-radius: 12px;
-  min-width: 0;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 22px;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 4px;
-  transition: background 0.15s;
-  cursor: pointer;
-}
-.icon-btn:active, .icon-btn:focus { background: var(--background); }
-
-.send-btn {
-  background: var(--primary);
-  color: #fff;
-  margin-left: 8px;
-  transition: background 0.15s;
-}
-.send-btn:active, .send-btn:focus { background: var(--primary-hover); }
-
-@media (max-width: 600px) {
-  .custom-input-bar {
-    border-radius: 18px 18px 0 0;
-    margin-bottom: 0;
-    padding-bottom: env(safe-area-inset-bottom, 8px);
-  }
-}
-
-.footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--background);
-  z-index: 20;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
   
   </style>
 </head>
@@ -1570,14 +1498,6 @@ body.modal-open {
     <!-- Шаг 3 -->
     <div id="step3" style="display:none;">
       <div class="row">
-        <div class="top-bar" id="topBarStep3" style="display:none;">
-  <button class="howto-toggle" id="howToBtn" title="Помощь">
-    <span class="icon">❓</span>
-  </button>
-  <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-    <span class="icon">🌙</span>
-  </button>
-</div>
         <div class="card">
           <button id="backTo2Top" class="top-back" title="Назад" aria-label="Назад">&larr;</button>
           <div class="dialog-header">
@@ -1591,19 +1511,17 @@ body.modal-open {
             </div>
             <button id="jumpToBottom" class="jump-bottom-btn" title="В конец" aria-label="В конец">▼</button>
           </div>
-          <div class="footer" style="padding:0;">
-  <form id="chatInputBar" class="chat-input-bar custom-input-bar" autocomplete="off" style="width:100%;position:relative;gap:0;">
-    <div class="input-chips">
-      <button type="button" class="chip"><span style="font-size:18px;vertical-align:middle;">🧠</span> DeepThink</button>
-      <button type="button" class="chip"><span style="font-size:18px;vertical-align:middle;">🌐</span> Search</button>
-    </div>
-    <input id="userInput" class="custom-input" type="text" placeholder="Напиши Saviora" autocomplete="off" />
-    <button type="button" class="icon-btn" id="plusBtn" title="Добавить" tabindex="0" aria-label="Добавить">+</button>
-    <button type="submit" class="icon-btn send-btn" id="sendAnswerBtn" title="Отправить" aria-label="Отправить">
-      <span style="font-size:20px;">➤</span>
-    </button>
-  </form>
-</div>
+          <div class="footer">
+            <div id="chatInputBar" class="chat-input-bar" style="width:100%; position:relative;">
+              <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
+              <button id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны"></button>
+              <div id="attachMenu" class="attach-menu" style="display:none;">
+                <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
+                <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
+                <button id="menuSaveToCabinet" class="attach-item">💾 Сохранить в кабинет</button>
+              </div>
+              <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить" aria-label="Отправить">➤</button>
+            </div>
           </div>
           <div class="nav-previews">
             <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
