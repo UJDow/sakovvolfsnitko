@@ -1021,6 +1021,9 @@ if (addWholeFromHint) {
   }
 
   // --- ШАГ 3 ---
+  document.getElementById('topBarStep3').style.display = 'flex';
+// скрыть обычный top-bar, если есть
+document.querySelector('.top-bar:not(#topBarStep3)').style.display = 'none';
   document.getElementById('backTo2Top').onclick = () => {
     ui.setStep(2);
     ui.renderDreamTiles();
