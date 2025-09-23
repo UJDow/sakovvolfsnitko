@@ -1,15 +1,4 @@
 // ====== ТЕМЫ ======
-
-const THEME_ICONS = {
-  std: "🎛️",      // стандарт
-  mint: "🌿",
-  sakura: "🌸",
-  amber: "🧡",
-  forest: "🌲",
-  fire: "🔥",
-  aurora: "🌌"
-};
-
 const THEMES = [
   {
     key: "mint",
@@ -1307,17 +1296,17 @@ function getSavedTheme() {
   const mode = localStorage.getItem(THEME_MODE_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? "night" : "day");
   return { theme, mode };
 }
+
 function updateThemeButton(themeKey, mode) {
-  const btnMode = document.getElementById("themeModeBtn");
-  const btnIcon = document.getElementById("themeIconBtn");
-  if (!btnMode || !btnIcon) return;
-
-  // Иконка день/ночь
-  btnMode.textContent = mode === "night" ? "🌙" : "☀️";
-
-  // Иконка темы
-  const key = themeKey || THEME_STD;
-  btnIcon.textContent = THEME_ICONS[key] || "🎛️";
+  const btn = document.getElementById("themeToggle");
+  if (themeKey === THEME_STD) {
+    btn.innerHTML = `<span class="icon">${mode === "night" ? "🌙" : "☀️"}</span><span class="text">Тема</span>`;
+    btn.classList.remove("theme-selected");
+  } else {
+    const theme = THEMES.find(t => t.key === themeKey);
+    btn.innerHTML = `<span class="icon">${mode === "night" ? "🌙" : "☀️"}</span><span class="text">${theme?.name || "Тема"}</span>`;
+    btn.classList.add("theme-selected");
+  }
 }
 
 function renderThemeMenu(selectedKey, selectedMode) {
@@ -1336,10 +1325,12 @@ function renderThemeMenu(selectedKey, selectedMode) {
   `;
   std.onclick = (e) => {
     e.stopPropagation();
+    // Применяем текущий selectedMode, закрываем меню и показываем слайдер для стандарта
     saveTheme(THEME_STD, selectedMode);
     applyTheme(THEME_STD, selectedMode);
     updateThemeButton(THEME_STD, selectedMode);
     document.getElementById("themeMenu").style.display = "none";
+    showStdModeSlider(selectedMode);
   };
   menu.appendChild(std);
 
@@ -1354,12 +1345,14 @@ function renderThemeMenu(selectedKey, selectedMode) {
       </span>
       <span class="chip-title">${theme.name}</span>
     `;
+    // Клик по чипу — применяем тему в режиме "day", закрываем меню, показываем слайдер
     chip.onclick = (e) => {
       e.stopPropagation();
       saveTheme(theme.key, "day");
       applyTheme(theme.key, "day");
       updateThemeButton(theme.key, "day");
       document.getElementById("themeMenu").style.display = "none";
+      showThemeSlider(theme.key, "day");
     };
     menu.appendChild(chip);
   });
@@ -1418,37 +1411,54 @@ function showStdModeSlider(mode) {
 }
 
 function initThemeUI() {
-  const btnWrapper = document.getElementById("themeToggle");
+  const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
-  const modeBtn = document.getElementById("themeModeBtn");
-  const iconBtn = document.getElementById("themeIconBtn");
-  if (!btnWrapper || !menu || !modeBtn || !iconBtn) return;
 
+  // Клики внутри меню не всплывают до документа
+  menu.addEventListener("click", (e) => e.stopPropagation());
+
+  // Применить тему при загрузке
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  modeBtn.onclick = (e) => {
-    e.stopPropagation();
-    const { theme: curTheme, mode: curMode } = getSavedTheme();
-    const nextMode = curMode === "night" ? "day" : "night";
-    saveTheme(curTheme, nextMode);
-    applyTheme(curTheme, nextMode);
-    updateThemeButton(curTheme, nextMode);
-  };
+  // Клик по кнопке — открыть меню или слайдер
+  btn.onclick = (e) => {
+  e.stopPropagation();
+  const { theme, mode } = getSavedTheme();
+  // Всегда рендерим актуальное меню
+  renderThemeMenu(theme, mode);
+  // Тоглим меню
+  if (menu.style.display === "block") {
+    menu.style.display = "none";
+  } else {
+    menu.style.display = "block";
+  }
 
-  iconBtn.onclick = (e) => {
-    e.stopPropagation();
-    const { theme: curTheme, mode: curMode } = getSavedTheme();
-    renderThemeMenu(curTheme, curMode);
-    menu.style.display = (menu.style.display === "block") ? "none" : "block";
-  };
+  // Отрисовываем соответствующий слайдер прямо в кнопке, но это не влияет на меню
+  if (theme === THEME_STD) {
+    showStdModeSlider(mode);
+  } else {
+    showThemeSlider(theme, mode);
+  }
+};
 
-  menu.addEventListener("click", (e) => e.stopPropagation());
+  // При загрузке: показать соответствующий слайдер в кнопке
+  if (theme === THEME_STD) {
+    showStdModeSlider(mode);
+  } else {
+    showThemeSlider(theme, mode);
+  }
+
+  // Клик вне меню — закрыть
   document.addEventListener("click", (e) => {
-    if (menu.style.display === "block") {
-      const clickedInside = menu.contains(e.target) || btnWrapper.contains(e.target);
-      if (!clickedInside) menu.style.display = "none";
+    const btn = document.getElementById("themeToggle");
+    const menu = document.getElementById("themeMenu");
+    if (!menu) return;
+    const clickInsideMenu = menu.contains(e.target);
+    const clickOnButton = btn && btn.contains(e.target);
+    if (!clickInsideMenu && !clickOnButton) {
+      menu.style.display = "none";
     }
   });
 }
