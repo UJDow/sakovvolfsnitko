@@ -1422,15 +1422,12 @@ function initThemeUI() {
   const menu = document.getElementById("themeMenu");
   const modeBtn = document.getElementById("themeModeBtn");
   const iconBtn = document.getElementById("themeIconBtn");
-
   if (!btnWrapper || !menu || !modeBtn || !iconBtn) return;
 
-  // Применить сохранённые значения
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  // Клик по мини-иконке день/ночь — мгновенный toggle
   modeBtn.onclick = (e) => {
     e.stopPropagation();
     const { theme: curTheme, mode: curMode } = getSavedTheme();
@@ -1440,7 +1437,6 @@ function initThemeUI() {
     updateThemeButton(curTheme, nextMode);
   };
 
-  // Клик по тематической иконке — открыть/закрыть меню
   iconBtn.onclick = (e) => {
     e.stopPropagation();
     const { theme: curTheme, mode: curMode } = getSavedTheme();
@@ -1448,10 +1444,7 @@ function initThemeUI() {
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
   };
 
-  // Клики внутри меню не закрывают его
   menu.addEventListener("click", (e) => e.stopPropagation());
-
-  // Клик вне меню — закрыть
   document.addEventListener("click", (e) => {
     if (menu.style.display === "block") {
       const clickedInside = menu.contains(e.target) || btnWrapper.contains(e.target);
