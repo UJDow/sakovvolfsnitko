@@ -499,79 +499,114 @@ const ui = {
     filled.style.width = ((step - 1) * 50) + '%';
   },
 
-  // Только чипсы
   updateBlocks() {
-    const blocksDiv = document.getElementById('blocks');
-    blocksDiv.innerHTML = '';
-    state.blocks.forEach(b => {
-      const chip = document.createElement('div');
-      chip.className = 'chip' + (state.currentBlock && state.currentBlock.id === b.id ? ' active' : '');
-      chip.textContent = b.text.length > 40 ? b.text.slice(0, 40) + '…' : b.text;
-      chip.onclick = () => blocks.select(b.id);
-      chip.style.background = utils.lighten(BLOCK_COLORS[b.colorIndex], 20);
-      chip.style.color = '#fff';
-      blocksDiv.appendChild(chip);
-    });
-  },
+  // Не рендерим чипсы, просто очищаем
+  const blocksDiv = document.getElementById('blocks');
+  if (blocksDiv) blocksDiv.innerHTML = '';
+},
 
   // Единственное место, которое рендерит dreamView
   renderDreamTiles() {
-    const dreamView = document.getElementById('dreamView');
-    if (!dreamView) return;
+  const dreamView = document.getElementById('dreamView');
+  if (!dreamView) return;
 
-    const textEl = document.getElementById('dream');
-    const text = (textEl && textEl.value) || '';
-    dreamView.innerHTML = '';
-    if (!text) return;
+  const textEl = document.getElementById('dream');
+  const text = (textEl && textEl.value) || '';
+  dreamView.innerHTML = '';
 
-    // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
-    const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
-    if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
-      const span = document.createElement('span');
-      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
-      span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
-      span.style.color = '#fff';
-      span.onclick = () => blocks.select(fullBlock.id);
-      span.textContent = text; // весь текст, без разрезов
-      dreamView.appendChild(span);
-      if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+  // --- Кликабельная фраза "Весь текст" ---
+  const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
+  const wholeTextBtn = document.createElement('span');
+  wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
+  wholeTextBtn.textContent = 'Весь текст';
+  wholeTextBtn.onclick = function() {
+    if (state.blocks.length > 0) {
+      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
       return;
     }
+    blocks.addWhole();
+    ui.renderDreamTiles();
+  };
+  wholeTextBtn.style.marginRight = '12px';
+  dreamView.appendChild(wholeTextBtn);
 
-    // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
-    let pos = 0;
-    const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
+  if (!text) return;
 
-    while (pos < text.length) {
-      const block = sortedBlocksArr.find(b => b.start === pos);
-      if (block) {
-        const span = document.createElement('span');
-        span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
-        span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
-        span.style.color = '#fff';
-        span.onclick = () => blocks.select(block.id);
-        span.textContent = text.slice(block.start, block.end);
-        dreamView.appendChild(span);
-        pos = block.end;
-      } else {
-        // свободный участок текста до следующего блока
-        const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
-        const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
-        const chunk = text.slice(pos, nextBlockStart);
-        const tokens = chunk.match(/\S+|\s+/g) || [];
-        let localPos = pos;
+  // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
+  const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
+  if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
+    const span = document.createElement('span');
+    span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
+    span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
+    span.style.color = '#fff';
+    span.onclick = () => blocks.select(fullBlock.id);
+    span.textContent = text; // весь текст, без разрезов
+    dreamView.appendChild(span);
+    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+    return;
+  }
 
-        tokens.forEach(token => {
-          const isWord = /\S/.test(token);
-          if (isWord) {
-            const span = document.createElement('span');
-            span.className = 'tile';
-            span.textContent = token;
-            span.dataset.start = String(localPos);
-            span.dataset.end = String(localPos + token.length);
-            span.onclick = function(e) {
-              e.preventDefault();
-              span.classList.toggle('selected');
+  // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
+  let pos = 0;
+  const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
+
+  while (pos < text.length) {
+    const block = sortedBlocksArr.find(b => b.start === pos);
+    if (block) {
+      const span = document.createElement('span');
+      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
+      span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+      span.style.color = '#fff';
+      span.onclick = () => blocks.select(block.id);
+      span.textContent = text.slice(block.start, block.end);
+      dreamView.appendChild(span);
+      pos = block.end;
+    } else {
+      // свободный участок текста до следующего блока
+      const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
+      const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
+      const chunk = text.slice(pos, nextBlockStart);
+      const tokens = chunk.match(/\S+|\s+/g) || [];
+      let localPos = pos;
+
+      tokens.forEach(token => {
+        const isWord = /\S/.test(token);
+        if (isWord) {
+          const span = document.createElement('span');
+          span.className = 'tile';
+          span.textContent = token;
+          span.dataset.start = String(localPos);
+          span.dataset.end = String(localPos + token.length);
+          // --- ВСТАВЬ ВОТ ЭТОТ ОБРАБОТЧИК ---
+          span.onclick = function(e) {
+            e.preventDefault();
+            span.classList.toggle('selected');
+            const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+            if (selected.length >= 2) {
+              // Определяем диапазон
+              const starts = selected.map(s => parseInt(s.dataset.start, 10));
+              const ends = selected.map(s => parseInt(s.dataset.end, 10));
+              const start = Math.min(...starts);
+              const end = Math.max(...ends);
+              // Проверка на пересечение
+              for (const b of state.blocks) {
+                if (!(end <= b.start || start >= b.end)) {
+                  utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+                  // Снять выделение
+                  selected.forEach(s => s.classList.remove('selected'));
+                  return;
+                }
+              }
+              const text = document.getElementById('dream').value.slice(start, end);
+              const ok = blocks.add(start, end, text);
+              if (ok) {
+                // Снять выделение
+                selected.forEach(s => s.classList.remove('selected'));
+                ui.renderDreamTiles();
+                utils.showToast('Блок добавлен', 'success');
+              }
+            } else {
+              // Просто подсветка
               const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
               const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
               document.querySelectorAll('.tile.selected').forEach(sel => {
@@ -582,28 +617,29 @@ const ui = {
                 sel.style.background = '';
                 sel.style.color = '';
               });
-              if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-            };
-            dreamView.appendChild(span);
-          } else {
-            dreamView.appendChild(document.createTextNode(token));
-          }
-          localPos += token.length;
-        });
-        pos = nextBlockStart;
-      }
+            }
+          };
+          // --- КОНЕЦ ОБРАБОТЧИКА ---
+          dreamView.appendChild(span);
+        } else {
+          dreamView.appendChild(document.createTextNode(token));
+        }
+        localPos += token.length;
+      });
+      pos = nextBlockStart;
     }
+  }
 
-    // Синхронизировать цвет уже выделенных плиток
-    const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-    const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-    document.querySelectorAll('.tile.selected').forEach(sel => {
-      sel.style.background = nextColor;
-      sel.style.color = '#fff';
-    });
+  // Синхронизировать цвет уже выделенных плиток
+  const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+  const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+  document.querySelectorAll('.tile.selected').forEach(sel => {
+    sel.style.background = nextColor;
+    sel.style.color = '#fff';
+  });
 
-    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-  },
+  if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+},
 
   updateChat() {
     const chatDiv = document.getElementById('chat');
@@ -854,23 +890,6 @@ function bindEvents() {
   };
 
   // --- ШАГ 2 ---
-  document.getElementById('addBlock').onclick = () => {
-    blocks.addFromTiles();
-  };
-  document.getElementById('addWholeBlock').onclick = () => {
-    // 1) Запрет, если уже есть хотя бы один блок
-    if (state.blocks.length > 0) {
-      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
-      return;
-    }
-    // 2) Дополнительно запретим, если сейчас выделены плитки (начато выделение)
-    const dreamView = document.getElementById('dreamView');
-    if (dreamView && dreamView.querySelector('.tile.selected')) {
-      utils.showToast('Сначала снимите выделение плиток', 'error');
-      return;
-    }
-    blocks.addWhole();
-  };
   document.getElementById('toStep3').onclick = () => {
     if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
     state.currentBlock = state.blocks[0];
