@@ -1344,6 +1344,29 @@ function showThemeSlider(themeKey, mode) {
   };
 }
 
+function showStdModeSlider(mode) {
+  const btn = document.getElementById("themeToggle");
+  btn.innerHTML = `
+    <div class="theme-slider">
+      <button class="theme-slider-btn${mode === "day" ? " active" : ""}" id="stdDayBtn">☀️</button>
+      <button class="theme-slider-btn${mode === "night" ? " active" : ""}" id="stdNightBtn">🌙</button>
+      <span style="margin-left:8px; font-weight:500;">Стандарт</span>
+    </div>
+  `;
+  document.getElementById("stdDayBtn").onclick = () => {
+    saveTheme(THEME_STD, "day");
+    applyTheme(THEME_STD, "day");
+    updateThemeButton(THEME_STD, "day");
+    showStdModeSlider("day");
+  };
+  document.getElementById("stdNightBtn").onclick = () => {
+    saveTheme(THEME_STD, "night");
+    applyTheme(THEME_STD, "night");
+    updateThemeButton(THEME_STD, "night");
+    showStdModeSlider("night");
+  };
+}
+
 function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
@@ -1357,17 +1380,19 @@ function initThemeUI() {
   updateThemeButton(theme, mode);
 
   // Клик по кнопке — открыть меню или слайдер
-  btn.onclick = e => {
+  btn.onclick = (e) => {
     e.stopPropagation();
-    const { theme, mode } = getSavedTheme(); // <-- всегда актуально!
+    const { theme, mode } = getSavedTheme(); // всегда актуально
     if (theme === THEME_STD) {
       renderThemeMenu(theme, mode);
       menu.style.display = menu.style.display === "block" ? "none" : "block";
+      showStdModeSlider(mode); // переключатель ☀️/🌙 для стандартной темы
     } else {
       showThemeSlider(theme, mode);
-      btn.onclick = e2 => {
+      // В этом режиме повторный клик по кнопке показывает меню
+      btn.onclick = (e2) => {
         e2.stopPropagation();
-        const { theme, mode } = getSavedTheme(); // <-- всегда актуально!
+        const { theme, mode } = getSavedTheme();
         renderThemeMenu(theme, mode);
         menu.style.display = "block";
         btn.onclick = arguments.callee;
@@ -1375,20 +1400,24 @@ function initThemeUI() {
     }
   };
 
+  // При загрузке: показать соответствующий слайдер в кнопке
+  if (theme === THEME_STD) {
+    showStdModeSlider(mode);
+  } else {
+    showThemeSlider(theme, mode);
+  }
+
   // Клик вне меню — закрыть
   document.addEventListener("click", (e) => {
-  const btn = document.getElementById("themeToggle");
-  const menu = document.getElementById("themeMenu");
-  if (!menu) return;
-  const clickInsideMenu = menu.contains(e.target);
-  const clickOnButton = btn && btn.contains(e.target);
-  if (!clickInsideMenu && !clickOnButton) {
-    menu.style.display = "none";
-  }
-});
-
-  // При загрузке, если выбрана тема — сразу слайдер
-  if (theme !== THEME_STD) showThemeSlider(theme, mode);
+    const btn = document.getElementById("themeToggle");
+    const menu = document.getElementById("themeMenu");
+    if (!menu) return;
+    const clickInsideMenu = menu.contains(e.target);
+    const clickOnButton = btn && btn.contains(e.target);
+    if (!clickInsideMenu && !clickOnButton) {
+      menu.style.display = "none";
+    }
+  });
 }
 
 // Вызвать после DOMContentLoaded
