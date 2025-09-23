@@ -869,6 +869,18 @@ function bindEvents() {
   document.getElementById('loginForm').onsubmit = e => { e.preventDefault(); auth.login(); };
   document.getElementById('registerForm').onsubmit = e => { e.preventDefault(); auth.register(); };
 
+  const addWholeFromHint = document.getElementById('addWholeFromHint');
+if (addWholeFromHint) {
+  addWholeFromHint.onclick = function() {
+    if (state.blocks.length > 0) {
+      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+      return;
+    }
+    blocks.addWhole();
+    ui.renderDreamTiles();
+  };
+}
+
   // --- ШАГ 1 ---
   document.getElementById('step1MainBtn').onclick = async function() {
     const text = document.getElementById('dream').value.trim();
