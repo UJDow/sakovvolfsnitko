@@ -1345,41 +1345,31 @@ function showThemeSlider(themeKey, mode) {
 function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
+  let { theme, mode } = getSavedTheme();
 
   // Применить тему при загрузке
-  const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
   // Клик по кнопке — открыть меню
   btn.onclick = e => {
     e.stopPropagation();
-    const { theme, mode } = getSavedTheme(); // <-- всегда актуально!
     if (theme === THEME_STD) {
       renderThemeMenu(theme, mode);
       menu.style.display = menu.style.display === "block" ? "none" : "block";
     } else {
+      // Если выбрана тема — показать слайдер ☀️/🌙
       showThemeSlider(theme, mode);
+      // Клик по названию — снова открыть меню
       btn.onclick = e2 => {
         e2.stopPropagation();
-        const { theme, mode } = getSavedTheme(); // <-- всегда актуально!
         renderThemeMenu(theme, mode);
         menu.style.display = "block";
+        // Вернуть обработчик
         btn.onclick = arguments.callee;
       };
     }
   };
-
-  // Клик вне меню — закрыть
-  document.addEventListener("click", e => {
-    if (!menu.contains(e.target) && e.target !== btn) {
-      menu.style.display = "none";
-    }
-  });
-
-  // При загрузке, если выбрана тема — сразу слайдер
-  if (theme !== THEME_STD) showThemeSlider(theme, mode);
-}
 
   // Клик вне меню — закрыть
   document.addEventListener("click", e => {
