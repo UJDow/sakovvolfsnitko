@@ -1291,12 +1291,13 @@ function renderThemeMenu(selectedKey, selectedMode) {
   const std = document.createElement("div");
   std.className = "theme-chip" + (selectedKey === THEME_STD ? " active" : "");
   std.innerHTML = `<span class="chip-preview"><div class="half left" style="background:#bdcff1"></div><div class="half right" style="background:#0f172a"></div></span><span class="chip-title">Стандарт</span><span class="chip-std">Системная</span>`;
-  std.onclick = () => {
-    saveTheme(THEME_STD, selectedMode);
-    applyTheme(THEME_STD, selectedMode);
-    updateThemeButton(THEME_STD, selectedMode);
-    document.getElementById("themeMenu").style.display = "none";
-  };
+  std.onclick = (e) => {
+e.stopPropagation(); // важно: не даём событию уйти на document
+saveTheme(THEME_STD, selectedMode);
+applyTheme(THEME_STD, selectedMode);
+updateThemeButton(THEME_STD, selectedMode);
+document.getElementById("themeMenu").style.display = "none";
+};
   menu.appendChild(std);
 
   // Темы
@@ -1310,13 +1311,14 @@ function renderThemeMenu(selectedKey, selectedMode) {
       </span>
       <span class="chip-title">${theme.name}</span>
     `;
-    chip.onclick = () => {
-      saveTheme(theme.key, "day");
-      applyTheme(theme.key, "day");
-      updateThemeButton(theme.key, "day");
-      document.getElementById("themeMenu").style.display = "none";
-      showThemeSlider(theme.key, "day");
-    };
+    chip.onclick = (e) => {
+e.stopPropagation(); // важно
+saveTheme(theme.key, "day");
+applyTheme(theme.key, "day");
+updateThemeButton(theme.key, "day");
+document.getElementById("themeMenu").style.display = "none";
+showThemeSlider(theme.key, "day");
+};
     menu.appendChild(chip);
   });
 }
@@ -1346,6 +1348,9 @@ function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
 
+  // Клики внутри меню не всплывают до документа
+  menu.addEventListener("click", (e) => e.stopPropagation());
+
   // Применить тему при загрузке
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
@@ -1371,11 +1376,16 @@ function initThemeUI() {
   };
 
   // Клик вне меню — закрыть
-  document.addEventListener("click", e => {
-    if (!menu.contains(e.target) && e.target !== btn) {
-      menu.style.display = "none";
-    }
-  });
+  document.addEventListener("click", (e) => {
+  const btn = document.getElementById("themeToggle");
+  const menu = document.getElementById("themeMenu");
+  if (!menu) return;
+  const clickInsideMenu = menu.contains(e.target);
+  const clickOnButton = btn && btn.contains(e.target);
+  if (!clickInsideMenu && !clickOnButton) {
+    menu.style.display = "none";
+  }
+});
 
   // При загрузке, если выбрана тема — сразу слайдер
   if (theme !== THEME_STD) showThemeSlider(theme, mode);
