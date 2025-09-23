@@ -838,38 +838,46 @@
   }
 }
     
-    .hint-inline { 
-  color: var(--text-secondary); 
-  font-size: 14px; 
-  margin: 6px 0 10px; 
-  min-height: 32px; 
+    .hint-inline {
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 6px 0 10px;
+  min-height: 32px;
   line-height: 1.5;
-  display: block; /* или просто убери display: flex */
+  display: block;
+  padding-right: 32px; /* чтобы текст не налезал на кнопку */
 }
   
      .hint-refresh {
-      appearance: none; 
-      -webkit-appearance: none; 
-      background: transparent; 
-      border: none; 
-      cursor: pointer; 
-      min-width: 36px; 
-      min-height: 36px;
-      padding: 6px; 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      line-height: 1; 
-      font-size: 17px; 
-      color: var(--primary);
-      opacity: 0.95; 
-      position: relative; 
-      z-index: 1; 
-      border-radius: 8px;
-      transition: all 0.12s ease;
-    }
+  position: absolute;
+  top: 0;
+  right: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 17px;
+  color: var(--primary);
+  opacity: 0.95;
+  border-radius: 8px;
+  transition: all 0.12s ease;
+}
   
-    .hint-refresh:hover { opacity: 1; color: var(--primary-hover); transform: scale(1.06); background: rgba(37, 99, 235, 0.06); }
+    .hint-refresh:hover {
+  opacity: 1;
+  color: var(--primary-hover);
+  transform: scale(1.06);
+  background: rgba(37, 99, 235, 0.06);
+}
     .hint-refresh:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
   
     /* Медиа-запросы для мобильных устройств */
