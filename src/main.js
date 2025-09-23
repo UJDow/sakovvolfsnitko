@@ -1322,37 +1322,16 @@ function renderThemeMenu(selectedKey, selectedMode) {
       <div class="half right" style="background:#0f172a"></div>
     </span>
     <span class="chip-title">Стандарт</span>
-    <div class="chip-modes" style="display:flex;gap:6px;margin-left:auto;">
-      <button class="chip-mode-btn" data-mode="day" title="День">☀️</button>
-      <button class="chip-mode-btn" data-mode="night" title="Ночь">🌙</button>
-    </div>
   `;
   std.onclick = (e) => {
     e.stopPropagation();
-    // Клик по пустому месту чипа — применяем текущий selectedMode и закрываем меню
-    if (!(e.target && e.target.classList.contains('chip-mode-btn'))) {
-      saveTheme(THEME_STD, selectedMode);
-      applyTheme(THEME_STD, selectedMode);
-      updateThemeButton(THEME_STD, selectedMode);
-      document.getElementById("themeMenu").style.display = "none";
-    }
+    // Применяем текущий selectedMode, закрываем меню и показываем слайдер для стандарта
+    saveTheme(THEME_STD, selectedMode);
+    applyTheme(THEME_STD, selectedMode);
+    updateThemeButton(THEME_STD, selectedMode);
+    document.getElementById("themeMenu").style.display = "none";
+    showStdModeSlider(selectedMode);
   };
-  // Быстрые режимы
-  std.querySelectorAll('.chip-mode-btn').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      const mode = btn.dataset.mode;
-      saveTheme(THEME_STD, mode);
-      applyTheme(THEME_STD, mode);
-      updateThemeButton(THEME_STD, mode);
-      // Оставляем меню открытым, чтобы можно было играть с темами — по UX удобно
-      // Если хотите закрывать меню — раскомментируйте следующую строку:
-      // document.getElementById("themeMenu").style.display = "none";
-      // Обновим меню и слайдер подписи кнопки
-      renderThemeMenu(THEME_STD, mode);
-      showStdModeSlider(mode);
-    };
-  });
   menu.appendChild(std);
 
   // Кастомные темы
@@ -1365,35 +1344,16 @@ function renderThemeMenu(selectedKey, selectedMode) {
         <div class="half right" style="background:${theme.night["--background"]};"></div>
       </span>
       <span class="chip-title">${theme.name}</span>
-      <div class="chip-modes" style="display:flex;gap:6px;margin-left:auto;">
-        <button class="chip-mode-btn" data-mode="day" title="День">☀️</button>
-        <button class="chip-mode-btn" data-mode="night" title="Ночь">🌙</button>
-      </div>
     `;
-    // Клик по всему чипу — активируем тему в режиме "day" (быстрый сценарий)
+    // Клик по чипу — применяем тему в режиме "day", закрываем меню, показываем слайдер
     chip.onclick = (e) => {
       e.stopPropagation();
-      if (!(e.target && e.target.classList.contains('chip-mode-btn'))) {
-        saveTheme(theme.key, "day");
-        applyTheme(theme.key, "day");
-        updateThemeButton(theme.key, "day");
-        document.getElementById("themeMenu").style.display = "none";
-        showThemeSlider(theme.key, "day");
-      }
+      saveTheme(theme.key, "day");
+      applyTheme(theme.key, "day");
+      updateThemeButton(theme.key, "day");
+      document.getElementById("themeMenu").style.display = "none";
+      showThemeSlider(theme.key, "day");
     };
-    // Мгновенные мини-переключатели
-    chip.querySelectorAll('.chip-mode-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const mode = btn.dataset.mode;
-        saveTheme(theme.key, mode);
-        applyTheme(theme.key, mode);
-        updateThemeButton(theme.key, mode);
-        // Меню оставляем открытым, можно менять несколько тем подряд
-        renderThemeMenu(theme.key, mode);
-        showThemeSlider(theme.key, mode);
-      };
-    });
     menu.appendChild(chip);
   });
 }
