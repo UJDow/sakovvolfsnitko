@@ -1416,6 +1416,41 @@ body.modal-open {
   color: #fff;
   border-color: var(--primary);
 }
+
+/* ——— Чистые иконки без “пластин” ——— */
+.theme-toggle-plain {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 6px !important;
+  height: 40px !important;
+  gap: 8px !important;
+}
+.theme-toggle-plain .text { display: none !important; }
+
+.theme-mode-btn,
+.theme-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 1;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 6px;
+  color: currentColor;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.theme-mode-btn:hover,
+.theme-icon-btn:hover { transform: scale(1.08); }
+.theme-mode-btn:active,
+.theme-icon-btn:active { transform: scale(0.96); }
+
+/* Поддержка тёмной темы — ничего не перекрываем, иконки остаются “чистыми” */
   
   </style>
 </head>
@@ -1425,10 +1460,10 @@ body.modal-open {
     <span class="icon">❓</span>
     <span class="text">Как?</span>
   </button>
-  <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-    <span class="icon">🌙</span>
-    <span class="text">Тема</span>
-  </button>
+  <button class="theme-toggle theme-toggle-plain" id="themeToggle" title="Тема" aria-label="Тема">
+  <span id="themeModeBtn" class="theme-mode-btn" title="День/Ночь" aria-label="День/Ночь">☀️</span>
+  <span id="themeIconBtn" class="theme-icon-btn" title="Выбор темы" aria-label="Выбор темы">🌸</span>
+</button>
   <!-- Меню тем — отдельный элемент, не внутри кнопки! -->
   <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
   <div id="themeMenuList"></div>
