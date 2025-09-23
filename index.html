@@ -1345,6 +1345,77 @@ body.modal-open {
   border-bottom: 1px solid #1d4ed8;
 }
 
+.theme-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  font-size: 15px;
+  font-weight: 500;
+  margin: 2px 0;
+  border: none;
+  background: transparent;
+  color: var(--menu-text);
+  outline: none;
+  border-left: 4px solid transparent;
+}
+.theme-chip:hover, .theme-chip.active {
+  background: rgba(37,99,235,0.07);
+  border-left: 4px solid var(--primary);
+}
+.theme-chip .chip-preview {
+  width: 38px;
+  height: 22px;
+  border-radius: 12px;
+  display: flex;
+  overflow: hidden;
+  border: 1.5px solid #e5e7eb;
+  margin-right: 8px;
+}
+.theme-chip .chip-preview .half {
+  width: 50%;
+  height: 100%;
+}
+.theme-chip .chip-preview .half.left { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+.theme-chip .chip-preview .half.right { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.theme-chip .chip-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.theme-chip .chip-std {
+  font-size: 15px;
+  color: #64748b;
+  margin-left: 8px;
+}
+.theme-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 10px 0 0;
+  padding: 0;
+}
+.theme-slider-btn {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 0.18s, color 0.18s;
+  margin: 0 2px;
+}
+.theme-slider-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
   
   </style>
 </head>
@@ -1355,6 +1426,9 @@ body.modal-open {
     <span class="text">Как?</span>
   </button>
   <button class="theme-toggle" id="themeToggle" title="Сменить тему">
+    <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0;">
+  <div id="themeMenuList"></div>
+</div>
     <span class="icon">🌙</span>
     <span class="text">Тема</span>
   </button>
