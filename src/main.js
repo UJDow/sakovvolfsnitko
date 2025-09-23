@@ -1,6 +1,11 @@
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
 
+const MAX_LAST_TURNS_TO_SEND = 6;
+const MAX_TURNS_BEFORE_SUMMARY = 8;
+const MAX_BLOCKTEXT_LEN_TO_SEND = 4000;
+const MAX_USER_INPUT_LEN = 1200; // ограничение на длину ввода
+
 const state = {
   user: null,
   jwt: null,
@@ -18,16 +23,8 @@ const state = {
 };
 
 const BLOCK_COLORS = [
-  "#6C63FF", // фиолетовый
-  "#00B894", // зелёный
-  "#00BFFF", // голубой
-  "#FFA500", // оранжевый
-  "#FF6F61", // коралловый
-  "#FFB347", // мягкий оранжевый
-  "#FF8C00", // тёмно-оранжевый
-  "#A259F7", // сиреневый
-  "#43E97B", // салатовый
-  "#FF5E62"  // розовый
+  "#6C63FF", "#00B894", "#00BFFF", "#FFA500", "#FF6F61",
+  "#FFB347", "#FF8C00", "#A259F7", "#43E97B", "#FF5E62"
 ];
 
 ///////////////////////
@@ -35,7 +32,6 @@ const BLOCK_COLORS = [
 ///////////////////////
 const utils = {
   uuid() {
-    // Генерация простого uuid v4
     return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
       (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     );
@@ -77,7 +73,6 @@ const utils = {
   }
 };
 utils.lighten = function(hex, percent = 20) {
-  // hex: "#RRGGBB"
   let num = parseInt(hex.replace('#',''),16);
   let r = (num >> 16) + Math.round(2.55 * percent);
   let g = (num >> 8 & 0x00FF) + Math.round(2.55 * percent);
@@ -115,6 +110,10 @@ const api = {
       ui.showTrialExpired();
       throw new Error('403');
     }
+    if (resp.status === 402) {
+      utils.showToast('Лимит исчерпан, попробуйте позже', 'error');
+      throw new Error('402');
+    }
     let data;
     try { data = await resp.json(); } catch { data = {}; }
     if (!resp.ok) {
@@ -142,8 +141,18 @@ const api = {
   deleteDream(id) {
     return api.request(`/dreams/${id}`, { method: 'DELETE' });
   },
-  analyze({ blockText, history, extraSystemPrompt }) {
-    return api.request('/analyze', { method: 'POST', body: { blockText, history, extraSystemPrompt } });
+  analyze({ blockText, lastTurns, rollingSummary, extraSystemPrompt }) {
+    // Новый контракт: lastTurns, rollingSummary, extraSystemPrompt
+    return api.request('/analyze', {
+      method: 'POST',
+      body: { blockText, lastTurns, rollingSummary, extraSystemPrompt }
+    });
+  },
+  summarize({ history, blockText, existingSummary }) {
+    return api.request('/summarize', {
+      method: 'POST',
+      body: { history, blockText, existingSummary }
+    });
   }
 };
 
@@ -222,7 +231,15 @@ const auth = {
 const dreams = {
   async load() {
     const list = await api.getDreams();
-    state.dreams = list.sort((a, b) => b.date - a.date);
+    // Восстанавливаем rollingSummary и turnsCount у блоков
+    state.dreams = list.map(dream => ({
+      ...dream,
+      blocks: (dream.blocks || []).map(b => ({
+        ...b,
+        rollingSummary: b.rollingSummary || null,
+        turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
+      }))
+    })).sort((a, b) => b.date - a.date);
     ui.updateCabinetList();
     ui.updateStorageBar();
   },
@@ -233,7 +250,9 @@ const dreams = {
       blocks: state.blocks.map(b => ({
         ...b,
         chat: state.chatHistory[b.id] || [],
-        finalInterpretation: b.finalInterpretation || null
+        finalInterpretation: b.finalInterpretation || null,
+        rollingSummary: b.rollingSummary || null,
+        turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
       })),
       globalFinalInterpretation: state.globalFinalInterpretation || null,
     };
@@ -249,7 +268,11 @@ const dreams = {
   },
   loadToEditor(dream) {
     state.currentDream = { ...dream };
-    state.blocks = (dream.blocks || []).map(b => ({ ...b }));
+    state.blocks = (dream.blocks || []).map(b => ({
+      ...b,
+      rollingSummary: b.rollingSummary || null,
+      turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
+    }));
     state.globalFinalInterpretation = dream.globalFinalInterpretation || null;
     state.chatHistory = {};
     for (const b of state.blocks) {
@@ -268,7 +291,6 @@ const dreams = {
 ///////////////////////
 const blocks = {
   add(start, end, text) {
-    // Проверка на пересечение диапазонов
     for (const b of state.blocks) {
       if ((start < b.end && end > b.start)) {
         utils.showToast('Блоки не должны пересекаться', 'error');
@@ -277,10 +299,16 @@ const blocks = {
     }
     const id = utils.uuid();
     const colorIndex = state.blocks.length % BLOCK_COLORS.length;
-    const block = { id, start, end, text, chat: [], finalInterpretation: null, colorIndex };
+    const block = {
+      id, start, end, text, chat: [],
+      finalInterpretation: null,
+      colorIndex,
+      rollingSummary: null,
+      turnsCount: 0
+    };
     state.blocks.push(block);
     state.chatHistory[id] = [];
-    ui.updateBlocks();       // только чипсы
+    ui.updateBlocks();
     return true;
   },
 
@@ -401,6 +429,10 @@ function refreshSelectedBlocksUnified() {
 const chat = {
   async sendUserMessage(msg) {
     if (!state.currentBlock) return;
+    if (msg.length > MAX_USER_INPUT_LEN) {
+      utils.showToast('Слишком длинное сообщение (макс. 1200 символов)', 'error');
+      return;
+    }
     const blockId = state.currentBlock.id;
     if (!state.chatHistory[blockId]) state.chatHistory[blockId] = [];
     state.chatHistory[blockId].push({ role: 'user', content: msg });
@@ -412,10 +444,47 @@ const chat = {
     if (!block) return;
     ui.setThinking(true);
     try {
+      // rolling summary logic
       const history = state.chatHistory[blockId] || [];
-      const res = await api.analyze({ blockText: block.text, history });
+      const lastTurns = history.slice(-MAX_LAST_TURNS_TO_SEND);
+      const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
+      const rollingSummary = block.rollingSummary || null;
+
+      const res = await api.analyze({
+        blockText,
+        lastTurns,
+        rollingSummary
+      });
+
       const aiMsg = res?.choices?.[0]?.message?.content || 'Ошибка анализа';
       state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
+
+      // Инкрементируем turnsCount по user-сообщениям
+      block.turnsCount = (block.turnsCount || 0) + 1;
+
+      // Условие summarize
+      if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
+        if (window.DEV_LOGS !== false) {
+          console.log('[debug] summarize triggered', { blockId, turnsCount: block.turnsCount, historyLen: history.length });
+        }
+        const resSum = await api.summarize({
+          history,
+          blockText,
+          existingSummary: block.rollingSummary || ''
+        });
+        block.rollingSummary = resSum.summary || block.rollingSummary;
+        // Обрезаем историю до хвоста
+        state.chatHistory[blockId] = state.chatHistory[blockId].slice(-MAX_LAST_TURNS_TO_SEND);
+        block.turnsCount = 0;
+        if (window.DEV_LOGS !== false) {
+          console.log('[debug] rolling summary updated/trimmed', {
+            blockId,
+            newSummaryLen: block.rollingSummary?.length,
+            keptTurns: MAX_LAST_TURNS_TO_SEND
+          });
+        }
+      }
+
       ui.updateChat();
       ui.updateProgressMoon();
       if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
@@ -432,8 +501,15 @@ const chat = {
     if (!block) return;
     ui.setThinking(true);
     try {
-      const history = state.chatHistory[blockId] || [];
-      const res = await api.analyze({ blockText: block.text, history, extraSystemPrompt: 'Сделай итоговое толкование этого блока сна. Не задавай вопросов, только вывод.' });
+      const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
+      const lastTurns = (state.chatHistory[blockId] || []).slice(-MAX_LAST_TURNS_TO_SEND);
+      const rollingSummary = block.rollingSummary || null;
+      const res = await api.analyze({
+        blockText,
+        lastTurns,
+        rollingSummary,
+        extraSystemPrompt: 'Сделай итоговое толкование этого блока сна. Не задавай вопросов, только вывод.'
+      });
       const final = res?.choices?.[0]?.message?.content || 'Ошибка толкования';
       block.finalInterpretation = final;
       ui.updateChat();
@@ -448,14 +524,21 @@ const chat = {
     if (!state.currentDream) return;
     ui.setThinking(true);
     try {
+      // rolling summary для каждого блока или короткая выжимка из finalInterpretation
       const allBlocks = state.blocks.map(b => ({
-        text: b.text,
-        final: b.finalInterpretation || '',
-        chat: state.chatHistory[b.id] || []
+        summary: b.rollingSummary || (b.finalInterpretation ? b.finalInterpretation.slice(0, 200) : ''),
+        text: b.text
       }));
-      const dreamText = state.currentDream.dreamText;
+      const dreamText = (state.currentDream.dreamText || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
+      // Собираем общий rolling summary
+      const summaryText = allBlocks.map((b, i) => `Блок ${i+1}: ${b.summary}`).join('\n');
       const prompt = 'Сделай итоговое толкование всего сна, учитывая все блоки и их толкования. Не задавай вопросов, только вывод.';
-      const res = await api.analyze({ blockText: dreamText, history: [], extraSystemPrompt: prompt });
+      const res = await api.analyze({
+        blockText: dreamText,
+        lastTurns: [],
+        rollingSummary: summaryText,
+        extraSystemPrompt: prompt
+      });
       state.globalFinalInterpretation = res?.choices?.[0]?.message?.content || 'Ошибка итогового толкования';
       ui.showFinalDialog();
     } catch (e) {
@@ -1042,4 +1125,5 @@ async function init() {
   }
 }
 
+window.DEV_LOGS = true; // включить dev-логи (выключить в проде)
 init();
