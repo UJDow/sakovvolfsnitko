@@ -1415,39 +1415,44 @@ function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
 
-  btn.ondblclick = (e) => {
+  // Применяем сохранённую тему и режим
+  const { theme, mode } = getSavedTheme();
+  applyTheme(theme, mode);
+  updateThemeButton(theme, mode);
+
+  // Клик по кнопке — просто меняет day/night для текущей темы
+  btn.onclick = (e) => {
     e.stopPropagation();
+    // Если меню открыто — не переключаем режим, а просто открываем меню
+    if (menu.style.display === "block") {
+      menu.style.display = "none";
+      return;
+    }
+    // Меняем режим
     const { theme, mode } = getSavedTheme();
     const newMode = mode === "night" ? "day" : "night";
     saveTheme(theme, newMode);
     applyTheme(theme, newMode);
     updateThemeButton(theme, newMode);
-    showThemeSlider(theme, newMode);
   };
 
-  menu.addEventListener("click", (e) => e.stopPropagation());
-
-  const { theme, mode } = getSavedTheme();
-  applyTheme(theme, mode);
-  updateThemeButton(theme, mode);
-
-  btn.onclick = (e) => {
-    e.stopPropagation();
+  // Открытие меню выбора темы по правому клику (или по отдельной иконке, если нужно)
+  btn.oncontextmenu = (e) => {
+    e.preventDefault();
     const { theme, mode } = getSavedTheme();
     renderThemeMenu(theme, mode);
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
   };
 
+  // Клик вне меню — закрывает меню
   document.addEventListener("click", (e) => {
-    const clickInsideMenu = menu.contains(e.target);
-    const clickOnButton = btn.contains(e.target);
-    if (!clickInsideMenu && !clickOnButton) {
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
       menu.style.display = "none";
     }
   });
-}
 
-document.addEventListener("DOMContentLoaded", initThemeUI);
+  menu.addEventListener("click", (e) => e.stopPropagation());
+}
 
 // === ИНИЦИАЛИЗАЦИЯ === //
 async function init() {
