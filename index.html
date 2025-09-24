@@ -19,6 +19,8 @@
   --surface-min-height: 180px;
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
+      --on-primary: #ffffff;
+      --on-accent: #0b1b4a;
   --secondary: #64748b;
   --accent: #06b6d4;
   --background: #bdcff1;
@@ -61,6 +63,8 @@
   --menu-bg: rgba(30, 41, 59, 0.98);
   --menu-text: #f1f5f9;
   --progress-inactive: #334155;
+  --on-primary: #0a1429;
+  --on-accent: #0a1429;
 }
 
 html, body {
@@ -412,10 +416,18 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 }
 
 .btn:hover { box-shadow: 0 6px 12px -1px rgba(0,0,0,0.15); }
-.btn.primary { background: var(--primary); color: white; border: none; font-weight: 600; }
-.btn.primary:hover { background: var(--primary-hover); }
-.btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
-.btn.secondary:hover { background: rgba(0,0,0,0.05); }
+.btn.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  font-weight: 600;
+}
+.btn.primary:hover {
+  /* легкое тонирование card-bg, если нет --primary-hover */
+  background: color-mix(in srgb, var(--primary) 88%, transparent);
+}
+.btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--primary); }
+.btn.secondary:hover { background: color-mix(in srgb, var(--card-bg) 85%, var(--primary) 15%); }
 
 .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 
@@ -477,7 +489,7 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 }
 
 .bot  { background: #f1f5f9; color: var(--text-primary); align-self: flex-start; border: 1px solid #e2e8f0; }
-.user { background: var(--primary);  color: #fff; align-self: flex-end; border: none; }
+.user { background: var(--primary); color: var(--on-primary); align-self: flex-end; border: none; }
 .msg.bot.final {
   background: linear-gradient(135deg, #e6f7ff 0%, #d0e8ff 100%);
   color: #06213a;
@@ -588,7 +600,7 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 
 .attach-icon-btn {
   right: 60px;
-  background: var(--card-bg);
+  background: var(--primary);
   color: var(--text-primary);
   border: 1px solid var(--border);
   font-size: 18px;
@@ -597,7 +609,7 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 .send-icon-btn {
   right: 12px;
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   border: none;
   font-size: 16px;
 }
@@ -1051,14 +1063,14 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 
 .chip.active {
   background: var(--primary);
-  color: white;
-  outline: 2.5px solid #22d3ee;
+  color: var(--on-primary);
+  outline: 2.5px solid color-mix(in srgb, var(--accent) 72%, transparent);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(34,211,238,0.13);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent);
   position: relative;
   z-index: 2;
   animation: chipSelectPulse 0.5s;
-}
+}1
 [data-theme="dark"] .chip.active {
   outline: 3px solid #fff;
   box-shadow: 0 0 0 4px rgba(255,255,255,0.13);
@@ -1341,8 +1353,8 @@ body.modal-open {
   white-space: nowrap;
 }
 .inline-link:hover {
-  color: #1d4ed8;
-  border-bottom: 1px solid #1d4ed8;
+  color: var(--primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 60%, transparent);
 }
 
 .theme-chip {
