@@ -1139,6 +1139,7 @@ if (addWholeFromHint) {
   };
 }
 
+
   // --- ШАГ 1 ---
   document.getElementById('step1MainBtn').onclick = async function() {
     const text = document.getElementById('dream').value.trim();
@@ -1393,6 +1394,7 @@ function initThemeUI() {
 // === ИНИЦИАЛИЗАЦИЯ === //
 async function init() {
   bindEvents();
+  initThemeUI(); // ← только одна строка!
   if (await auth.tryAutoLogin()) {
     await dreams.load();
     ui.showMain();
@@ -1401,5 +1403,5 @@ async function init() {
   }
 }
 
-window.DEV_LOGS = true; // включить dev-логи (выключить в проде)
+window.DEV_LOGS = true;
 init();
