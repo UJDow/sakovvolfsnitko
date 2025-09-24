@@ -1301,13 +1301,17 @@ function applyTheme(themeKey, mode) {
   });
 
   if (mode === "night") {
+    // Тёмная тема: тёмные меню и чат
     document.documentElement.style.setProperty("--chat-bg", "rgba(30, 41, 59, 0.82)");
     document.documentElement.style.setProperty("--menu-bg", "rgba(30, 41, 59, 0.98)");
     document.documentElement.style.setProperty("--menu-text", "#f1f5f9");
     document.documentElement.style.setProperty("--border", "rgba(255,255,255,0.12)");
   } else {
+    // Светлая тема: светлые меню и чат (фикс контраста и “залипания” тёмного фона)
+    document.documentElement.style.setProperty("--chat-bg", "rgba(255, 255, 255, 0.92)");
+    document.documentElement.style.setProperty("--menu-bg", "rgba(255, 255, 255, 0.98)");
     document.documentElement.style.setProperty("--menu-text", "#111827");
-    document.documentElement.style.setProperty("--border", "rgba(0, 0, 0, 0.1)");
+    document.documentElement.style.setProperty("--border", "rgba(0, 0, 0, 0.08)");
   }
 
   document.documentElement.setAttribute("data-theme-custom", themeKey);
