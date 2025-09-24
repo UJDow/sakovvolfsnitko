@@ -1415,7 +1415,6 @@ function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
 
-  // Применяем сохранённую тему и режим
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
@@ -1424,7 +1423,7 @@ function initThemeUI() {
 
   // Обычный клик — смена day/night
   btn.onclick = (e) => {
-    if (pressTimer) return; // если был долгий тап — не меняем режим
+    if (pressTimer) return;
     e.stopPropagation();
     if (menu.style.display === "block") {
       menu.style.display = "none";
@@ -1437,16 +1436,15 @@ function initThemeUI() {
     updateThemeButton(theme, newMode);
   };
 
-  // Долгое нажатие — меню тем
+  // Долгое нажатие мышкой
   btn.onmousedown = (e) => {
     pressTimer = setTimeout(() => {
       const { theme, mode } = getSavedTheme();
       renderThemeMenu(theme, mode);
       menu.style.display = (menu.style.display === "block") ? "none" : "block";
       pressTimer = null;
-    }, 500); // 500мс — время долгого нажатия
+    }, 500);
   };
-
   btn.onmouseup = btn.onmouseleave = () => {
     if (pressTimer) {
       clearTimeout(pressTimer);
@@ -1454,7 +1452,26 @@ function initThemeUI() {
     }
   };
 
-  // Клик вне меню — закрывает меню
+  // Долгое нажатие на мобильном
+  btn.addEventListener('touchstart', (e) => {
+    pressTimer = setTimeout(() => {
+      const { theme, mode } = getSavedTheme();
+      renderThemeMenu(theme, mode);
+      menu.style.display = (menu.style.display === "block") ? "none" : "block";
+      pressTimer = null;
+    }, 500);
+    e.preventDefault();
+  });
+  btn.addEventListener('touchend', () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+  });
+
+  // Отключить стандартное контекстное меню
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
   document.addEventListener("click", (e) => {
     if (!menu.contains(e.target) && !btn.contains(e.target)) {
       menu.style.display = "none";
