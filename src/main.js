@@ -1330,14 +1330,9 @@ function getSavedTheme() {
 
 function updateThemeButton(themeKey, mode) {
   const btn = document.getElementById("themeToggle");
-  if (themeKey === THEME_STD) {
-    btn.innerHTML = `<span class="icon">${mode === "night" ? "🌙" : "☀️"}</span><span class="text">Тема</span>`;
-    btn.classList.remove("theme-selected");
-  } else {
-    const theme = THEMES.find(t => t.key === themeKey);
-    btn.innerHTML = `<span class="icon">${mode === "night" ? "🌙" : "☀️"}</span><span class="text">${theme?.name || "Тема"}</span>`;
-    btn.classList.add("theme-selected");
-  }
+  const theme = THEMES.find(t => t.key === themeKey);
+  const icon = mode === "night" ? "🌙" : "☀️";
+  btn.innerHTML = `<span class="icon">${icon}</span><span class="text">${theme?.name || "Тема"}</span>`;
 }
 
 function renderThemeMenu(selectedKey, selectedMode) {
@@ -1420,17 +1415,12 @@ function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
 
-  // Клики внутри меню не всплывают до документа
   menu.addEventListener("click", (e) => e.stopPropagation());
 
-  // Применить тему при загрузке
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
-  // Отрисовать слайдер в кнопке при загрузке
-  showThemeSlider(theme, mode);
 
-  // Клик по кнопке — открыть/закрыть меню и перерендер превью
   btn.onclick = (e) => {
     e.stopPropagation();
     const { theme, mode } = getSavedTheme();
@@ -1438,7 +1428,6 @@ function initThemeUI() {
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
   };
 
-  // Клик вне меню — закрыть
   document.addEventListener("click", (e) => {
     const clickInsideMenu = menu.contains(e.target);
     const clickOnButton = btn.contains(e.target);
@@ -1448,7 +1437,6 @@ function initThemeUI() {
   });
 }
 
-// Вызвать после DOMContentLoaded
 document.addEventListener("DOMContentLoaded", initThemeUI);
 
 // === ИНИЦИАЛИЗАЦИЯ === //
