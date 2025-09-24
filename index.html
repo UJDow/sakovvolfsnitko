@@ -1480,6 +1480,36 @@ body.modal-open {
   background: rgba(255,255,255,0.06);
   border-color: rgba(148,163,184,0.16);
 }
+
+.theme-compact-toggle {
+  pointer-events: auto;
+  margin: 0 18px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 18px 8px 12px;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+}
+.theme-compact-toggle .icon {
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.theme-compact-toggle .text {
+  font-size: 15px;
+  font-weight: 500;
+}
   
   </style>
 </head>
@@ -1489,12 +1519,11 @@ body.modal-open {
     <span class="icon">❓</span>
     <span class="text">Как?</span>
   </button>
-  <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-    <span class="icon">🌙</span>
-    <span class="text">Тема</span>
-  </button>
-  <!-- Меню тем — отдельный элемент, не внутри кнопки! -->
-  <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
+  <button class="theme-compact-toggle" id="themeToggle" title="Сменить тему">
+  <span class="icon" id="themeIcon">🌙</span>
+  <span class="text" id="themeName">Тема</span>
+</button>
+<div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
   <div id="themeMenuList"></div>
 </div>
 </div>
