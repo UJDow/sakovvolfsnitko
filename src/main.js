@@ -1420,36 +1420,38 @@ function initThemeUI() {
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  let clickTimer = null;
+  let pressTimer = null;
 
+  // Обычный клик — смена day/night
   btn.onclick = (e) => {
+    if (pressTimer) return; // если был долгий тап — не меняем режим
     e.stopPropagation();
-    if (clickTimer) return; // ждём, вдруг будет dblclick
-    clickTimer = setTimeout(() => {
-      // Если меню открыто — просто закрываем его
-      if (menu.style.display === "block") {
-        menu.style.display = "none";
-      } else {
-        // Меняем режим
-        const { theme, mode } = getSavedTheme();
-        const newMode = mode === "night" ? "day" : "night";
-        saveTheme(theme, newMode);
-        applyTheme(theme, newMode);
-        updateThemeButton(theme, newMode);
-      }
-      clickTimer = null;
-    }, 220); // 220мс — стандартный dblclick timeout
-  };
-
-  btn.ondblclick = (e) => {
-    e.stopPropagation();
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-      clickTimer = null;
+    if (menu.style.display === "block") {
+      menu.style.display = "none";
+      return;
     }
     const { theme, mode } = getSavedTheme();
-    renderThemeMenu(theme, mode);
-    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    const newMode = mode === "night" ? "day" : "night";
+    saveTheme(theme, newMode);
+    applyTheme(theme, newMode);
+    updateThemeButton(theme, newMode);
+  };
+
+  // Долгое нажатие — меню тем
+  btn.onmousedown = (e) => {
+    pressTimer = setTimeout(() => {
+      const { theme, mode } = getSavedTheme();
+      renderThemeMenu(theme, mode);
+      menu.style.display = (menu.style.display === "block") ? "none" : "block";
+      pressTimer = null;
+    }, 500); // 500мс — время долгого нажатия
+  };
+
+  btn.onmouseup = btn.onmouseleave = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
   };
 
   // Клик вне меню — закрывает меню
