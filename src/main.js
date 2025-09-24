@@ -1420,24 +1420,33 @@ function initThemeUI() {
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  // Одинарный клик — смена day/night
+  let clickTimer = null;
+
   btn.onclick = (e) => {
     e.stopPropagation();
-    // Если меню открыто — закрываем его
-    if (menu.style.display === "block") {
-      menu.style.display = "none";
-      return;
-    }
-    const { theme, mode } = getSavedTheme();
-    const newMode = mode === "night" ? "day" : "night";
-    saveTheme(theme, newMode);
-    applyTheme(theme, newMode);
-    updateThemeButton(theme, newMode);
+    if (clickTimer) return; // ждём, вдруг будет dblclick
+    clickTimer = setTimeout(() => {
+      // Если меню открыто — просто закрываем его
+      if (menu.style.display === "block") {
+        menu.style.display = "none";
+      } else {
+        // Меняем режим
+        const { theme, mode } = getSavedTheme();
+        const newMode = mode === "night" ? "day" : "night";
+        saveTheme(theme, newMode);
+        applyTheme(theme, newMode);
+        updateThemeButton(theme, newMode);
+      }
+      clickTimer = null;
+    }, 220); // 220мс — стандартный dblclick timeout
   };
 
-  // Двойной клик — открыть/закрыть меню выбора темы
   btn.ondblclick = (e) => {
     e.stopPropagation();
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+    }
     const { theme, mode } = getSavedTheme();
     renderThemeMenu(theme, mode);
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
@@ -1452,7 +1461,6 @@ function initThemeUI() {
 
   menu.addEventListener("click", (e) => e.stopPropagation());
 }
-
 // === ИНИЦИАЛИЗАЦИЯ === //
 async function init() {
   bindEvents();
