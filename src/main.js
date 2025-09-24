@@ -1294,77 +1294,44 @@ if (addWholeFromHint) {
 function applyTheme(themeKey, mode) {
   const theme = THEMES.find(t => t.key === themeKey);
   if (!theme) return;
-
   const vars = mode === "night" ? theme.night : theme.day;
   Object.entries(vars).forEach(([k, v]) => {
     document.documentElement.style.setProperty(k, v);
   });
-
   if (mode === "night") {
-    // Тёмная тема: тёмные меню и чат
     document.documentElement.style.setProperty("--chat-bg", "rgba(30, 41, 59, 0.82)");
     document.documentElement.style.setProperty("--menu-bg", "rgba(30, 41, 59, 0.98)");
     document.documentElement.style.setProperty("--menu-text", "#f1f5f9");
     document.documentElement.style.setProperty("--border", "rgba(255,255,255,0.12)");
   } else {
-    // Светлая тема: светлые меню и чат (фикс контраста и “залипания” тёмного фона)
     document.documentElement.style.setProperty("--chat-bg", "rgba(255, 255, 255, 0.92)");
     document.documentElement.style.setProperty("--menu-bg", "rgba(255, 255, 255, 0.98)");
     document.documentElement.style.setProperty("--menu-text", "#111827");
     document.documentElement.style.setProperty("--border", "rgba(0, 0, 0, 0.08)");
   }
-
   document.documentElement.setAttribute("data-theme-custom", themeKey);
   document.documentElement.setAttribute("data-theme", mode === "night" ? "dark" : "light");
 }
 function saveTheme(themeKey, mode) {
-  localStorage.setItem(THEME_STORAGE_KEY, themeKey);
-  localStorage.setItem(THEME_MODE_KEY, mode);
+  localStorage.setItem("saviora_theme_v2", themeKey);
+  localStorage.setItem("saviora_theme_mode_v2", mode);
 }
-
 function getSavedTheme() {
-  const theme = localStorage.getItem(THEME_STORAGE_KEY) || THEME_STD;
-  const mode = localStorage.getItem(THEME_MODE_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? "night" : "day");
+  const theme = localStorage.getItem("saviora_theme_v2") || "std";
+  const mode = localStorage.getItem("saviora_theme_mode_v2") || (window.matchMedia('(prefers-color-scheme: dark)').matches ? "night" : "day");
   return { theme, mode };
 }
-
 function updateThemeButton(themeKey, mode) {
   const btn = document.getElementById("themeToggle");
   const theme = THEMES.find(t => t.key === themeKey);
   const icon = mode === "night" ? "🌙" : "☀️";
-  btn.innerHTML = `<span class="icon">${icon}</span><span class="text">${theme?.name || "Тема"}</span>`;
+  btn.querySelector("#themeIcon").textContent = icon;
+  btn.querySelector("#themeName").textContent = theme?.name || "Тема";
 }
-
 function renderThemeMenu(selectedKey, selectedMode) {
   const menu = document.getElementById("themeMenuList");
   menu.innerHTML = "";
-
-  // Стандарт (используем палитру из THEMES)
-  const stdTheme = THEMES.find(t => t.key === THEME_STD);
-  const std = document.createElement("div");
-  std.className = "theme-chip" + (selectedKey === THEME_STD ? " active" : "");
-  std.innerHTML = `
-    <span class="chip-preview">
-      <div class="half left" style="background:${stdTheme ? stdTheme.day["--background"] : "#bdcff1"};"></div>
-      <div class="half right" style="background:${stdTheme ? stdTheme.night["--background"] : "#0f172a"};"></div>
-    </span>
-    <span class="chip-title">${stdTheme ? stdTheme.name : "Стандарт"}</span>
-  `;
-  std.onclick = (e) => {
-    e.stopPropagation();
-    // Применяем текущий selectedMode, закрываем меню и показываем общий слайдер
-    saveTheme(THEME_STD, selectedMode);
-    applyTheme(THEME_STD, selectedMode);
-    updateThemeButton(THEME_STD, selectedMode);
-    document.getElementById("themeMenu").style.display = "none";
-    showThemeSlider(THEME_STD, selectedMode);
-  };
-  menu.appendChild(std);
-
-  // Кастомные темы (все, кроме стандарта)
   THEMES.forEach(theme => {
-    if (theme.key === THEME_STD) return; // уже добавили как std выше
-
     const chip = document.createElement("div");
     chip.className = "theme-chip" + (selectedKey === theme.key ? " active" : "");
     chip.innerHTML = `
@@ -1374,55 +1341,26 @@ function renderThemeMenu(selectedKey, selectedMode) {
       </span>
       <span class="chip-title">${theme.name}</span>
     `;
-    // Клик по чипу — применяем тему в режиме "day", закрываем меню, показываем слайдер
     chip.onclick = (e) => {
       e.stopPropagation();
       saveTheme(theme.key, selectedMode);
-applyTheme(theme.key, selectedMode);
-updateThemeButton(theme.key, selectedMode);
-document.getElementById("themeMenu").style.display = "none";
-showThemeSlider(theme.key, selectedMode);
+      applyTheme(theme.key, selectedMode);
+      updateThemeButton(theme.key, selectedMode);
+      document.getElementById("themeMenu").style.display = "none";
     };
     menu.appendChild(chip);
   });
 }
-function showThemeSlider(themeKey, mode) {
-  const btn = document.getElementById("themeToggle");
-  btn.innerHTML = `
-    <div class="theme-slider">
-      <button class="theme-slider-btn${mode === "day" ? " active" : ""}" id="themeDayBtn">☀️</button>
-      <button class="theme-slider-btn${mode === "night" ? " active" : ""}" id="themeNightBtn">🌙</button>
-      <span style="margin-left:8px; font-weight:500;">${THEMES.find(t => t.key === themeKey)?.name || ""}</span>
-    </div>
-  `;
-  const dayBtn = document.getElementById("themeDayBtn");
-  const nightBtn = document.getElementById("themeNightBtn");
-  dayBtn.onclick = (e) => {
-    e.stopPropagation();
-    saveTheme(themeKey, "day");
-    applyTheme(themeKey, "day");
-    showThemeSlider(themeKey, "day");
-  };
-  nightBtn.onclick = (e) => {
-    e.stopPropagation();
-    saveTheme(themeKey, "night");
-    applyTheme(themeKey, "night");
-    showThemeSlider(themeKey, "night");
-  };
-}
-
 function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menuIcon = document.getElementById("themeMenuIcon");
   const menu = document.getElementById("themeMenu");
-
+  // Инициализация при загрузке
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
-
-  // Клик по основной части кнопки (но не по иконке-подушке)
+  // Клик по основной части кнопки (кроме подушки)
   btn.onclick = (e) => {
-    // Если клик по иконке-подушке — ничего не делаем
     if (e.target === menuIcon) return;
     e.stopPropagation();
     if (menu.style.display === "block") {
@@ -1435,22 +1373,21 @@ function initThemeUI() {
     applyTheme(theme, newMode);
     updateThemeButton(theme, newMode);
   };
-
-  // Клик по иконке-подушке — открывает/закрывает меню
+  // Клик по подушке — открывает/закрывает меню
   menuIcon.onclick = (e) => {
     e.stopPropagation();
     const { theme, mode } = getSavedTheme();
     renderThemeMenu(theme, mode);
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    // Позиционирование меню (если нужно)
+    // Можно добавить плавную анимацию через CSS
   };
-
   // Клик вне меню — закрывает меню
   document.addEventListener("click", (e) => {
     if (!menu.contains(e.target) && !btn.contains(e.target)) {
       menu.style.display = "none";
     }
   });
-
   menu.addEventListener("click", (e) => e.stopPropagation());
 }
 // === ИНИЦИАЛИЗАЦИЯ === //
