@@ -1413,14 +1413,17 @@ function showThemeSlider(themeKey, mode) {
 
 function initThemeUI() {
   const btn = document.getElementById("themeToggle");
+  const menuIcon = document.getElementById("themeMenuIcon");
   const menu = document.getElementById("themeMenu");
 
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  // Обычный клик — смена day/night
+  // Клик по основной части кнопки (но не по иконке-подушке)
   btn.onclick = (e) => {
+    // Если клик по иконке-подушке — ничего не делаем
+    if (e.target === menuIcon) return;
     e.stopPropagation();
     if (menu.style.display === "block") {
       menu.style.display = "none";
@@ -1433,41 +1436,13 @@ function initThemeUI() {
     updateThemeButton(theme, newMode);
   };
 
-  // --- Свайп на мобильных ---
-  let touchStartX = null, touchStartY = null;
-
-  btn.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }
-  });
-
-  btn.addEventListener('touchend', (e) => {
-    if (touchStartX === null || touchStartY === null) return;
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - touchStartX;
-    const dy = touch.clientY - touchStartY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Свайп считается, если движение больше 40px
-    if (distance > 40) {
-      e.preventDefault();
-      const { theme, mode } = getSavedTheme();
-      renderThemeMenu(theme, mode);
-      menu.style.display = (menu.style.display === "block") ? "none" : "block";
-    }
-    touchStartX = null;
-    touchStartY = null;
-  });
-
-  // --- Для десктопа: по правому клику ---
-  btn.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
+  // Клик по иконке-подушке — открывает/закрывает меню
+  menuIcon.onclick = (e) => {
+    e.stopPropagation();
     const { theme, mode } = getSavedTheme();
     renderThemeMenu(theme, mode);
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
-  });
+  };
 
   // Клик вне меню — закрывает меню
   document.addEventListener("click", (e) => {
