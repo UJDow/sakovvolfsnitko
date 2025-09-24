@@ -1419,11 +1419,8 @@ function initThemeUI() {
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  let pressTimer = null;
-
   // Обычный клик — смена day/night
   btn.onclick = (e) => {
-    if (pressTimer) return;
     e.stopPropagation();
     if (menu.style.display === "block") {
       menu.style.display = "none";
@@ -1436,42 +1433,43 @@ function initThemeUI() {
     updateThemeButton(theme, newMode);
   };
 
-  // Долгое нажатие мышкой
-  btn.onmousedown = (e) => {
-    pressTimer = setTimeout(() => {
-      const { theme, mode } = getSavedTheme();
-      renderThemeMenu(theme, mode);
-      menu.style.display = (menu.style.display === "block") ? "none" : "block";
-      pressTimer = null;
-    }, 500);
-  };
-  btn.onmouseup = btn.onmouseleave = () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    }
-  };
+  // --- Свайп на мобильных ---
+  let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
 
-  // Долгое нажатие на мобильном
   btn.addEventListener('touchstart', (e) => {
-    pressTimer = setTimeout(() => {
-      const { theme, mode } = getSavedTheme();
-      renderThemeMenu(theme, mode);
-      menu.style.display = (menu.style.display === "block") ? "none" : "block";
-      pressTimer = null;
-    }, 500);
-    e.preventDefault();
-  });
-  btn.addEventListener('touchend', () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
     }
   });
 
-  // Отключить стандартное контекстное меню
-  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+  btn.addEventListener('touchend', (e) => {
+    if (e.changedTouches.length === 1) {
+      touchEndX = e.changedTouches[0].clientX;
+      touchEndY = e.changedTouches[0].clientY;
 
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Если свайп больше 40px в любом направлении — открываем меню
+      if (distance > 40) {
+        const { theme, mode } = getSavedTheme();
+        renderThemeMenu(theme, mode);
+        menu.style.display = (menu.style.display === "block") ? "none" : "block";
+      }
+    }
+  });
+
+  // --- Для десктопа: по правому клику ---
+  btn.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const { theme, mode } = getSavedTheme();
+    renderThemeMenu(theme, mode);
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+  });
+
+  // Клик вне меню — закрывает меню
   document.addEventListener("click", (e) => {
     if (!menu.contains(e.target) && !btn.contains(e.target)) {
       menu.style.display = "none";
