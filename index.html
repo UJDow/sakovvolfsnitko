@@ -1435,10 +1435,23 @@ body.modal-open {
   background: transparent;                  /* внешняя оболочка — прозрачная */
 }
 
-[data-theme="dark"] .chat {
-  background: rgba(44,55,78,0.86);          /* на полтона светлее, чем card-bg */
-  border: 1px solid #334155;                /* едва заметный контур */
-  box-shadow: inset 0 0 0 1px rgba(148,163,184,0.08);
+/* Светлая тема: та же прозрачность, что у .surface/.dream-view */
+#step3 .chat {
+  background: rgba(255,255,255,0.80);
+  border: 1px solid var(--border);
+}
+
+/* Тёмная тема: делаем заметно светлее, как карточки шага 2 */
+[data-theme="dark"] #step3 .chat { background: var(--card-bg); }
+
+/* Оболочка совпадает со “surface” */
+#step3 .chat-wrap.surface {
+  background: transparent;
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] #step3 .chat-wrap.surface {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(148,163,184,0.16);
 }
 
 /* Поле ввода под стиль шагов 1–2 */
@@ -1466,11 +1479,6 @@ body.modal-open {
 #step3 .chat {
   background: rgba(255,255,255,0.80);  /* ровно как у .surface/.dream-view */
   border: 1px solid var(--border);
-}
-/* Dark: ещё светлее, чтобы совпадало с шагами 1–2 */
-[data-theme="dark"] #step3 .chat {
-  background: rgba(255,255,255,0.12); /* светлая вуаль вместо тёмного блока */
-  border-color: rgba(148,163,184,0.20);
 }
 #step3 .chat-wrap.surface {
   background: transparent;
@@ -1771,23 +1779,27 @@ body.modal-open {
   "></div>
   <script type="module" src="src/main.js"></script>
   <script>
-    // ====== Theme toggle ======
-    const themeBtn = document.getElementById('themeToggle');
-    function setTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('saviora_theme', theme);
-      themeBtn.textContent = theme === 'dark' ? '🌙 Тема' : '☀️ Тема';
-    }
-    function getPreferredTheme() {
-      const saved = localStorage.getItem('saviora_theme');
-      if (saved) return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    themeBtn.onclick = () => {
-      const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
-      setTheme(current === 'dark' ? 'light' : 'dark');
-    };
-    setTheme(getPreferredTheme());
+   // ====== Theme toggle ======
+  const themeBtn = document.getElementById('themeToggle');
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('saviora_theme', theme);
+  }
+
+  function getPreferredTheme() {
+    const saved = localStorage.getItem('saviora_theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  themeBtn.onclick = () => {
+    const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  };
+
+  // Инициализация
+  setTheme(getPreferredTheme());
   </script>
     <!-- Модалка просмотра сна -->
 <div id="dreamPreviewModal" style="display:none; position:fixed; inset:0; z-index:3001; background:rgba(0,0,0,0.45);">
