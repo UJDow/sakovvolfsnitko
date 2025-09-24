@@ -1480,6 +1480,46 @@ body.modal-open {
   background: rgba(255,255,255,0.06);
   border-color: rgba(148,163,184,0.16);
 }
+
+/* Кнопка-тоггл без текста */
+.theme-toggle-icon {
+  pointer-events: auto;
+  margin: 0 18px;
+  position: static;
+  width: 44px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s, color .2s, border-color .2s, transform .1s;
+  user-select: none;
+}
+
+/* Иконка по теме: по умолчанию — солнце (light) */
+.theme-toggle-icon::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  display: block;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.48 0l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM12 4V1h0v3h0zm0 19v-3h0v3h0zM4 13H1v-2h3v2zm19 0h-3v-2h3v2zM6.76 19.16l-1.42 1.42-1.79-1.8 1.41-1.41 1.8 1.79zm12.69-.38l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>') no-repeat center / 20px 20px;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.48 0l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM12 4V1h0v3h0zm0 19v-3h0v3h0zM4 13H1v-2h3v2zm19 0h-3v-2h3v2zM6.76 19.16l-1.42 1.42-1.79-1.8 1.41-1.41 1.8 1.79zm12.69-.38l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>') no-repeat center / 20px 20px;
+}
+
+/* В тёмной теме — луна */
+[data-theme="dark"] .theme-toggle-icon::before {
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>') no-repeat center / 20px 20px;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>') no-repeat center / 20px 20px;
+}
+
+.theme-toggle-icon:hover { transform: translateY(-1px); }
+.theme-toggle-icon:active { transform: translateY(0); }
   
   </style>
 </head>
@@ -1489,12 +1529,8 @@ body.modal-open {
     <span class="icon">❓</span>
     <span class="text">Как?</span>
   </button>
-  <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-    <span class="icon">🌙</span>
-    <span class="text">Тема</span>
-  </button>
-  <!-- Меню тем — отдельный элемент, не внутри кнопки! -->
-  <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
+  <button class="theme-toggle-icon" id="themeToggle" title="Сменить тему" aria-label="Сменить тему"></button>
+<div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
   <div id="themeMenuList"></div>
 </div>
 </div>
