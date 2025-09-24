@@ -1415,6 +1415,16 @@ function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
 
+  btn.ondblclick = (e) => {
+    e.stopPropagation();
+    const { theme, mode } = getSavedTheme();
+    const newMode = mode === "night" ? "day" : "night";
+    saveTheme(theme, newMode);
+    applyTheme(theme, newMode);
+    updateThemeButton(theme, newMode);
+    showThemeSlider(theme, newMode);
+  };
+
   menu.addEventListener("click", (e) => e.stopPropagation());
 
   const { theme, mode } = getSavedTheme();
