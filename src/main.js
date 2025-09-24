@@ -1434,7 +1434,7 @@ function initThemeUI() {
   };
 
   // --- Свайп на мобильных ---
-  let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+  let touchStartX = null, touchStartY = null;
 
   btn.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
@@ -1444,21 +1444,21 @@ function initThemeUI() {
   });
 
   btn.addEventListener('touchend', (e) => {
-    if (e.changedTouches.length === 1) {
-      touchEndX = e.changedTouches[0].clientX;
-      touchEndY = e.changedTouches[0].clientY;
+    if (touchStartX === null || touchStartY === null) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-      const dx = touchEndX - touchStartX;
-      const dy = touchEndY - touchStartY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // Если свайп больше 40px в любом направлении — открываем меню
-      if (distance > 40) {
-        const { theme, mode } = getSavedTheme();
-        renderThemeMenu(theme, mode);
-        menu.style.display = (menu.style.display === "block") ? "none" : "block";
-      }
+    // Свайп считается, если движение больше 40px
+    if (distance > 40) {
+      e.preventDefault();
+      const { theme, mode } = getSavedTheme();
+      renderThemeMenu(theme, mode);
+      menu.style.display = (menu.style.display === "block") ? "none" : "block";
     }
+    touchStartX = null;
+    touchStartY = null;
   });
 
   // --- Для десктопа: по правому клику ---
