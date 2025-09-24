@@ -1462,47 +1462,24 @@ body.modal-open {
   color: #94a3b8;
 }
 
-/* Шаг 3 — делаем визуально как шаги 1 и 2 (светлее) */
-#step3 .card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-}
-
-/* Оболочка диалога — как surface на шагах 1–2 */
-#step3 .chat-wrap.surface {
-  background: rgba(255,255,255,0.08); /* в светлой почти не видно; в тёмной даёт лёгкий “фрост” */
-  border: 1px solid var(--border);
-}
-
-/* Внутренняя область чата — светлее и ближе к шагам 1–2 */
+/* Шаг 3: сделать “доску” чата как surface шагов 1–2 */
 #step3 .chat {
-  background: var(--chat-bg);          /* уже задана переменная, используем её */
+  background: rgba(255,255,255,0.80);  /* ровно как у .surface/.dream-view */
   border: 1px solid var(--border);
-  box-shadow: inset 0 0 0 1px rgba(148,163,184,0.06);
 }
-
-/* Тёмная тема: специально осветляем чат, чтобы не проваливался */
+/* Dark: ещё светлее, чтобы совпадало с шагами 1–2 */
 [data-theme="dark"] #step3 .chat {
-  background: rgba(44, 55, 78, 0.86);  /* на полтона светлее, чем сейчас */
-  border-color: #334155;
+  background: rgba(255,255,255,0.12); /* светлая вуаль вместо тёмного блока */
+  border-color: rgba(148,163,184,0.20);
 }
-
-/* Тёмная тема: тон оболочки аналогичен surface шагов 1–2 */
+#step3 .chat-wrap.surface {
+  background: transparent;
+  border: 1px solid var(--border);
+}
 [data-theme="dark"] #step3 .chat-wrap.surface {
-  background: rgba(15, 23, 42, 0.2);
+  background: rgba(255,255,255,0.06);
   border-color: rgba(148,163,184,0.16);
 }
-
-/* Кнопка “вниз” чуть спокойнее в тёмной, но с hover по primary */
-[data-theme="dark"] #step3 .jump-bottom-btn {
-  background: color-mix(in srgb, var(--primary) 82%, #0f172a);
-  box-shadow: 0 2px 8px rgba(2,6,23,0.35);
-}
-[data-theme="dark"] #step3 .jump-bottom-btn:hover { background: var(--primary); }
-
-/* Подпись текущего блока — как в шаге 2 */
-#step3 #currentBlock { color: var(--text-secondary); }
-[data-theme="dark"] #step3 #currentBlock { color: #94a3b8; }
   
   </style>
 </head>
