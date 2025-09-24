@@ -1420,15 +1420,14 @@ function initThemeUI() {
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
 
-  // Клик по кнопке — просто меняет day/night для текущей темы
+  // Одинарный клик — смена day/night
   btn.onclick = (e) => {
     e.stopPropagation();
-    // Если меню открыто — не переключаем режим, а просто открываем меню
+    // Если меню открыто — закрываем его
     if (menu.style.display === "block") {
       menu.style.display = "none";
       return;
     }
-    // Меняем режим
     const { theme, mode } = getSavedTheme();
     const newMode = mode === "night" ? "day" : "night";
     saveTheme(theme, newMode);
@@ -1436,9 +1435,9 @@ function initThemeUI() {
     updateThemeButton(theme, newMode);
   };
 
-  // Открытие меню выбора темы по правому клику (или по отдельной иконке, если нужно)
-  btn.oncontextmenu = (e) => {
-    e.preventDefault();
+  // Двойной клик — открыть/закрыть меню выбора темы
+  btn.ondblclick = (e) => {
+    e.stopPropagation();
     const { theme, mode } = getSavedTheme();
     renderThemeMenu(theme, mode);
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
