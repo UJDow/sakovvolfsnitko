@@ -1,123 +1,171 @@
 // ====== ТЕМЫ ======
 const THEMES = [
   {
+    key: "std",
+    name: "Стандарт",
+    day: {
+      "--background": "#E7EEF9",
+      "--card-bg": "#F2F6FD",
+      "--primary": "#3758F9",
+      "--on-primary": "#FFFFFF",
+      "--accent": "#7CA3FF",
+      "--on-accent": "#0B1B4A",
+      "--text-primary": "#0F172A",
+      "--text-secondary": "#475569"
+    },
+    night: {
+      "--background": "#0F172A",
+      "--card-bg": "#17223D",
+      "--primary": "#4670FF",
+      "--on-primary": "#0A1429",
+      "--accent": "#7CA3FF",
+      "--on-accent": "#0A1429",
+      "--text-primary": "#E5EDFF",
+      "--text-secondary": "#A8B3CF"
+    }
+  },
+  {
     key: "mint",
     name: "Мятный рассвет",
     day: {
-      "--primary": "#2dd4bf",
-      "--accent": "#a7f3d0",
-      "--background": "#e0fdfa",
-      "--card-bg": "#f0fdfa",
-      "--text-primary": "#134e4a",
-      "--text-secondary": "#5eead4"
+      "--background": "#E7FCF7",
+      "--card-bg": "#DFF8F2",
+      "--primary": "#2DD4BF",
+      "--on-primary": "#073B37",
+      "--accent": "#A7F3D0",
+      "--on-accent": "#0B3A33",
+      "--text-primary": "#134E4A",
+      "--text-secondary": "#2F7F77"
     },
     night: {
-      "--primary": "#14b8a6",
-      "--accent": "#0f766e",
-      "--background": "#134e4a",
-      "--card-bg": "#115e59",
-      "--text-primary": "#a7f3d0",
-      "--text-secondary": "#5eead4"
+      "--background": "#0F2F2B",
+      "--card-bg": "#13433D",
+      "--primary": "#14B8A6",
+      "--on-primary": "#062A27",
+      "--accent": "#0F766E",
+      "--on-accent": "#E6FFFA",
+      "--text-primary": "#CFFAF1",
+      "--text-secondary": "#8ADFD1"
     }
   },
   {
     key: "sakura",
     name: "Цветущая сакура",
     day: {
-      "--primary": "#f472b6",
-      "--accent": "#f9a8d4",
-      "--background": "#fff1f2",
-      "--card-bg": "#ffe4e6",
-      "--text-primary": "#831843",
-      "--text-secondary": "#f472b6"
+      "--background": "#FFF3F6",
+      "--card-bg": "#FFE8EF",
+      "--primary": "#F472B6",
+      "--on-primary": "#4A0F2B",
+      "--accent": "#F9A8D4",
+      "--on-accent": "#4C1531",
+      "--text-primary": "#6D0F3A",
+      "--text-secondary": "#B02D6F"
     },
     night: {
-      "--primary": "#be185d",
-      "--accent": "#f472b6",
-      "--background": "#831843",
-      "--card-bg": "#9d174d",
-      "--text-primary": "#f9a8d4",
-      "--text-secondary": "#f472b6"
+      "--background": "#3A0C24",
+      "--card-bg": "#4A1230",
+      "--primary": "#E04797",
+      "--on-primary": "#2C0A1B",
+      "--accent": "#F58BC7",
+      "--on-accent": "#2C0A1B",
+      "--text-primary": "#FFD9EA",
+      "--text-secondary": "#F9A8D4"
     }
   },
   {
     key: "amber",
     name: "Тёплый янтарь",
     day: {
-      "--primary": "#f59e42",
-      "--accent": "#fde68a",
-      "--background": "#fff7ed",
-      "--card-bg": "#ffedd5",
-      "--text-primary": "#78350f",
-      "--text-secondary": "#fbbf24"
+      "--background": "#FFF7ED",
+      "--card-bg": "#FFEAD6",
+      "--primary": "#F59E42",
+      "--on-primary": "#3D1E03",
+      "--accent": "#FDE68A",
+      "--on-accent": "#3A2A06",
+      "--text-primary": "#5C2B07",
+      "--text-secondary": "#9A5C1A"
     },
     night: {
-      "--primary": "#b45309",
-      "--accent": "#f59e42",
-      "--background": "#78350f",
-      "--card-bg": "#92400e",
-      "--text-primary": "#fde68a",
-      "--text-secondary": "#fbbf24"
+      "--background": "#2E1A06",
+      "--card-bg": "#3B2208",
+      "--primary": "#C8711F",
+      "--on-primary": "#1A0E02",
+      "--accent": "#E9B956",
+      "--on-accent": "#1A1203",
+      "--text-primary": "#FFE8C7",
+      "--text-secondary": "#F5C98E"
     }
   },
   {
     key: "forest",
     name: "Глубокий лес",
     day: {
-      "--primary": "#22c55e",
-      "--accent": "#bbf7d0",
-      "--background": "#f0fdf4",
-      "--card-bg": "#dcfce7",
-      "--text-primary": "#14532d",
-      "--text-secondary": "#22c55e"
+      "--background": "#F0FDF4",
+      "--card-bg": "#E3FAE9",
+      "--primary": "#22C55E",
+      "--on-primary": "#062413",
+      "--accent": "#BBF7D0",
+      "--on-accent": "#0A2F1C",
+      "--text-primary": "#14532D",
+      "--text-secondary": "#317E52"
     },
     night: {
-      "--primary": "#166534",
-      "--accent": "#22c55e",
-      "--background": "#14532d",
-      "--card-bg": "#166534",
-      "--text-primary": "#bbf7d0",
-      "--text-secondary": "#22c55e"
+      "--background": "#0F2518",
+      "--card-bg": "#143222",
+      "--primary": "#1FA154",
+      "--on-primary": "#041A0E",
+      "--accent": "#35D47E",
+      "--on-accent": "#051E10",
+      "--text-primary": "#CFF6DF",
+      "--text-secondary": "#90D8B3"
     }
   },
   {
     key: "fire",
     name: "Вечерний костёр",
     day: {
-      "--primary": "#ef4444",
-      "--accent": "#fca5a5",
-      "--background": "#fff7f0",
-      "--card-bg": "#ffe4e6",
-      "--text-primary": "#7f1d1d",
-      "--text-secondary": "#ef4444"
+      "--background": "#FFF6F4",
+      "--card-bg": "#FFE8E7",
+      "--primary": "#EF4444",
+      "--on-primary": "#3E0A0A",
+      "--accent": "#FCA5A5",
+      "--on-accent": "#3A0C0C",
+      "--text-primary": "#7F1D1D",
+      "--text-secondary": "#B63A3A"
     },
     night: {
-      "--primary": "#b91c1c",
-      "--accent": "#ef4444",
-      "--background": "#7f1d1d",
-      "--card-bg": "#991b1b",
-      "--text-primary": "#fca5a5",
-      "--text-secondary": "#ef4444"
+      "--background": "#2B0E0E",
+      "--card-bg": "#3A1212",
+      "--primary": "#D22E2E",
+      "--on-primary": "#1A0707",
+      "--accent": "#F07171",
+      "--on-accent": "#1A0707",
+      "--text-primary": "#FFCFCF",
+      "--text-secondary": "#F5A5A5"
     }
   },
   {
     key: "aurora",
     name: "Северное сияние",
     day: {
-      "--primary": "#6366f1",
-      "--accent": "#a5b4fc",
-      "--background": "#f0f5ff",
-      "--card-bg": "#e0e7ff",
-      "--text-primary": "#312e81",
-      "--text-secondary": "#6366f1"
+      "--background": "#F2F5FF",
+      "--card-bg": "#E3E9FF",
+      "--primary": "#6366F1",
+      "--on-primary": "#0D113A",
+      "--accent": "#A5B4FC",
+      "--on-accent": "#101B46",
+      "--text-primary": "#312E81",
+      "--text-secondary": "#4B51A6"
     },
     night: {
-      "--primary": "#3730a3",
-      "--accent": "#6366f1",
-      "--background": "#312e81",
-      "--card-bg": "#3730a3",
-      "--text-primary": "#a5b4fc",
-      "--text-secondary": "#6366f1"
+      "--background": "#151A3A",
+      "--card-bg": "#1D2450",
+      "--primary": "#4950F2",
+      "--on-primary": "#0A0E2E",
+      "--accent": "#7E8FFF",
+      "--on-accent": "#0A0E2E",
+      "--text-primary": "#DDE2FF",
+      "--text-secondary": "#A9B2FF"
     }
   }
 ];
@@ -1244,48 +1292,27 @@ if (addWholeFromHint) {
 
 // ====== ТЕМЫ: UI и логика ======
 function applyTheme(themeKey, mode) {
-  // std = system
-  if (themeKey === THEME_STD) {
-    document.documentElement.removeAttribute("data-theme-custom");
-    document.documentElement.setAttribute("data-theme", mode === "night" ? "dark" : "light");
-    // Сбросить кастомные переменные
-    Object.keys(THEMES[0].day).forEach(k => document.documentElement.style.removeProperty(k));
-    return;
-  }
   const theme = THEMES.find(t => t.key === themeKey);
   if (!theme) return;
-  const vars = mode === "night" ? theme.night : theme.day;
-  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
-  // Нормализация контраста в night-режиме
-  if (mode === "night" && themeKey !== THEME_STD) {
-    const get = (k, fallback) => vars[k] || getComputedStyle(document.documentElement).getPropertyValue(k) || fallback;
-    // Чуть осветлим фоны night-темы (на 8–12%), чтобы кнопки/текст были читаемы
-    const lightenHex = (hex, p=10) => utils.lighten(hex, p);
-    try {
-      const bg = get("--background", "#0f172a").trim();
-      const card = get("--card-bg", bg).trim();
-      const txt = get("--text-primary", "#e5e7eb").trim();
-      const txt2 = get("--text-secondary", "#cbd5e1").trim();
-      const border = get("--border", "rgba(255,255,255,0.08)").trim();
 
-      // Мягкая корректировка
-      document.documentElement.style.setProperty("--background", lightenHex(bg, 10));
-      document.documentElement.style.setProperty("--card-bg", lightenHex(card, 12));
-      document.documentElement.style.setProperty("--text-primary", txt || "#e5e7eb");
-      document.documentElement.style.setProperty("--text-secondary", txt2 || "#cbd5e1");
-      document.documentElement.style.setProperty("--border", "rgba(255,255,255,0.12)");
-      // Чат- и меню-фоны немного светлее базового, для лучшей читаемости элементов внутри
-      document.documentElement.style.setProperty("--chat-bg", "rgba(30, 41, 59, 0.82)");
-      document.documentElement.style.setProperty("--menu-bg", "rgba(30, 41, 59, 0.98)");
-      document.documentElement.style.setProperty("--menu-text", "#f1f5f9");
-    } catch(e) {
-      // безопасно игнорируем
-    }
+  const vars = mode === "night" ? theme.night : theme.day;
+  Object.entries(vars).forEach(([k, v]) => {
+    document.documentElement.style.setProperty(k, v);
+  });
+
+  if (mode === "night") {
+    document.documentElement.style.setProperty("--chat-bg", "rgba(30, 41, 59, 0.82)");
+    document.documentElement.style.setProperty("--menu-bg", "rgba(30, 41, 59, 0.98)");
+    document.documentElement.style.setProperty("--menu-text", "#f1f5f9");
+    document.documentElement.style.setProperty("--border", "rgba(255,255,255,0.12)");
+  } else {
+    document.documentElement.style.setProperty("--menu-text", "#111827");
+    document.documentElement.style.setProperty("--border", "rgba(0, 0, 0, 0.1)");
   }
+
   document.documentElement.setAttribute("data-theme-custom", themeKey);
   document.documentElement.setAttribute("data-theme", mode === "night" ? "dark" : "light");
 }
-
 function saveTheme(themeKey, mode) {
   localStorage.setItem(THEME_STORAGE_KEY, themeKey);
   localStorage.setItem(THEME_MODE_KEY, mode);
@@ -1313,29 +1340,32 @@ function renderThemeMenu(selectedKey, selectedMode) {
   const menu = document.getElementById("themeMenuList");
   menu.innerHTML = "";
 
-  // Стандарт
+  // Стандарт (используем палитру из THEMES)
+  const stdTheme = THEMES.find(t => t.key === THEME_STD);
   const std = document.createElement("div");
   std.className = "theme-chip" + (selectedKey === THEME_STD ? " active" : "");
   std.innerHTML = `
     <span class="chip-preview">
-      <div class="half left" style="background:#bdcff1"></div>
-      <div class="half right" style="background:#0f172a"></div>
+      <div class="half left" style="background:${stdTheme ? stdTheme.day["--background"] : "#bdcff1"};"></div>
+      <div class="half right" style="background:${stdTheme ? stdTheme.night["--background"] : "#0f172a"};"></div>
     </span>
-    <span class="chip-title">Стандарт</span>
+    <span class="chip-title">${stdTheme ? stdTheme.name : "Стандарт"}</span>
   `;
   std.onclick = (e) => {
     e.stopPropagation();
-    // Применяем текущий selectedMode, закрываем меню и показываем слайдер для стандарта
+    // Применяем текущий selectedMode, закрываем меню и показываем общий слайдер
     saveTheme(THEME_STD, selectedMode);
     applyTheme(THEME_STD, selectedMode);
     updateThemeButton(THEME_STD, selectedMode);
     document.getElementById("themeMenu").style.display = "none";
-    showStdModeSlider(selectedMode);
+    showThemeSlider(THEME_STD, selectedMode);
   };
   menu.appendChild(std);
 
-  // Кастомные темы
+  // Кастомные темы (все, кроме стандарта)
   THEMES.forEach(theme => {
+    if (theme.key === THEME_STD) return; // уже добавили как std выше
+
     const chip = document.createElement("div");
     chip.className = "theme-chip" + (selectedKey === theme.key ? " active" : "");
     chip.innerHTML = `
@@ -1348,16 +1378,15 @@ function renderThemeMenu(selectedKey, selectedMode) {
     // Клик по чипу — применяем тему в режиме "day", закрываем меню, показываем слайдер
     chip.onclick = (e) => {
       e.stopPropagation();
-      saveTheme(theme.key, "day");
-      applyTheme(theme.key, "day");
-      updateThemeButton(theme.key, "day");
-      document.getElementById("themeMenu").style.display = "none";
-      showThemeSlider(theme.key, "day");
+      saveTheme(theme.key, selectedMode);
+applyTheme(theme.key, selectedMode);
+updateThemeButton(theme.key, selectedMode);
+document.getElementById("themeMenu").style.display = "none";
+showThemeSlider(theme.key, selectedMode);
     };
     menu.appendChild(chip);
   });
 }
-
 function showThemeSlider(themeKey, mode) {
   const btn = document.getElementById("themeToggle");
   btn.innerHTML = `
@@ -1383,33 +1412,6 @@ function showThemeSlider(themeKey, mode) {
   };
 }
 
-function showStdModeSlider(mode) {
-  const btn = document.getElementById("themeToggle");
-  btn.innerHTML = `
-    <div class="theme-slider">
-      <button class="theme-slider-btn${mode === "day" ? " active" : ""}" id="stdDayBtn">☀️</button>
-      <button class="theme-slider-btn${mode === "night" ? " active" : ""}" id="stdNightBtn">🌙</button>
-      <span style="margin-left:8px; font-weight:500;">Стандарт</span>
-    </div>
-  `;
-  const stdDayBtn = document.getElementById("stdDayBtn");
-  const stdNightBtn = document.getElementById("stdNightBtn");
-  stdDayBtn.onclick = (e) => {
-    e.stopPropagation();
-    saveTheme(THEME_STD, "day");
-    applyTheme(THEME_STD, "day");
-    updateThemeButton(THEME_STD, "day");
-    showStdModeSlider("day");
-  };
-  stdNightBtn.onclick = (e) => {
-    e.stopPropagation();
-    saveTheme(THEME_STD, "night");
-    applyTheme(THEME_STD, "night");
-    updateThemeButton(THEME_STD, "night");
-    showStdModeSlider("night");
-  };
-}
-
 function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menu = document.getElementById("themeMenu");
@@ -1421,42 +1423,21 @@ function initThemeUI() {
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
+  // Отрисовать слайдер в кнопке при загрузке
+  showThemeSlider(theme, mode);
 
-  // Клик по кнопке — открыть меню или слайдер
+  // Клик по кнопке — открыть/закрыть меню и перерендер превью
   btn.onclick = (e) => {
-  e.stopPropagation();
-  const { theme, mode } = getSavedTheme();
-  // Всегда рендерим актуальное меню
-  renderThemeMenu(theme, mode);
-  // Тоглим меню
-  if (menu.style.display === "block") {
-    menu.style.display = "none";
-  } else {
-    menu.style.display = "block";
-  }
-
-  // Отрисовываем соответствующий слайдер прямо в кнопке, но это не влияет на меню
-  if (theme === THEME_STD) {
-    showStdModeSlider(mode);
-  } else {
-    showThemeSlider(theme, mode);
-  }
-};
-
-  // При загрузке: показать соответствующий слайдер в кнопке
-  if (theme === THEME_STD) {
-    showStdModeSlider(mode);
-  } else {
-    showThemeSlider(theme, mode);
-  }
+    e.stopPropagation();
+    const { theme, mode } = getSavedTheme();
+    renderThemeMenu(theme, mode);
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+  };
 
   // Клик вне меню — закрыть
   document.addEventListener("click", (e) => {
-    const btn = document.getElementById("themeToggle");
-    const menu = document.getElementById("themeMenu");
-    if (!menu) return;
     const clickInsideMenu = menu.contains(e.target);
-    const clickOnButton = btn && btn.contains(e.target);
+    const clickOnButton = btn.contains(e.target);
     if (!clickInsideMenu && !clickOnButton) {
       menu.style.display = "none";
     }
