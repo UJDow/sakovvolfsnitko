@@ -1499,6 +1499,18 @@ body.modal-open {
   gap: 10px;
   height: 40px;
 }
+
+.theme-menu-icon {
+  margin-left: 8px;
+  font-size: 1.3em;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.theme-menu-icon:active {
+  transform: scale(1.2);
+}
+    
 .theme-compact-toggle .icon {
   font-size: 22px;
   line-height: 1;
@@ -1522,6 +1534,7 @@ body.modal-open {
   <button class="theme-compact-toggle" id="themeToggle" title="Сменить тему">
   <span class="icon" id="themeIcon">🌙</span>
   <span class="text" id="themeName">Тема</span>
+  <span class="theme-menu-icon" id="themeMenuIcon" title="Выбрать тему">🛏️</span>
 </button>
 <div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
   <div id="themeMenuList"></div>
