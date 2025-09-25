@@ -266,25 +266,23 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
   color: #fff;
 }
 
-/* Линия фона прогресса */
 .progress-line {
   position: absolute;
   top: 50%;
   left: 16px;
   right: 16px;
   height: 3px;
-  background: rgba(var(--progress-inactive-rgb), 0.6); /* чуть менее прозрачная */
+  background: rgba(var(--progress-completed-rgb), 0.3); /* 70% прозрачности */
   transform: translateY(-50%);
   z-index: 1;
 }
 
-/* Заполненная часть линии — оставляем заметной (можно сделать прозрачной, если нужно) */
 .progress-line-filled {
   position: absolute;
   top: 50%;
   left: 16px;
   height: 3px;
-  background: rgba(var(--progress-active-rgb), 1); /* полностью непрозрачная */
+  background: rgba(var(--progress-completed-rgb), 0.6); /* чуть плотнее, можно тоже 0.3 */
   transform: translateY(-50%);
   transition: width 0.4s ease;
   z-index: 1;
