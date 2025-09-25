@@ -1356,37 +1356,48 @@ function initThemeUI() {
   const btn = document.getElementById("themeToggle");
   const menuIcon = document.getElementById("themeMenuIcon");
   const menu = document.getElementById("themeMenu");
+  const themeName = document.getElementById("themeName");
+
   // Инициализация при загрузке
   const { theme, mode } = getSavedTheme();
   applyTheme(theme, mode);
   updateThemeButton(theme, mode);
+
   // Клик по основной части кнопки (кроме подушки)
   btn.onclick = (e) => {
     if (e.target === menuIcon) return;
     e.stopPropagation();
+    // Если меню открыто — просто закрываем его
     if (menu.style.display === "block") {
       menu.style.display = "none";
+      btn.classList.remove("theme-menu-open");
       return;
     }
+    // Переключение светлая/тёмная
     const { theme, mode } = getSavedTheme();
     const newMode = mode === "night" ? "day" : "night";
     saveTheme(theme, newMode);
     applyTheme(theme, newMode);
     updateThemeButton(theme, newMode);
+    // Название не показываем!
+    btn.classList.remove("theme-menu-open");
   };
+
   // Клик по подушке — открывает/закрывает меню
   menuIcon.onclick = (e) => {
     e.stopPropagation();
     const { theme, mode } = getSavedTheme();
     renderThemeMenu(theme, mode);
-    menu.style.display = (menu.style.display === "block") ? "none" : "block";
-    // Позиционирование меню (если нужно)
-    // Можно добавить плавную анимацию через CSS
+    const isOpen = menu.style.display === "block";
+    menu.style.display = isOpen ? "none" : "block";
+    btn.classList.toggle("theme-menu-open", !isOpen);
   };
+
   // Клик вне меню — закрывает меню
   document.addEventListener("click", (e) => {
     if (!menu.contains(e.target) && !btn.contains(e.target)) {
       menu.style.display = "none";
+      btn.classList.remove("theme-menu-open");
     }
   });
   menu.addEventListener("click", (e) => e.stopPropagation());
