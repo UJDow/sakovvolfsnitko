@@ -1531,6 +1531,17 @@ body.modal-open {
   display: inline;
   opacity: 1;
 }
+
+#cabinetModal .theme-compact-toggle {
+  position: relative;
+  margin-bottom: 12px;
+}
+#cabinetModal #themeMenu {
+  position: absolute;
+  top: 56px;
+  right: 0;
+  left: auto;
+}
   
   </style>
 </head>
@@ -1539,14 +1550,6 @@ body.modal-open {
   <button class="howto-toggle" id="howToBtn" title="Как?">
     <span class="icon">❓</span>
   </button>
-  <button class="theme-compact-toggle" id="themeToggle" title="Сменить тему">
-  <span class="icon" id="themeIcon">🌙</span>
-  <span class="text" id="themeName">Тема</span>
-  <span class="theme-menu-icon" id="themeMenuIcon" title="Выбрать тему">🛏️</span>
-</button>
-<div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
-  <div id="themeMenuList"></div>
-</div>
 </div>
 
   <div id="howToModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.45);">
@@ -1758,6 +1761,14 @@ body.modal-open {
   <div class="modal-content">
   <button id="closeCabinetBtn" class="modal-close-btn" aria-label="Закрыть">×</button>
   <h2>Личный кабинет</h2>
+    <button class="theme-compact-toggle" id="themeToggle" title="Сменить тему">
+  <span class="icon" id="themeIcon">🌙</span>
+  <span class="text" id="themeName">Тема</span>
+  <span class="theme-menu-icon" id="themeMenuIcon" title="Выбрать тему">🛏️</span>
+</button>
+<div id="themeMenu" style="display:none; position:absolute; top:56px; right:18px; z-index:2000; min-width:260px; background:var(--menu-bg); border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); border:1px solid var(--border); padding:10px 0; pointer-events:auto;">
+  <div id="themeMenuList"></div>
+</div>
   <div id="cabinetStorageInfo" class="muted" style="margin-bottom: 10px;"></div>
   <div id="cabinetList" class="cabinet-list"></div>
   <div style="display: flex; gap: 12px; margin-top: 18px;">
