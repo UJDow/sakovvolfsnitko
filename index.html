@@ -1037,16 +1037,15 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
   }
 
   .progress-step {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
 
-  .progress-line,
-  .progress-line-filled {
-    left: 14px;
-    right: 14px;
-  }
+.progress-line,
+.progress-line-filled {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 @media (pointer: coarse) {
@@ -1058,7 +1057,6 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
     opacity: 0.8;
   }
 }
-
 @media (spanning: single-fold-vertical) {
   .center-wrap {
     max-width: calc(var(--panel-max-width) * 1.3);
