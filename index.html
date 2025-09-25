@@ -1632,6 +1632,80 @@ body.modal-open {
   background: var(--card-bg);
 }
 
+.step-nav-wrapper {
+  width: 100%;
+  max-width: var(--panel-max-width);
+  margin: 0 auto 12px;
+  overflow: hidden;
+  transition: max-height 0.28s ease, opacity 0.25s ease, margin 0.25s ease;
+  max-height: 420px;
+}
+
+.step-nav-wrapper.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 4px;
+  pointer-events: none;
+}
+
+.step-nav-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step-nav-toggle {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 auto 8px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: color 0.2s, background 0.2s;
+}
+
+.step-nav-toggle:hover {
+  background: color-mix(in srgb, var(--card-bg) 82%, black 18%);
+}
+
+.step-nav-toggle .toggle-icon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.step-nav-toggle.collapsed .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Чтобы чат поднимался вверх, когда шаг 3 активен */
+.center-wrap.step-3-active {
+  padding-top: clamp(8px, 2vh, 14px);
+}
+
+.center-wrap.step-3-active #step3 .row {
+  margin-top: 0;
+}
+
+.center-wrap.step-3-active #step3 .card {
+  margin-top: 0;
+}
+
+/* Кнопка-тогглер пусть остаётся видимой даже на очень маленьких экранах */
+@media (max-width: 400px) {
+  .step-nav-toggle {
+    font-size: 13px;
+    padding: 6px 14px;
+  }
+}
+
+/* Сюда же можно положить ранее предложенный блок с гибкой высотой карточки и чата */
+    
 /* Шаг 3 — адаптивная высота карточки и чата */
 #step3 .row {
   flex: 1 1 auto;
@@ -1767,8 +1841,8 @@ body.modal-open {
   </div>
 </div>
 
-  <div class="center-wrap" style="display: none;">
-    <h1>Saviora</h1>
+  <div id="stepNavWrapper" class="step-nav-wrapper expanded">
+  <div class="step-nav-inner">
     <div id="cabinetMenu" style="margin: 18px 0 0 0; display: flex; flex-direction: column; align-items: center;">
       <button id="openCabinetBtn" class="btn secondary" style="margin: 0 auto;">Личный кабинет</button>
       <div id="storageIndicator" style="margin-top:10px; width: fit-content;">
@@ -1779,13 +1853,20 @@ body.modal-open {
       </div>
     </div>
 
-    <div class="progress-indicator">
+   <div class="progress-indicator">
       <div class="progress-step active" id="step1-indicator">1</div>
       <div class="progress-step" id="step2-indicator">2</div>
       <div class="progress-step" id="step3-indicator">3</div>
       <div class="progress-line"></div>
       <div class="progress-line-filled" id="progress-line-filled"></div>
     </div>
+  </div>
+</div>
+
+  <button id="stepNavToggle" class="step-nav-toggle" type="button" aria-expanded="true">
+  <span class="toggle-text">Навигация</span>
+  <span class="toggle-icon">▴</span>
+</button>
 
     <!-- Шаг 1 -->
     <div id="step1">
