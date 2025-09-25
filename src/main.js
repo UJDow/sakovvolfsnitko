@@ -1292,6 +1292,15 @@ if (addWholeFromHint) {
 }
 
 // ====== ТЕМЫ: UI и логика ======
+
+function updateThemeColorMeta() {
+  const meta = document.getElementById('appThemeColor');
+  if (!meta) return;
+  const rootStyles = getComputedStyle(document.documentElement);
+  const themeColor = rootStyles.getPropertyValue('--background').trim() || '#ffffff';
+  meta.setAttribute('content', themeColor);
+}
+
 function applyTheme(themeKey, mode) {
   const theme = THEMES.find(t => t.key === themeKey);
   if (!theme) return;
@@ -1299,6 +1308,7 @@ function applyTheme(themeKey, mode) {
   Object.entries(vars).forEach(([k, v]) => {
     document.documentElement.style.setProperty(k, v);
   });
+  updateThemeColorMeta();
   if (mode === "night") {
     document.documentElement.style.setProperty("--chat-bg", "rgba(30, 41, 59, 0.82)");
     document.documentElement.style.setProperty("--menu-bg", "rgba(30, 41, 59, 0.98)");
