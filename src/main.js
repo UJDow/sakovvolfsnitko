@@ -203,21 +203,6 @@ const BLOCK_COLORS = [
   "#FFB347", "#FF8C00", "#A259F7", "#43E97B", "#FF5E62"
 ];
 
-const dom = {
-  get centerWrap() {
-    return document.querySelector('.center-wrap');
-  },
-  get stepNavWrapper() {
-    return document.getElementById('stepNavWrapper');
-  },
-  get stepNavToggle() {
-    return document.getElementById('stepNavToggle');
-  },
-  get stepNavToggleIcon() {
-    return document.querySelector('#stepNavToggle .toggle-icon');
-  }
-};
-
 ///////////////////////
 // === УТИЛИТЫ === //
 ///////////////////////
@@ -746,44 +731,21 @@ const ui = {
   showAuth() {
     document.getElementById('trialStartScreen').style.display = 'flex';
     document.getElementById('authCard').style.display = 'none';
-    const centerWrapEl = dom.centerWrap;
-    if (centerWrapEl) centerWrapEl.style.display = 'none';
+    document.querySelector('.center-wrap').style.display = 'none';
     document.body.classList.remove('modal-open');
   },
-
   showMain() {
     document.getElementById('trialStartScreen').style.display = 'none';
     document.getElementById('authCard').style.display = 'none';
-    const centerWrapEl = dom.centerWrap;
-    if (centerWrapEl) centerWrapEl.style.display = 'flex';
+    document.querySelector('.center-wrap').style.display = 'flex';
     ui.setStep(1);
     ui.updateCabinetList();
     ui.updateStorageBar();
   },
-
   showTrialExpired() {
     ui.showAuth();
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
-
-  setStepNavState(collapsed) {
-    const wrapper = dom.stepNavWrapper;
-    const toggle = dom.stepNavToggle;
-    if (!wrapper || !toggle) return;
-    wrapper.classList.toggle('collapsed', collapsed);
-    toggle.classList.toggle('collapsed', collapsed);
-    toggle.setAttribute('aria-expanded', String(!collapsed));
-    const icon = dom.stepNavToggleIcon;
-    if (icon) icon.textContent = collapsed ? '▾' : '▴';
-  },
-
-  toggleStepNav() {
-    const wrapper = dom.stepNavWrapper;
-    if (!wrapper) return;
-    const willCollapse = !wrapper.classList.contains('collapsed');
-    ui.setStepNavState(willCollapse);
-  },
-
   setStep(step) {
     state.uiStep = step;
     for (let i = 1; i <= 3; ++i) {
@@ -791,158 +753,298 @@ const ui = {
       document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
       document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
     }
-
+    // Прогресс-бар
     const filled = document.getElementById('progress-line-filled');
-    if (filled) filled.style.width = ((step - 1) * 50) + '%';
-
-    if (step === 3) {
-      dom.centerWrap?.classList.add('step-3-active');
-      ui.setStepNavState(true);
-    } else {
-      dom.centerWrap?.classList.remove('step-3-active');
-      ui.setStepNavState(false);
-    }
+    filled.style.width = ((step - 1) * 50) + '%';
   },
 
   updateBlocks() {
-    const blocksDiv = document.getElementById('blocks');
-    if (blocksDiv) blocksDiv.innerHTML = '';
-  },
+  // Не рендерим чипсы, просто очищаем
+  const blocksDiv = document.getElementById('blocks');
+  if (blocksDiv) blocksDiv.innerHTML = '';
+},
 
+  // Единственное место, которое рендерит dreamView
   renderDreamTiles() {
-    const dreamView = document.getElementById('dreamView');
-    if (!dreamView) return;
+  const dreamView = document.getElementById('dreamView');
+  if (!dreamView) return;
 
-    const textEl = document.getElementById('dream');
-    const text = (textEl && textEl.value) || '';
-    dreamView.innerHTML = '';
-    if (!text) return;
+  const textEl = document.getElementById('dream');
+  const text = (textEl && textEl.value) || '';
+  dreamView.innerHTML = '';
 
-    const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
-    const wholeTextBtn = document.createElement('span');
-    wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
-    wholeTextBtn.textContent = 'Весь текст';
-    wholeTextBtn.onclick = function() {
-      if (state.blocks.length > 0) {
-        utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
-        return;
-      }
-      blocks.addWhole();
-      ui.renderDreamTiles();
-    };
-    wholeTextBtn.style.marginRight = '12px';
-    dreamView.appendChild(wholeTextBtn);
-
-    const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
-    if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
-      const span = document.createElement('span');
-      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
-      span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
-      span.style.color = '#fff';
-      span.onclick = () => blocks.select(fullBlock.id);
-      span.textContent = text;
-      dreamView.appendChild(span);
-      if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+  // --- Кликабельная фраза "Весь текст" ---
+  const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
+  const wholeTextBtn = document.createElement('span');
+  wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
+  wholeTextBtn.textContent = 'Весь текст';
+  wholeTextBtn.onclick = function() {
+    if (state.blocks.length > 0) {
+      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
       return;
     }
+    blocks.addWhole();
+    ui.renderDreamTiles();
+  };
+  wholeTextBtn.style.marginRight = '12px';
 
-    let pos = 0;
-    const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
+  if (!text) return;
 
-    while (pos < text.length) {
-      const block = sortedBlocksArr.find(b => b.start === pos);
-      if (block) {
-        const span = document.createElement('span');
-        span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
-        span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
-        span.style.color = '#fff';
-        span.onclick = () => blocks.select(block.id);
-        span.textContent = text.slice(block.start, block.end);
-        dreamView.appendChild(span);
-        pos = block.end;
-      } else {
-        const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
-        const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
-        const chunk = text.slice(pos, nextBlockStart);
-        const tokens = chunk.match(/\S+|\s+/g) || [];
-        let localPos = pos;
-
-        tokens.forEach(token => {
-          const isWord = /\S/.test(token);
-          if (isWord) {
-            const span = document.createElement('span');
-            span.className = 'tile';
-            span.textContent = token;
-            span.dataset.start = String(localPos);
-            span.dataset.end = String(localPos + token.length);
-            span.onclick = function(e) {
-              e.preventDefault();
-              span.classList.toggle('selected');
-              const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-              if (selected.length >= 2) {
-                const starts = selected.map(s => parseInt(s.dataset.start, 10));
-                const ends = selected.map(s => parseInt(s.dataset.end, 10));
-                const start = Math.min(...starts);
-                const end = Math.max(...ends);
-                for (const b of state.blocks) {
-                  if (!(end <= b.start || start >= b.end)) {
-                    utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
-                    selected.forEach(s => s.classList.remove('selected'));
-                    return;
-                  }
-                }
-                const sliceText = document.getElementById('dream').value.slice(start, end);
-                const ok = blocks.add(start, end, sliceText);
-                if (ok) {
-                  selected.forEach(s => s.classList.remove('selected'));
-                  ui.renderDreamTiles();
-                  utils.showToast('Блок добавлен', 'success');
-                }
-              } else {
-                const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-                const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-                document.querySelectorAll('.tile.selected').forEach(sel => {
-                  sel.style.background = nextColor;
-                  sel.style.color = '#fff';
-                });
-                document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
-                  sel.style.background = '';
-                  sel.style.color = '';
-                });
-              }
-            };
-            dreamView.appendChild(span);
-          } else {
-            dreamView.appendChild(document.createTextNode(token));
-          }
-          localPos += token.length;
-        });
-        pos = nextBlockStart;
-      }
-    }
-
-    const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-    const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-    document.querySelectorAll('.tile.selected').forEach(sel => {
-      sel.style.background = nextColor;
-      sel.style.color = '#fff';
-    });
-
+  // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
+  const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
+  if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
+    const span = document.createElement('span');
+    span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
+    span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
+    span.style.color = '#fff';
+    span.onclick = () => blocks.select(fullBlock.id);
+    span.textContent = text; // весь текст, без разрезов
+    dreamView.appendChild(span);
     if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+    return;
+  }
+
+  // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
+  let pos = 0;
+  const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
+
+  while (pos < text.length) {
+    const block = sortedBlocksArr.find(b => b.start === pos);
+    if (block) {
+      const span = document.createElement('span');
+      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
+      span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+      span.style.color = '#fff';
+      span.onclick = () => blocks.select(block.id);
+      span.textContent = text.slice(block.start, block.end);
+      dreamView.appendChild(span);
+      pos = block.end;
+    } else {
+      // свободный участок текста до следующего блока
+      const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
+      const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
+      const chunk = text.slice(pos, nextBlockStart);
+      const tokens = chunk.match(/\S+|\s+/g) || [];
+      let localPos = pos;
+
+      tokens.forEach(token => {
+        const isWord = /\S/.test(token);
+        if (isWord) {
+          const span = document.createElement('span');
+          span.className = 'tile';
+          span.textContent = token;
+          span.dataset.start = String(localPos);
+          span.dataset.end = String(localPos + token.length);
+          // --- ВСТАВЬ ВОТ ЭТОТ ОБРАБОТЧИК ---
+          span.onclick = function(e) {
+            e.preventDefault();
+            span.classList.toggle('selected');
+            const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+            if (selected.length >= 2) {
+              // Определяем диапазон
+              const starts = selected.map(s => parseInt(s.dataset.start, 10));
+              const ends = selected.map(s => parseInt(s.dataset.end, 10));
+              const start = Math.min(...starts);
+              const end = Math.max(...ends);
+              // Проверка на пересечение
+              for (const b of state.blocks) {
+                if (!(end <= b.start || start >= b.end)) {
+                  utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+                  // Снять выделение
+                  selected.forEach(s => s.classList.remove('selected'));
+                  return;
+                }
+              }
+              const text = document.getElementById('dream').value.slice(start, end);
+              const ok = blocks.add(start, end, text);
+              if (ok) {
+                // Снять выделение
+                selected.forEach(s => s.classList.remove('selected'));
+                ui.renderDreamTiles();
+                utils.showToast('Блок добавлен', 'success');
+              }
+            } else {
+              // Просто подсветка
+              const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+              const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+              document.querySelectorAll('.tile.selected').forEach(sel => {
+                sel.style.background = nextColor;
+                sel.style.color = '#fff';
+              });
+              document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
+                sel.style.background = '';
+                sel.style.color = '';
+              });
+            }
+          };
+          // --- КОНЕЦ ОБРАБОТЧИКА ---
+          dreamView.appendChild(span);
+        } else {
+          dreamView.appendChild(document.createTextNode(token));
+        }
+        localPos += token.length;
+      });
+      pos = nextBlockStart;
+    }
+  }
+
+  // Синхронизировать цвет уже выделенных плиток
+  const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+  const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+  document.querySelectorAll('.tile.selected').forEach(sel => {
+    sel.style.background = nextColor;
+    sel.style.color = '#fff';
+  });
+
+  if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+},
+
+  updateChat() {
+    const chatDiv = document.getElementById('chat');
+    chatDiv.innerHTML = '';
+    if (!state.currentBlock) {
+      document.getElementById('currentBlock').textContent = 'Блок не выбран';
+      return;
+    }
+    document.getElementById('currentBlock').textContent = 'Блок: ' + (state.currentBlock.text.length > 40 ? state.currentBlock.text.slice(0, 40) + '…' : state.currentBlock.text);
+    const history = state.chatHistory[state.currentBlock.id] || [];
+    history.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
+      div.textContent = msg.content;
+      chatDiv.appendChild(div);
+    });
+    if (state.currentBlock.finalInterpretation) {
+      const div = document.createElement('div');
+      div.className = 'msg bot final';
+      div.textContent = state.currentBlock.finalInterpretation;
+      chatDiv.appendChild(div);
+    }
+    chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
+    chatDiv.scrollTop = chatDiv.scrollHeight;
   },
 
-  updateChat() { /* остальной код без изменений */ },
-  setThinking(isThinking) { /* ... */ },
-  updateProgressMoon(flash = false) { /* ... */ },
-  updateCabinetList() { /* ... */ },
-  updateStorageBar() { /* ... */ },
-  showFinalDialog() { /* ... */ },
-  closeFinalDialog() { /* ... */ },
-  showCabinetModal() { /* ... */ },
-  closeCabinetModal() { /* ... */ },
-  showDreamPreviewModal(dream) { /* ... */ },
-  closeDreamPreviewModal() { /* ... */ }
+  setThinking(isThinking) {
+    document.getElementById('thinking').style.display = isThinking ? 'block' : 'none';
+  },
+
+  updateProgressMoon(flash = false) {
+    // Анимация луны (SVG) — flash при flash=true
+    const moonBtn = document.getElementById('moonBtn');
+    const block = state.currentBlock;
+    if (!block) { moonBtn.innerHTML = ''; return; }
+    const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
+    let percent = utils.clamp(count / 10, 0, 1);
+    let color = percent === 1 ? '#10b981' : '#2563eb';
+    moonBtn.innerHTML = `
+      <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44">
+        <circle cx="22" cy="22" r="20" fill="#fffbe6" stroke="${color}" stroke-width="3"/>
+        <path d="M22 2
+          a 20 20 0 1 0 0.00001 0"
+          fill="none" stroke="#e2e8f0" stroke-width="3"/>
+        <path d="M22 2
+          a 20 20 0 ${percent > 0.5 ? 1 : 0} 1 ${20 * Math.sin(2 * Math.PI * percent)} ${20 - 20 * Math.cos(2 * Math.PI * percent)}"
+          fill="none" stroke="${color}" stroke-width="3"/>
+        <text x="22" y="28" text-anchor="middle" font-size="15" fill="${color}" font-weight="bold">${count}/10</text>
+      </svg>
+    `;
+    if (flash) {
+      moonBtn.querySelector('.moon-svg').classList.add('moon-flash');
+      setTimeout(() => {
+        moonBtn.querySelector('.moon-svg').classList.remove('moon-flash');
+      }, 1600);
+    }
+  },
+
+  updateCabinetList() {
+    const listDiv = document.getElementById('cabinetList');
+    if (!listDiv) return;
+    listDiv.innerHTML = '';
+    state.dreams.forEach(d => {
+      const tile = document.createElement('div');
+      tile.className = 'cabinet-tile';
+      tile.innerHTML = `
+        <span class="cabinet-date">${utils.formatDate(d.date)}</span>
+        <span class="cabinet-preview">${utils.escapeHtml((d.dreamText || '').slice(0, 40))}</span>
+        <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
+      `;
+      // Клик по плитке (кроме кнопки "Удалить")
+      tile.onclick = e => {
+        if (e.target.closest('button')) return;
+        ui.showDreamPreviewModal(d);
+      };
+      // Кнопка "Удалить"
+      tile.querySelector('[data-del]').onclick = async e => {
+        e.stopPropagation();
+        if (confirm('Удалить этот сон?')) await dreams.delete(d.id);
+      };
+      listDiv.appendChild(tile);
+    });
+  },
+
+  updateStorageBar() {
+    const bar = document.getElementById('storageBar');
+    const txt = document.getElementById('storageText');
+    const used = state.dreams.length;
+    const percent = Math.min(used / 50, 1) * 100;
+    bar.style.width = percent + '%';
+    txt.textContent = `${used}/50`;
+    txt.style.color = percent > 90 ? '#ef4444' : (percent > 60 ? '#f59e0b' : '#22c55e');
+  },
+
+  showFinalDialog() {
+    const dlg = document.getElementById('finalDialog');
+    dlg.style.display = 'block';
+    document.body.classList.add('modal-open');
+    document.getElementById('finalDialogMain').textContent = state.globalFinalInterpretation || '';
+    const blocksDiv = document.getElementById('finalDialogBlocks');
+    blocksDiv.innerHTML = '';
+    state.blocks.forEach((b, i) => {
+      const div = document.createElement('div');
+      div.className = 'msg bot final';
+      div.textContent = `Блок ${i + 1}: ${b.finalInterpretation || 'Нет толкования'}`;
+      blocksDiv.appendChild(div);
+    });
+  },
+
+  closeFinalDialog() {
+    document.getElementById('finalDialog').style.display = 'none';
+    document.body.classList.remove('modal-open');
+  },
+
+  showCabinetModal() {
+    document.getElementById('cabinetModal').style.display = 'block';
+    document.body.classList.add('modal-open');
+    ui.updateCabinetList();
+  },
+
+  closeCabinetModal() {
+    document.getElementById('cabinetModal').style.display = 'none';
+    document.body.classList.remove('modal-open');
+  },
+
+  // --- МОДАЛКА ПРОСМОТРА СНА ---
+  showDreamPreviewModal(dream) {
+    const modal = document.getElementById('dreamPreviewModal');
+    const textDiv = document.getElementById('dreamPreviewText');
+    const interpDiv = document.getElementById('dreamPreviewInterpret');
+    const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
+    textDiv.textContent = dream.dreamText || '';
+    interpWrap.style.display = 'block';
+    interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
+    interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
+    state._previewedDream = dream;
+    modal.style.display = 'block';
+    document.body.classList.add('modal-open');
+  },
+
+  closeDreamPreviewModal() {
+    document.getElementById('dreamPreviewModal').style.display = 'none';
+    document.body.classList.remove('modal-open');
+    state._previewedDream = null;
+  }
 };
+
 ///////////////////////
 // === ЭКСПОРТ/ИМПОРТ === //
 ///////////////////////
