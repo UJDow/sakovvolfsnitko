@@ -1631,6 +1631,64 @@ body.modal-open {
   color: #ffe066; /* или другой цвет для тёмной темы */
   background: var(--card-bg);
 }
+
+/* Шаг 3 — адаптивная высота карточки и чата */
+#step3 .row {
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+}
+
+#step3 .card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: min(92vh, 720px);
+  max-height: calc(100svh - (env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 24px));
+  padding-bottom: clamp(12px, 5vh, 24px);
+  margin-bottom: clamp(12px, 4vh, 24px);
+}
+
+@supports (height: 100dvh) {
+  #step3 .card {
+    max-height: calc(100dvh - (env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 24px));
+  }
+}
+
+#step3 .card > .dialog-header,
+#step3 .card > #currentBlock,
+#step3 .card > .footer,
+#step3 .card > .nav-previews {
+  flex-shrink: 0;
+}
+
+#step3 .chat-wrap.surface {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#step3 .chat {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#step3 .footer {
+  padding-top: 8px;
+}
+
+/* Чуть компактнее на очень маленьких экранах (≤360px) */
+@media (max-width: 360px) {
+  #step3 .card {
+    height: min(96vh, 640px);
+  }
+}
   
   </style>
 </head>
