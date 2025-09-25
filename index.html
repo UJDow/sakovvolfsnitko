@@ -226,13 +226,8 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 
 /* Progress indicator */
 .progress-indicator {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 auto 24px auto;
-  max-width: 300px;
-  width: 100%;
-  position: relative;
+  justify-content: center;
+  gap: 12px;
 }
 
 /* Кружки — фон с альфой, а текст остаётся непрозрачным */
@@ -1037,10 +1032,10 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
   }
 
   .progress-step {
-  width: 28px;
-  height: 28px;
-  font-size: 12px;
-}
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
 
 .progress-line,
 .progress-line-filled {
@@ -1057,6 +1052,7 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
     opacity: 0.8;
   }
 }
+
 @media (spanning: single-fold-vertical) {
   .center-wrap {
     max-width: calc(var(--panel-max-width) * 1.3);
