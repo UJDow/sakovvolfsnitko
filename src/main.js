@@ -203,6 +203,13 @@ const BLOCK_COLORS = [
   "#FFB347", "#FF8C00", "#A259F7", "#43E97B", "#FF5E62"
 ];
 
+const dom = {
+  centerWrap: document.querySelector('.center-wrap'),
+  stepNavWrapper: document.getElementById('stepNavWrapper'),
+  stepNavToggle: document.getElementById('stepNavToggle'),
+  stepNavToggleIcon: document.querySelector('#stepNavToggle .toggle-icon')
+};
+
 ///////////////////////
 // === УТИЛИТЫ === //
 ///////////////////////
@@ -731,21 +738,42 @@ const ui = {
   showAuth() {
     document.getElementById('trialStartScreen').style.display = 'flex';
     document.getElementById('authCard').style.display = 'none';
-    document.querySelector('.center-wrap').style.display = 'none';
+    const centerWrapEl = dom.centerWrap || document.querySelector('.center-wrap');
+    if (centerWrapEl) centerWrapEl.style.display = 'none';
     document.body.classList.remove('modal-open');
   },
+
   showMain() {
     document.getElementById('trialStartScreen').style.display = 'none';
     document.getElementById('authCard').style.display = 'none';
-    document.querySelector('.center-wrap').style.display = 'flex';
+    const centerWrapEl = dom.centerWrap || document.querySelector('.center-wrap');
+    if (centerWrapEl) centerWrapEl.style.display = 'flex';
     ui.setStep(1);
     ui.updateCabinetList();
     ui.updateStorageBar();
   },
+
   showTrialExpired() {
     ui.showAuth();
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
+
+  setStepNavState(collapsed) {
+    if (!dom.stepNavWrapper || !dom.stepNavToggle) return;
+    dom.stepNavWrapper.classList.toggle('collapsed', collapsed);
+    dom.stepNavToggle.classList.toggle('collapsed', collapsed);
+    dom.stepNavToggle.setAttribute('aria-expanded', String(!collapsed));
+    if (dom.stepNavToggleIcon) {
+      dom.stepNavToggleIcon.textContent = collapsed ? '▾' : '▴';
+    }
+  },
+
+  toggleStepNav() {
+    if (!dom.stepNavWrapper) return;
+    const willCollapse = !dom.stepNavWrapper.classList.contains('collapsed');
+    ui.setStepNavState(willCollapse);
+  },
+
   setStep(step) {
     state.uiStep = step;
     for (let i = 1; i <= 3; ++i) {
@@ -753,151 +781,151 @@ const ui = {
       document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
       document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
     }
-    // Прогресс-бар
+
     const filled = document.getElementById('progress-line-filled');
     filled.style.width = ((step - 1) * 50) + '%';
+
+    if (step === 3) {
+      dom.centerWrap?.classList.add('step-3-active');
+      ui.setStepNavState(true);
+    } else {
+      dom.centerWrap?.classList.remove('step-3-active');
+      ui.setStepNavState(false);
+    }
   },
 
   updateBlocks() {
-  // Не рендерим чипсы, просто очищаем
-  const blocksDiv = document.getElementById('blocks');
-  if (blocksDiv) blocksDiv.innerHTML = '';
-},
+    // Не рендерим чипсы, просто очищаем
+    const blocksDiv = document.getElementById('blocks');
+    if (blocksDiv) blocksDiv.innerHTML = '';
+  },
 
   // Единственное место, которое рендерит dreamView
   renderDreamTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
+    const dreamView = document.getElementById('dreamView');
+    if (!dreamView) return;
 
-  const textEl = document.getElementById('dream');
-  const text = (textEl && textEl.value) || '';
-  dreamView.innerHTML = '';
+    const textEl = document.getElementById('dream');
+    const text = (textEl && textEl.value) || '';
+    dreamView.innerHTML = '';
+    if (!text) return;
 
-  // --- Кликабельная фраза "Весь текст" ---
-  const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
-  const wholeTextBtn = document.createElement('span');
-  wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
-  wholeTextBtn.textContent = 'Весь текст';
-  wholeTextBtn.onclick = function() {
-    if (state.blocks.length > 0) {
-      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+    // --- Кликабельная фраза "Весь текст" ---
+    const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
+    const wholeTextBtn = document.createElement('span');
+    wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
+    wholeTextBtn.textContent = 'Весь текст';
+    wholeTextBtn.onclick = function() {
+      if (state.blocks.length > 0) {
+        utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+        return;
+      }
+      blocks.addWhole();
+      ui.renderDreamTiles();
+    };
+    wholeTextBtn.style.marginRight = '12px';
+    dreamView.appendChild(wholeTextBtn);
+
+    // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
+    const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
+    if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
+      const span = document.createElement('span');
+      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
+      span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
+      span.style.color = '#fff';
+      span.onclick = () => blocks.select(fullBlock.id);
+      span.textContent = text; // весь текст, без разрезов
+      dreamView.appendChild(span);
+      if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
       return;
     }
-    blocks.addWhole();
-    ui.renderDreamTiles();
-  };
-  wholeTextBtn.style.marginRight = '12px';
 
-  if (!text) return;
+    // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
+    let pos = 0;
+    const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
 
-  // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
-  const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
-  if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
-    const span = document.createElement('span');
-    span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
-    span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
-    span.style.color = '#fff';
-    span.onclick = () => blocks.select(fullBlock.id);
-    span.textContent = text; // весь текст, без разрезов
-    dreamView.appendChild(span);
-    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-    return;
-  }
+    while (pos < text.length) {
+      const block = sortedBlocksArr.find(b => b.start === pos);
+      if (block) {
+        const span = document.createElement('span');
+        span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
+        span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+        span.style.color = '#fff';
+        span.onclick = () => blocks.select(block.id);
+        span.textContent = text.slice(block.start, block.end);
+        dreamView.appendChild(span);
+        pos = block.end;
+      } else {
+        // свободный участок текста до следующего блока
+        const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
+        const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
+        const chunk = text.slice(pos, nextBlockStart);
+        const tokens = chunk.match(/\S+|\s+/g) || [];
+        let localPos = pos;
 
-  // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
-  let pos = 0;
-  const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
-
-  while (pos < text.length) {
-    const block = sortedBlocksArr.find(b => b.start === pos);
-    if (block) {
-      const span = document.createElement('span');
-      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
-      span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
-      span.style.color = '#fff';
-      span.onclick = () => blocks.select(block.id);
-      span.textContent = text.slice(block.start, block.end);
-      dreamView.appendChild(span);
-      pos = block.end;
-    } else {
-      // свободный участок текста до следующего блока
-      const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
-      const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
-      const chunk = text.slice(pos, nextBlockStart);
-      const tokens = chunk.match(/\S+|\s+/g) || [];
-      let localPos = pos;
-
-      tokens.forEach(token => {
-        const isWord = /\S/.test(token);
-        if (isWord) {
-          const span = document.createElement('span');
-          span.className = 'tile';
-          span.textContent = token;
-          span.dataset.start = String(localPos);
-          span.dataset.end = String(localPos + token.length);
-          // --- ВСТАВЬ ВОТ ЭТОТ ОБРАБОТЧИК ---
-          span.onclick = function(e) {
-            e.preventDefault();
-            span.classList.toggle('selected');
-            const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-            if (selected.length >= 2) {
-              // Определяем диапазон
-              const starts = selected.map(s => parseInt(s.dataset.start, 10));
-              const ends = selected.map(s => parseInt(s.dataset.end, 10));
-              const start = Math.min(...starts);
-              const end = Math.max(...ends);
-              // Проверка на пересечение
-              for (const b of state.blocks) {
-                if (!(end <= b.start || start >= b.end)) {
-                  utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
-                  // Снять выделение
-                  selected.forEach(s => s.classList.remove('selected'));
-                  return;
+        tokens.forEach(token => {
+          const isWord = /\S/.test(token);
+          if (isWord) {
+            const span = document.createElement('span');
+            span.className = 'tile';
+            span.textContent = token;
+            span.dataset.start = String(localPos);
+            span.dataset.end = String(localPos + token.length);
+            span.onclick = function(e) {
+              e.preventDefault();
+              span.classList.toggle('selected');
+              const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+              if (selected.length >= 2) {
+                const starts = selected.map(s => parseInt(s.dataset.start, 10));
+                const ends = selected.map(s => parseInt(s.dataset.end, 10));
+                const start = Math.min(...starts);
+                const end = Math.max(...ends);
+                for (const b of state.blocks) {
+                  if (!(end <= b.start || start >= b.end)) {
+                    utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+                    selected.forEach(s => s.classList.remove('selected'));
+                    return;
+                  }
                 }
+                const text = document.getElementById('dream').value.slice(start, end);
+                const ok = blocks.add(start, end, text);
+                if (ok) {
+                  selected.forEach(s => s.classList.remove('selected'));
+                  ui.renderDreamTiles();
+                  utils.showToast('Блок добавлен', 'success');
+                }
+              } else {
+                const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+                const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+                document.querySelectorAll('.tile.selected').forEach(sel => {
+                  sel.style.background = nextColor;
+                  sel.style.color = '#fff';
+                });
+                document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
+                  sel.style.background = '';
+                  sel.style.color = '';
+                });
               }
-              const text = document.getElementById('dream').value.slice(start, end);
-              const ok = blocks.add(start, end, text);
-              if (ok) {
-                // Снять выделение
-                selected.forEach(s => s.classList.remove('selected'));
-                ui.renderDreamTiles();
-                utils.showToast('Блок добавлен', 'success');
-              }
-            } else {
-              // Просто подсветка
-              const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-              const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-              document.querySelectorAll('.tile.selected').forEach(sel => {
-                sel.style.background = nextColor;
-                sel.style.color = '#fff';
-              });
-              document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
-                sel.style.background = '';
-                sel.style.color = '';
-              });
-            }
-          };
-          // --- КОНЕЦ ОБРАБОТЧИКА ---
-          dreamView.appendChild(span);
-        } else {
-          dreamView.appendChild(document.createTextNode(token));
-        }
-        localPos += token.length;
-      });
-      pos = nextBlockStart;
+            };
+            dreamView.appendChild(span);
+          } else {
+            dreamView.appendChild(document.createTextNode(token));
+          }
+          localPos += token.length;
+        });
+        pos = nextBlockStart;
+      }
     }
-  }
 
-  // Синхронизировать цвет уже выделенных плиток
-  const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-  const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-  document.querySelectorAll('.tile.selected').forEach(sel => {
-    sel.style.background = nextColor;
-    sel.style.color = '#fff';
-  });
+    const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+    const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+    document.querySelectorAll('.tile.selected').forEach(sel => {
+      sel.style.background = nextColor;
+      sel.style.color = '#fff';
+    });
 
-  if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-},
+    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+  },
 
   updateChat() {
     const chatDiv = document.getElementById('chat');
@@ -929,7 +957,6 @@ const ui = {
   },
 
   updateProgressMoon(flash = false) {
-    // Анимация луны (SVG) — flash при flash=true
     const moonBtn = document.getElementById('moonBtn');
     const block = state.currentBlock;
     if (!block) { moonBtn.innerHTML = ''; return; }
@@ -968,12 +995,10 @@ const ui = {
         <span class="cabinet-preview">${utils.escapeHtml((d.dreamText || '').slice(0, 40))}</span>
         <button class="btn" style="background:#ef4444;color:#fff;" data-del="${d.id}">Удалить</button>
       `;
-      // Клик по плитке (кроме кнопки "Удалить")
       tile.onclick = e => {
         if (e.target.closest('button')) return;
         ui.showDreamPreviewModal(d);
       };
-      // Кнопка "Удалить"
       tile.querySelector('[data-del]').onclick = async e => {
         e.stopPropagation();
         if (confirm('Удалить этот сон?')) await dreams.delete(d.id);
@@ -1023,7 +1048,6 @@ const ui = {
     document.body.classList.remove('modal-open');
   },
 
-  // --- МОДАЛКА ПРОСМОТРА СНА ---
   showDreamPreviewModal(dream) {
     const modal = document.getElementById('dreamPreviewModal');
     const textDiv = document.getElementById('dreamPreviewText');
