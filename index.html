@@ -1631,6 +1631,226 @@ body.modal-open {
   color: #ffe066; /* или другой цвет для тёмной темы */
   background: var(--card-bg);
 }
+
+/* === Step 3 full-screen chat === */
+body.step3-mode {
+  background: #05050a;
+  color: #f4f6ff;
+}
+
+body.step3-mode .center-wrap {
+  max-width: 100%;
+  width: 100%;
+  padding: max(env(safe-area-inset-top, 18px), 18px)
+           clamp(16px, 4vw, 28px)
+           calc(env(safe-area-inset-bottom, 0px) + 18px);
+}
+
+body.step3-mode .center-wrap > h1,
+body.step3-mode #cabinetMenu,
+body.step3-mode .progress-indicator {
+  display: none !important;
+}
+
+body.step3-mode #step1,
+body.step3-mode #step2 {
+  display: none !important;
+}
+
+body.step3-mode #step3 {
+  display: flex !important;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+body.step3-mode #step3 .row,
+body.step3-mode #step3 .card,
+body.step3-mode #step3 .chat-screen__wrapper {
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+body.step3-mode #step3 .card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.chat-screen__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.chat-screen__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-screen__brand {
+  font-size: 16px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(157, 171, 255, 0.85);
+}
+
+.chat-screen__subtitle {
+  margin: 0;
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 600;
+  color: #f7f8ff;
+}
+
+body.step3-mode #step3 #currentBlock,
+body.step3-mode #step3 .nav-previews {
+  display: none !important;
+}
+
+body.step3-mode #step3 .chat-wrap.surface {
+  flex: 1 1 auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(14, 16, 26, 0.86);
+  padding: clamp(18px, 4vw, 28px);
+}
+
+body.step3-mode #step3 .chat {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  gap: 18px;
+}
+
+body.step3-mode #step3 #chatInputBar {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-quick-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chat-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #f4f6ff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.chat-quick-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.chat-quick-btn:active {
+  transform: scale(0.97);
+}
+
+.chat-quick-btn--icon {
+  width: 48px;
+  justify-content: center;
+  font-size: 24px;
+  padding: 10px;
+  border-style: dashed;
+}
+
+.chat-quick-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffd54a;
+  box-shadow: 0 0 12px rgba(255,213,74,0.6);
+}
+
+body.step3-mode #step3 #moonBtn.attach-icon-btn {
+  position: static;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  padding: 10px 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #f4f6ff;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.chat-input-field {
+  position: relative;
+}
+
+body.step3-mode #step3 #userInput {
+  min-height: 56px;
+  max-height: 160px;
+  padding: 16px 68px 16px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: #f4f6ff;
+}
+
+body.step3-mode #step3 #userInput::placeholder {
+  color: rgba(244, 246, 255, 0.42);
+}
+
+body.step3-mode #step3 #userInput:focus {
+  outline: none;
+  border-color: rgba(124, 92, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.18);
+}
+
+body.step3-mode #step3 .send-icon-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  box-shadow: 0 8px 26px rgba(79, 70, 229, 0.35);
+  font-size: 20px;
+}
+
+body.step3-mode #step3 .send-icon-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+body.step3-mode #step3 #attachMenu {
+  right: 0;
+  bottom: calc(100% + 12px);
+}
+
+body.step3-mode #step3 .footer {
+  margin-top: 0;
+  padding: 0;
+}
+
+body.step3-mode #step3 .jump-bottom-btn {
+  bottom: clamp(92px, 12vh, 128px);
+  right: clamp(18px, 4vw, 28px);
+}
   
   </style>
 </head>
@@ -1772,48 +1992,70 @@ body.modal-open {
       </div>
     </div>
 
-    <!-- Шаг 3 -->
-    <div id="step3" style="display:none;">
-      <div class="row">
-        <div class="card">
-          <button id="backTo2Top" class="top-back" title="Назад" aria-label="Назад">&larr;</button>
-          <div class="dialog-header">
-            <h3>Диалог по вашему сновидению</h3>
+   <!-- Шаг 3 -->
+<div id="step3" class="chat-screen" style="display:none;">
+  <div class="row">
+    <div class="card">
+      <div class="chat-screen__wrapper">
+        <header class="chat-screen__header">
+          <button id="backTo2Top" class="top-back" title="Назад" aria-label="Назад">←</button>
+
+          <div class="chat-screen__titles">
+            <span class="chat-screen__brand">Saviora</span>
+            <h2 class="chat-screen__subtitle">Диалог по вашему сновидению</h2>
           </div>
-          <div id="currentBlock" class="muted" style="margin: 0 0 8px;">Блок не выбран</div>
-          <div class="chat-wrap surface">
-            <div class="chat" id="chat">
-              <div id="thinking" class="msg thinking" style="display:none;">Думаю<span class="dots">...</span></div>
-              <div class="chat-stabilizer"></div>
+        </header>
+
+        <div id="currentBlock" class="chat-screen__meta muted" aria-hidden="true"></div>
+
+        <div class="chat-wrap surface">
+          <div class="chat" id="chat">
+            <div id="thinking" class="msg thinking" style="display:none;">Думаю<span class="dots">...</span></div>
+            <div class="chat-stabilizer"></div>
+          </div>
+          <button id="jumpToBottom" class="jump-bottom-btn" title="В конец" aria-label="В конец">▼</button>
+        </div>
+
+        <footer class="chat-screen__footer">
+          <div id="chatInputBar" class="chat-input-bar">
+            <div class="chat-quick-row">
+              <button id="moonBtn" class="chat-quick-btn" type="button">
+                <span class="chat-quick-dot"></span>
+                Прогресс луны
+              </button>
+              <button
+                id="quickMenuBtn"
+                class="chat-quick-btn chat-quick-btn--icon"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="attachMenu"
+              >
+                +
+              </button>
             </div>
-            <button id="jumpToBottom" class="jump-bottom-btn" title="В конец" aria-label="В конец">▼</button>
-          </div>
-          <div class="footer">
-            <div id="chatInputBar" class="chat-input-bar" style="width:100%; position:relative;">
+
+            <div class="chat-input-field">
               <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
-              <button id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны"></button>
-              <div id="attachMenu" class="attach-menu" style="display:none;">
-                <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
-                <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
-                <button id="menuSaveToCabinet" class="attach-item">💾 Сохранить в кабинет</button>
-              </div>
               <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить" aria-label="Отправить">➤</button>
             </div>
+
+            <div id="attachMenu" class="attach-menu" role="menu">
+              <button id="menuBlockInterpret" class="attach-item" role="menuitem">📖 Толкование</button>
+              <button id="menuFinalInterpret" class="attach-item" role="menuitem">🎯 Итог</button>
+              <button id="menuSaveToCabinet" class="attach-item" role="menuitem">💾 Сохранить в кабинет</button>
+            </div>
           </div>
-          <div class="nav-previews">
-            <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
-            <div id="nextPreview" class="block-preview"><span class="label"></span></div>
-          </div>
-          <div style="display:none;">
-            <button id="blockInterpretBtn">Толкование</button>
-            <button id="finalInterpretBtn">Итог</button>
-            <button id="prevBlockBtn">◀</button>
-            <button id="nextBlockBtn">▶</button>
-          </div>
+        </footer>
+
+        <div class="nav-previews" aria-hidden="true">
+          <div id="prevPreview" class="block-preview disabled"><span class="label">…</span></div>
+          <div id="nextPreview" class="block-preview"><span class="label"></span></div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
   <!-- Итоговое окно -->
   <div id="finalDialog" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); overflow-y:auto;">
