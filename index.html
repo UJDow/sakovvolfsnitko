@@ -1689,6 +1689,15 @@ body.modal-open {
     height: min(96vh, 640px);
   }
 }
+
+@media (max-width: 800px) {
+  @supports (env(safe-area-inset-top: 0)) {
+    .center-wrap,
+    .centered-card {
+      margin-top: calc(env(safe-area-inset-top, 0px) * -1);
+    }
+  }
+}
   
   </style>
 </head>
