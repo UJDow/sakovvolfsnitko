@@ -1042,9 +1042,11 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
     font-size: 12px;
   }
 
-.progress-line,
-.progress-line-filled {
-  display: none;
+  .progress-line,
+  .progress-line-filled {
+    left: 0px;
+    right: 0px;
+  }
 }
 
 @media (pointer: coarse) {
@@ -1725,6 +1727,8 @@ body.modal-open {
       <div class="progress-step active" id="step1-indicator">1</div>
       <div class="progress-step" id="step2-indicator">2</div>
       <div class="progress-step" id="step3-indicator">3</div>
+      <div class="progress-line"></div>
+      <div class="progress-line-filled" id="progress-line-filled"></div>
     </div>
 
     <!-- Шаг 1 -->
