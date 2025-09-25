@@ -746,27 +746,17 @@ const ui = {
     ui.showAuth();
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
- setStep(step) {
-  state.uiStep = step;
-
-  for (let i = 1; i <= 3; ++i) {
-    const stepEl = document.getElementById('step' + i);
-    if (!stepEl) continue;
-    const show = i === step;
-    const isStep3 = i === 3;
-
-    // step 3 теперь развёрнут на весь экран
-    stepEl.style.display = show ? (isStep3 ? 'flex' : 'block') : 'none';
-
-    document.getElementById('step' + i + '-indicator').classList.toggle('active', show);
-    document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
-  }
-
-  document.body.classList.toggle('step3-mode', step === 3);
-
-  // прогресс-бар остаётся, но ширина зависит от шага
-  document.getElementById('progress-line-filled').style.width = ((step - 1) * 50) + '%';
-},
+  setStep(step) {
+    state.uiStep = step;
+    for (let i = 1; i <= 3; ++i) {
+      document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
+      document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
+      document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
+    }
+    // Прогресс-бар
+    const filled = document.getElementById('progress-line-filled');
+    filled.style.width = ((step - 1) * 50) + '%';
+  },
 
   updateBlocks() {
   // Не рендерим чипсы, просто очищаем
