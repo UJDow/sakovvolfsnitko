@@ -1640,17 +1640,15 @@ body.modal-open {
 
 #step3 .card {
   height: auto !important;
-  min-height: calc(100svh - (env(safe-area-inset-top, 0px) + 150px)) !important;
-  max-height: calc(100svh - (env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 16px)) !important;
-  margin-top: clamp(4px, 0.8vh, 12px) !important;
-  margin-bottom: clamp(8px, 1.8vh, 18px) !important;
-  padding: clamp(16px, 3vh, 22px) clamp(16px, 4vw, 24px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 22px !important;
 }
-
 @media (max-width: 600px) {
   #step3 .card {
-    min-height: calc(100svh - (env(safe-area-inset-top, 0px) + 120px)) !important;
-    padding-block: clamp(14px, 3.4vh, 20px) !important;
+    padding: 16px !important;
   }
 }
 
