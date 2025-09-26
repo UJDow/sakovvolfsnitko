@@ -934,7 +934,10 @@ updateChat() {
   const block = state.currentBlock;
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
-  let percent = utils.clamp(count / 10, 0, 1);
+
+  // 10 шагов: заполнение начинается только после первого шага
+  let percent = 0;
+  if (count > 0) percent = Math.min((count) / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
   const dx = (1 - 2 * percent) * r;
@@ -950,18 +953,23 @@ updateChat() {
           </feMerge>
         </filter>
         <radialGradient id="moonTexture" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fffbe6"/>
-          <stop offset="100%" stop-color="#e2e8f0"/>
+          <stop offset="0%" stop-color="#e2e8f0"/>
+          <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
         <mask id="phaseMask">
           <rect x="0" y="0" width="44" height="44" fill="white"/>
           <circle cx="${cx + dx}" cy="${cy}" r="${r}" fill="black"/>
         </mask>
       </defs>
+      <!-- Серый фон луны с текстурой -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <g mask="url(#phaseMask)">
-        <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
-      </g>
+      <!-- Заполнение луны только если count > 0 -->
+      ${count > 0 ? `
+        <g mask="url(#phaseMask)">
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
+        </g>
+      ` : ''}
+      <!-- Кратеры -->
       <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#e0e0e0" opacity="0.25"/>
       <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#e0e0e0" opacity="0.18"/>
       <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#e0e0e0" opacity="0.13"/>
