@@ -922,7 +922,18 @@ const ui = {
       chatDiv.appendChild(div);
     }
     chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
+    setTimeout(() => {
     chatDiv.scrollTop = chatDiv.scrollHeight;
+    updateJumpToBottomVisibility();
+  }, 0);
+},
+
+  updateJumpToBottomVisibility() {
+    const chatDiv = document.getElementById('chat');
+    const btn = document.getElementById('jumpToBottom');
+    if (!chatDiv || !btn) return;
+    const isAtBottom = chatDiv.scrollHeight - chatDiv.scrollTop - chatDiv.clientHeight < 32;
+    btn.style.display = isAtBottom ? 'none' : 'flex';
   },
 
   setThinking(isThinking) {
@@ -1290,6 +1301,12 @@ if (addWholeFromHint) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
+
+// --- Обработчик прокрутки чата для кнопки "вниз" ---
+  const chatDiv = document.getElementById('chat');
+  if (chatDiv) {
+    chatDiv.addEventListener('scroll', ui.updateJumpToBottomVisibility);
+  }
 }
 
 // ====== ТЕМЫ: UI и логика ======
