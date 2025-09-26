@@ -333,9 +333,7 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 }
 
 .chat-wrap.surface {
-  padding: 0 !important;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
 
 .header-row, .dialog-header {
@@ -558,9 +556,7 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 }
 
 .chat-stabilizer {
-  height: 6px;
-  flex: 0 0 auto;
-  transition: height 0.3s ease;
+  height: 48px; /* или чуть больше, чем высота #thinking */
 }
 
 .muted { color: var(--text-secondary); font-size: 14px; margin: 8px 0; }
@@ -1747,21 +1743,21 @@ body.step-3-active #step3 .card {
 }
 
 #thinking.sticky-thinking {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 72px; /* чуть выше input-бара, подберите под ваш отступ */
+  position: absolute;
+  left: 16px;         /* отступ от левого края */
+  bottom: 16px;       /* отступ от нижнего края */
   z-index: 200;
-  background: var(--card-bg, #fff);
-  color: var(--text-secondary, #64748b);
-  text-align: center;
+  background: var(--card-bg, #232b3a);
+  color: var(--text-secondary, #bfcbe3);
+  text-align: left;
   font-size: 16px;
-  padding: 10px 0 8px 0;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
-  border-top: 1px solid var(--border, #e2e8f0);
+  padding: 8px 18px 8px 18px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border: 1px solid var(--border, #2a3140);
   pointer-events: none;
-  transition: opacity 0.2s;
   display: none;
+  max-width: 60%;
 }
 
 #userInput {
@@ -1924,6 +1920,7 @@ body.step-3-active #step3 .card {
           <div id="currentBlock" class="muted" style="margin: 0 0 8px;">Блок не выбран</div>
           <div class="chat-wrap surface">
             <div class="chat" id="chat">
+              <!-- ... сообщения ... -->
               <div class="chat-stabilizer"></div>
             </div>
             <div id="thinking" class="msg thinking" style="display:none;">Думаю<span class="dots">...</span></div>
