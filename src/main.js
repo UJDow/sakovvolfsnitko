@@ -1194,6 +1194,32 @@ updateProgressMoon(flash = false) {
     state._previewedDream = null;
   }
 };
+function showSimilarModal(similarArr) {
+  // similarArr — массив строк или объектов
+  const html = Array.isArray(similarArr)
+    ? similarArr.map(item => {
+        if (typeof item === 'object') {
+          return `<div class="similar-item">
+            <b>${utils.escapeHtml(item.title || '')}</b> (${utils.escapeHtml(item.author || '')}, ${utils.escapeHtml(item.year || '')})<br>
+            <i>${utils.escapeHtml(item.type || '')}</i><br>
+            <span>${utils.escapeHtml(item.desc || item.description || '')}</span>
+          </div>`;
+        }
+        return `<div class="similar-item">${utils.escapeHtml(item)}</div>`;
+      }).join('')
+    : `<div class="similar-item">${utils.escapeHtml(similarArr)}</div>`;
+  const modal = document.createElement('div');
+  modal.className = 'modal similar-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:540px;margin:40px auto;background:var(--card-bg);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:32px 24px;position:relative;">
+      <h2>Похожие сценарии в искусстве</h2>
+      ${html}
+      <button class="close-modal btn primary" style="margin-top:18px;">Закрыть</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.close-modal').onclick = () => modal.remove();
+}
 
 ///////////////////////
 // === ЭКСПОРТ/ИМПОРТ === //
@@ -1445,6 +1471,37 @@ document.getElementById('jumpToBottom').onclick = () => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
+
+  document.getElementById('findSimilarBtn').onclick = async () => {
+  const dream = state._previewedDream;
+  if (!dream || !dream.dreamText) {
+    utils.showToast('Нет текста сна', 'error');
+    return;
+  }
+  // Показываем лоадер
+  const btn = document.getElementById('findSimilarBtn');
+  const oldText = btn.textContent;
+  btn.textContent = 'Поиск...';
+  btn.disabled = true;
+  try {
+    const resp = await fetch(API_URL + '/find_similar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
+      body: JSON.stringify({ summary: dream.dreamText })
+    });
+    if (!resp.ok) throw new Error('Ошибка поиска');
+    const data = await resp.json();
+    if (data.similar && data.similar.length) {
+      showSimilarModal(data.similar);
+    } else {
+      showSimilarModal('Похожих сценариев не найдено');
+    }
+  } catch (e) {
+    showSimilarModal('Ошибка поиска похожих сценариев');
+  }
+  btn.textContent = oldText;
+  btn.disabled = false;
+};
 
 // --- Обработчик прокрутки чата для кнопки "вниз" ---
   const chatDiv = document.getElementById('chat');
