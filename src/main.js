@@ -935,11 +935,12 @@ updateChat() {
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
 
-  // 10 шагов: заполнение начинается только после первого шага
+  // percent: 0 (пусто) ... 1 (полная луна)
   let percent = 0;
-  if (count > 0) percent = Math.min((count) / 10, 1);
+  if (count > 0) percent = Math.min(count / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
+  // dx: от -20 (лево) до +20 (право)
   const dx = (1 - 2 * percent) * r;
 
   moonBtn.innerHTML = `
@@ -956,24 +957,27 @@ updateChat() {
           <stop offset="0%" stop-color="#e2e8f0"/>
           <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
+        <!-- Маска для заполнения: тень двигается слева направо -->
         <mask id="phaseMask">
           <rect x="0" y="0" width="44" height="44" fill="white"/>
           <circle cx="${cx + dx}" cy="${cy}" r="${r}" fill="black"/>
         </mask>
       </defs>
-      <!-- Серый фон луны с текстурой -->
+      <!-- Серый фон луны -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <!-- Заполнение луны только если count > 0 -->
+      <!-- Заполнение луны (желтый полумесяц) -->
       ${count > 0 ? `
         <g mask="url(#phaseMask)">
           <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
         </g>
       ` : ''}
-      <!-- Кратеры -->
-      <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#e0e0e0" opacity="0.25"/>
-      <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#e0e0e0" opacity="0.18"/>
-      <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#e0e0e0" opacity="0.13"/>
-      <circle cx="${cx - 8}" cy="${cy - 4}" r="0.9" fill="#e0e0e0" opacity="0.15"/>
+      <!-- Кратеры всегда поверх! -->
+      <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#b0b0b0" opacity="0.45"/>
+      <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#888" opacity="0.38"/>
+      <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#a0a0a0" opacity="0.33"/>
+      <circle cx="${cx - 8}" cy="${cy - 4}" r="0.9" fill="#666" opacity="0.35"/>
+      <ellipse cx="${cx - 2}" cy="${cy - 8}" rx="1.2" ry="0.7" fill="#bfc4cc" opacity="0.5"/>
+      <ellipse cx="${cx + 5}" cy="${cy + 10}" rx="0.8" ry="0.5" fill="#888" opacity="0.4"/>
     </svg>
   `;
   if (flash) {
