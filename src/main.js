@@ -603,7 +603,9 @@ function refreshSelectedBlocksUnified() {
 // === ЧАТ И AI === //
 ///////////////////////
 const chat = {
+  // chat.sendUserMessage
   async sendUserMessage(msg) {
+    console.log('[debug] sendUserMessage called', msg);
     if (!state.currentBlock) return;
     if (msg.length > MAX_USER_INPUT_LEN) {
       utils.showToast('Слишком длинное сообщение (макс. 1200 символов)', 'error');
@@ -613,32 +615,39 @@ const chat = {
     if (!state.chatHistory[blockId]) state.chatHistory[blockId] = [];
     state.chatHistory[blockId].push({ role: 'user', content: msg });
     ui.updateChat();
+    console.log('[debug] calling sendToAI with', blockId);
     await chat.sendToAI(blockId);
   },
+
+  // chat.sendToAI
   async sendToAI(blockId) {
+    console.log('[debug] sendToAI called', blockId);
     const block = state.blocks.find(b => b.id === blockId);
-    if (!block) return;
+    if (!block) {
+      console.log('[debug] block not found for id', blockId, state.blocks);
+      return;
+    }
     ui.setThinking(true);
+    console.log('[debug] setThinking(true) called');
     try {
-      // rolling summary logic
       const history = state.chatHistory[blockId] || [];
       const lastTurns = history.slice(-MAX_LAST_TURNS_TO_SEND);
       const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
       const rollingSummary = block.rollingSummary || null;
 
+      console.log('[debug] calling api.analyze', { blockText, lastTurns, rollingSummary });
       const res = await api.analyze({
         blockText,
         lastTurns,
         rollingSummary
       });
+      console.log('[debug] api.analyze result', res);
 
       const aiMsg = res?.choices?.[0]?.message?.content || 'Ошибка анализа';
       state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
 
-      // Инкрементируем turnsCount по user-сообщениям
       block.turnsCount = (block.turnsCount || 0) + 1;
 
-      // Условие summarize
       if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
         if (window.DEV_LOGS !== false) {
           console.log('[debug] summarize triggered', { blockId, turnsCount: block.turnsCount, historyLen: history.length });
@@ -649,7 +658,6 @@ const chat = {
           existingSummary: block.rollingSummary || ''
         });
         block.rollingSummary = resSum.summary || block.rollingSummary;
-        // Обрезаем историю до хвоста
         state.chatHistory[blockId] = state.chatHistory[blockId].slice(-MAX_LAST_TURNS_TO_SEND);
         block.turnsCount = 0;
         if (window.DEV_LOGS !== false) {
@@ -665,65 +673,13 @@ const chat = {
       ui.updateProgressMoon();
       if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
     } catch (e) {
+      console.error('[debug] error in sendToAI', e);
       state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
       ui.updateChat();
     }
     ui.setThinking(false);
-  },
-  async blockInterpretation() {
-    if (!state.currentBlock) return;
-    const blockId = state.currentBlock.id;
-    const block = state.blocks.find(b => b.id === blockId);
-    if (!block) return;
-    ui.setThinking(true);
-    try {
-      const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
-      const lastTurns = (state.chatHistory[blockId] || []).slice(-MAX_LAST_TURNS_TO_SEND);
-      const rollingSummary = block.rollingSummary || null;
-      const res = await api.analyze({
-        blockText,
-        lastTurns,
-        rollingSummary,
-        extraSystemPrompt: 'Сделай итоговое толкование этого блока сна. Не задавай вопросов, только вывод.'
-      });
-      const final = res?.choices?.[0]?.message?.content || 'Ошибка толкования';
-      block.finalInterpretation = final;
-      ui.updateChat();
-      ui.updateProgressMoon(true);
-      utils.showToast('Толкование блока готово', 'success');
-    } catch (e) {
-      utils.showToast('Ошибка толкования блока', 'error');
-    }
-    ui.setThinking(false);
-  },
-  async globalInterpretation() {
-    if (!state.currentDream) return;
-    ui.setThinking(true);
-    try {
-      // rolling summary для каждого блока или короткая выжимка из finalInterpretation
-      const allBlocks = state.blocks.map(b => ({
-        summary: b.rollingSummary || (b.finalInterpretation ? b.finalInterpretation.slice(0, 200) : ''),
-        text: b.text
-      }));
-      const dreamText = (state.currentDream.dreamText || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
-      // Собираем общий rolling summary
-      const summaryText = allBlocks.map((b, i) => `Блок ${i+1}: ${b.summary}`).join('\n');
-      const prompt = 'Сделай итоговое толкование всего сна, учитывая все блоки и их толкования. Не задавай вопросов, только вывод.';
-      const res = await api.analyze({
-        blockText: dreamText,
-        lastTurns: [],
-        rollingSummary: summaryText,
-        extraSystemPrompt: prompt
-      });
-      state.globalFinalInterpretation = res?.choices?.[0]?.message?.content || 'Ошибка итогового толкования';
-      ui.showFinalDialog();
-    } catch (e) {
-      utils.showToast('Ошибка итогового толкования', 'error');
-    }
-    ui.setThinking(false);
   }
 };
-
 ///////////////////////
 // === UI === //
 ///////////////////////
