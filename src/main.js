@@ -1133,13 +1133,19 @@ if (addWholeFromHint) {
   };
 
   // --- ШАГ 2 ---
-  document.getElementById('toStep3').onclick = () => {
-    if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
-    state.currentBlock = state.blocks[0];
-    ui.setStep(3);
-    ui.updateChat();
-    ui.updateProgressMoon();
-  };
+ document.getElementById('toStep3').onclick = async () => {
+  if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
+  state.currentBlock = state.blocks[0];
+  ui.setStep(3);
+  ui.updateChat();
+  ui.updateProgressMoon();
+
+  // --- Сразу отправляем первый запрос к AI ---
+  const blockId = state.currentBlock.id;
+  if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+    await chat.sendToAI(blockId);
+  }
+};
   document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
   ui.renderDreamTiles();
 
