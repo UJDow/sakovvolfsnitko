@@ -889,43 +889,34 @@ const ui = {
   if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
 },
 
-  updateChat() {
-    const chatDiv = document.getElementById('chat');
-    chatDiv.innerHTML = '';
-    if (!state.currentBlock) {
-      document.getElementById('currentBlock').textContent = 'Блок не выбран';
-      return;
-    }
-    document.getElementById('currentBlock').textContent = 'Блок: ' + (state.currentBlock.text.length > 40 ? state.currentBlock.text.slice(0, 40) + '…' : state.currentBlock.text);
-    const history = state.chatHistory[state.currentBlock.id] || [];
-    history.forEach(msg => {
-      const div = document.createElement('div');
-      div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
-      div.textContent = msg.content;
-      chatDiv.appendChild(div);
-    });
-    if (state.currentBlock.finalInterpretation) {
-      const div = document.createElement('div');
-      div.className = 'msg bot final';
-      div.textContent = state.currentBlock.finalInterpretation;
-      chatDiv.appendChild(div);
-    }
-    chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
-    setTimeout(() => {
-    setTimeout(() => {
-  chatDiv.scrollTop = chatDiv.scrollHeight;
-  ui.updateJumpToBottomVisibility();
-}, 0);
+updateChat() {
+  const chatDiv = document.getElementById('chat');
+  chatDiv.innerHTML = '';
+  if (!state.currentBlock) {
+    document.getElementById('currentBlock').textContent = 'Блок не выбран';
+    return;
+  }
+  document.getElementById('currentBlock').textContent = 'Блок: ' + (state.currentBlock.text.length > 40 ? state.currentBlock.text.slice(0, 40) + '…' : state.currentBlock.text);
+  const history = state.chatHistory[state.currentBlock.id] || [];
+  history.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
+    div.textContent = msg.content;
+    chatDiv.appendChild(div);
+  });
+  if (state.currentBlock.finalInterpretation) {
+    const div = document.createElement('div');
+    div.className = 'msg bot final';
+    div.textContent = state.currentBlock.finalInterpretation;
+    chatDiv.appendChild(div);
+  }
+  chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
+  setTimeout(() => {
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+    ui.updateJumpToBottomVisibility();
     bindChatEvents();
+  }, 0);
 },
-
-  updateJumpToBottomVisibility() {
-    const chatDiv = document.getElementById('chat');
-    const btn = document.getElementById('jumpToBottom');
-    if (!chatDiv || !btn) return;
-    const isAtBottom = chatDiv.scrollHeight - chatDiv.scrollTop - chatDiv.clientHeight < 32;
-    btn.style.display = isAtBottom ? 'none' : 'flex';
-  },
 
   setThinking(isThinking) {
   const thinkingEl = document.getElementById('thinking');
