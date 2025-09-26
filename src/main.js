@@ -956,16 +956,35 @@ updateProgressMoon(flash = false) {
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
 
+  // percent: 0 (пусто) ... 1 (полная луна)
   let percent = 0;
   if (count > 0) percent = Math.min(count / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
 
-  // Дуга буквой "С" слева направо
-  let arcPath = '';
-  if (percent > 0) {
-    arcPath = utils.describeArcC(cx, cy, r, percent);
-  }
+  // Кратеры
+  const craters = [
+    [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
+    [cx - 5, cy + 7, 1.7, "#888", 0.38],
+    [cx + 10, cy + 4, 1.3, "#a0a0a0", 0.33],
+    [cx - 8, cy - 4, 1.1, "#666", 0.35],
+    [cx - 2, cy - 8, 1.6, "#bfc4cc", 0.5],
+    [cx + 5, cy + 10, 1.2, "#888", 0.4],
+    [cx + 2, cy - 12, 0.9, "#d1d5db", 0.32],
+    [cx - 10, cy + 2, 1.8, "#6b7280", 0.28],
+    [cx + 12, cy - 2, 1.4, "#9ca3af", 0.36],
+    [cx - 6, cy - 10, 1.1, "#b0b0b0", 0.42],
+    [cx + 8, cy + 8, 1.6, "#a3a3a3", 0.29],
+    [cx - 12, cy + 8, 1.3, "#6b7280", 0.22],
+    [cx + 13, cy - 8, 0.8, "#bfc4cc", 0.38],
+    [cx - 13, cy - 7, 1.2, "#888", 0.31],
+    [cx + 3, cy + 13, 1.5, "#b0b0b0", 0.27],
+    [cx - 3, cy + 13, 1.1, "#6b7280", 0.19],
+    [cx + 14, cy + 6, 0.9, "#a0a0a0", 0.21],
+    [cx - 14, cy - 2, 1.0, "#9ca3af", 0.25],
+    [cx + 6, cy - 14, 1.2, "#d1d5db", 0.23],
+    [cx - 9, cy + 12, 1.4, "#888", 0.34],
+  ];
 
   moonBtn.innerHTML = `
     <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44" width="44" height="44">
@@ -981,16 +1000,23 @@ updateProgressMoon(flash = false) {
           <stop offset="0%" stop-color="#e2e8f0"/>
           <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
+        <!-- Прямоугольная маска для заполнения слева-направо -->
+        <mask id="phaseMask">
+          <rect x="0" y="0" width="${44 * percent}" height="44" fill="white"/>
+        </mask>
       </defs>
+      <!-- Серый фон луны -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      ${percent > 0 ? `
-        <path d="${arcPath}" fill="none" stroke="#ffe066" stroke-width="6" opacity="0.85"/>
+      <!-- Заполнение луны (желтый цвет) -->
+      ${count > 0 ? `
+        <g mask="url(#phaseMask)">
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
+        </g>
       ` : ''}
-      <!-- Кратеры -->
-      <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#e0e0e0" opacity="0.25"/>
-      <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#e0e0e0" opacity="0.18"/>
-      <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#e0e0e0" opacity="0.13"/>
-      <circle cx="${cx - 8}" cy="${cy - 4}" r="0.9" fill="#e0e0e0" opacity="0.15"/>
+      <!-- Кратеры всегда поверх! -->
+      ${craters.map(([x, y, rad, color, op]) =>
+        `<circle cx="${x}" cy="${y}" r="${rad}" fill="${color}" opacity="${op}"/>`
+      ).join('')}
     </svg>
   `;
   if (flash) {
