@@ -548,20 +548,13 @@ const blocks = {
     ui.updateChat();         // обновить чат, если удалили текущий блок
   },
 
-  select: async function(id) {
-  state.currentBlock = state.blocks.find(b => b.id === id) || null;
-  ui.updateBlocks();
-  ui.renderDreamTiles();
-  ui.updateChat();
-
-  // Если в чате этого блока ещё нет сообщений — инициируем диалог
-  if (state.currentBlock) {
-    const blockId = state.currentBlock.id;
-    if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-      await chat.sendToAI(blockId);
-    }
+  select(id) {
+    state.currentBlock = state.blocks.find(b => b.id === id) || null;
+    ui.updateBlocks();       // только панель чипсов
+    ui.renderDreamTiles();   // отдельно — только dreamView
+    ui.updateChat();         // обновить чат
   }
-},
+};
 
 function refreshSelectedBlocksUnified() {
   const dreamView = document.getElementById('dreamView');
@@ -1180,24 +1173,13 @@ if (addWholeFromHint) {
   };
 
   // --- ШАГ 2 ---
- document.getElementById('toStep3').onclick = async () => {
-  if (!state.blocks.length) {
-    utils.showToast('Добавьте хотя бы один блок', 'error');
-    return;
-  }
-  // Если пользователь сам не выбрал блок — выбираем первый
-  if (!state.currentBlock) state.currentBlock = state.blocks[0];
-
-  ui.setStep(3);
-  ui.updateChat();
-  ui.updateProgressMoon();
-
-  // Если в чате этого блока ещё нет сообщений — сразу инициируем диалог
-  const blockId = state.currentBlock.id;
-  if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-    await chat.sendToAI(blockId);
-  }
-};
+  document.getElementById('toStep3').onclick = () => {
+    if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
+    state.currentBlock = state.blocks[0];
+    ui.setStep(3);
+    ui.updateChat();
+    ui.updateProgressMoon();
+  };
   document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
   ui.renderDreamTiles();
 
