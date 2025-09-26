@@ -260,6 +260,27 @@ utils.lighten = function(hex, percent = 20) {
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
 
+ // Вставь эти две функции ОДИН РАЗ где-нибудь в коде (например, в utils или рядом с updateProgressMoon)
+utils.polarToCartesian = (cx, cy, r, angleInDegrees) => {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+  return {
+    x: cx + (r * Math.cos(angleInRadians)),
+    y: cy + (r * Math.sin(angleInRadians))
+  };
+};
+
+utils.describeArc = (cx, cy, r, startAngle, endAngle) => {
+  const start = utils.polarToCartesian(cx, cy, r, endAngle);
+  const end = utils.polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return [
+    "M", start.x, start.y,
+    "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+    "L", cx, cy,
+    "Z"
+  ].join(" ");
+};
+
 ///////////////////////
 // === API === //
 ///////////////////////
@@ -928,27 +949,6 @@ updateChat() {
     thinkingEl.classList.remove('sticky-thinking');
   }
 },
-
- // Вставь эти две функции ОДИН РАЗ где-нибудь в коде (например, в utils или рядом с updateProgressMoon)
-utils.polarToCartesian = (cx, cy, r, angleInDegrees) => {
-  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-  return {
-    x: cx + (r * Math.cos(angleInRadians)),
-    y: cy + (r * Math.sin(angleInRadians))
-  };
-};
-
-utils.describeArc = (cx, cy, r, startAngle, endAngle) => {
-  const start = utils.polarToCartesian(cx, cy, r, endAngle);
-  const end = utils.polarToCartesian(cx, cy, r, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-  return [
-    "M", start.x, start.y,
-    "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
-    "L", cx, cy,
-    "Z"
-  ].join(" ");
-};
 
 updateProgressMoon(flash = false) {
   const moonBtn = document.getElementById('moonBtn');
