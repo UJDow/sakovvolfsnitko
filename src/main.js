@@ -712,66 +712,69 @@ const chat = {
   },
 
   // Итоговое толкование блока
-  async blockInterpretation() {
-    if (!state.currentBlock) {
-      utils.showToast('Блок не выбран', 'error');
-      return;
-    }
-    const block = state.currentBlock;
-    const blockId = block.id;
-    const history = state.chatHistory[blockId] || [];
-    ui.setThinking(true);
-    try {
-      const payload = buildAnalyzePayload({
-        fullHistory: history,
-        blockText: block.text,
-        rollingSummary: block.rollingSummary,
-        extraSystemPrompt: "Сделай итоговое толкование этого блока сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всей истории диалога.",
-        maxTurns: 6
-      });
-      const res = await api.analyze(payload);
-      let interpretation = res?.choices?.[0]?.message?.content;
-      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-        interpretation = 'Ошибка: пустой ответ от сервера.';
-      }
-      block.finalInterpretation = interpretation;
-      ui.updateChat();
-      utils.showToast('Толкование блока готово', 'success');
-    } catch (e) {
-      utils.showToast('Ошибка при толковании блока', 'error');
-    }
-    ui.setThinking(false);
-  },
-
-  // Итоговое толкование всего сна
-  async globalInterpretation() {
-    if (!state.currentDream) {
-      utils.showToast('Сон не выбран', 'error');
-      return;
-    }
-    const dreamText = state.currentDream.dreamText || '';
-    const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
-    ui.setThinking(true);
-    try {
-      const payload = {
-        blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
-        lastTurns: [],
-        rollingSummary: allSummaries || null,
-        extraSystemPrompt: "Сделай итоговое толкование всего сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всех блоков и их истории."
-      };
-      const res = await api.analyze(payload);
-      let interpretation = res?.choices?.[0]?.message?.content;
-      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-        interpretation = 'Ошибка: пустой ответ от сервера.';
-      }
-      state.globalFinalInterpretation = interpretation;
-      ui.showFinalDialog();
-      utils.showToast('Итоговое толкование сна готово', 'success');
-    } catch (e) {
-      utils.showToast('Ошибка при итоговом толковании сна', 'error');
-    }
-    ui.setThinking(false);
+async blockInterpretation() {
+  if (!state.currentBlock) {
+    utils.showToast('Блок не выбран', 'error');
+    return;
   }
+  const block = state.currentBlock;
+  const blockId = block.id;
+  const history = state.chatHistory[blockId] || [];
+  ui.setThinking(true);
+  try {
+    const payload = buildAnalyzePayload({
+      fullHistory: history,
+      blockText: block.text,
+      rollingSummary: block.rollingSummary,
+      extraSystemPrompt: "Сделай итоговое толкование этого блока сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всей истории диалога.",
+      maxTurns: 6
+    });
+    const res = await api.analyze(payload);
+    let interpretation = res?.choices?.[0]?.message?.content;
+    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+      interpretation = 'Ошибка: пустой ответ от сервера.';
+    }
+    block.finalInterpretation = interpretation;
+    ui.updateChat();
+    ui.updateBlockInterpretButton();      // обновляем состояние кнопки "Толкование"
+    ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+    utils.showToast('Толкование блока готово', 'success');
+  } catch (e) {
+    utils.showToast('Ошибка при толковании блока', 'error');
+  }
+  ui.setThinking(false);
+},
+
+// Итоговое толкование всего сна
+async globalInterpretation() {
+  if (!state.currentDream) {
+    utils.showToast('Сон не выбран', 'error');
+    return;
+  }
+  const dreamText = state.currentDream.dreamText || '';
+  const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
+  ui.setThinking(true);
+  try {
+    const payload = {
+      blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
+      lastTurns: [],
+      rollingSummary: allSummaries || null,
+      extraSystemPrompt: "Сделай итоговое толкование всего сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всех блоков и их истории."
+    };
+    const res = await api.analyze(payload);
+    let interpretation = res?.choices?.[0]?.message?.content;
+    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+      interpretation = 'Ошибка: пустой ответ от сервера.';
+    }
+    state.globalFinalInterpretation = interpretation;
+    ui.showFinalDialog();
+    ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+    utils.showToast('Итоговое толкование сна готово', 'success');
+  } catch (e) {
+    utils.showToast('Ошибка при итоговом толковании сна', 'error');
+  }
+  ui.setThinking(false);
+}
 };
 
 ///////////////////////
@@ -1069,7 +1072,7 @@ updateProgressMoon(flash = false) {
     }, 1600);
   }
 },
-  updateBlockInterpretButton() {
+ updateBlockInterpretButton() {
   const btn = document.getElementById('menuBlockInterpret');
   const tooltip = document.getElementById('moonTooltip');
   const block = state.currentBlock;
@@ -1093,9 +1096,11 @@ updateProgressMoon(flash = false) {
   } else {
     btn.disabled = false;
     btn.classList.add('active');
-    if (tooltip) {
+    // Показываем тултип только если он ещё не показывался для этого блока
+    if (tooltip && !block._interpretTooltipShown) {
       tooltip.textContent = 'Можно получить толкование блока';
       tooltip.classList.add('show');
+      block._interpretTooltipShown = true;
       setTimeout(() => tooltip.classList.remove('show'), 3000);
     }
   }
