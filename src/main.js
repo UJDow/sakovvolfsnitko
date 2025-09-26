@@ -444,22 +444,26 @@ const dreams = {
     utils.showToast('Сон удалён', 'success');
   },
   loadToEditor(dream) {
-    state.currentDream = { ...dream };
-    state.blocks = (dream.blocks || []).map(b => ({
-      ...b,
-      rollingSummary: b.rollingSummary || null,
-      turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
-    }));
-    state.globalFinalInterpretation = dream.globalFinalInterpretation || null;
-    state.chatHistory = {};
-    for (const b of state.blocks) {
-      state.chatHistory[b.id] = (b.chat || []).map(m => ({ ...m }));
-    }
-    state.uiStep = 1;
-    ui.showMain();
-    ui.setStep(1);
-    document.getElementById('dream').value = dream.dreamText || '';
-    utils.showToast('Сон загружен для редактирования', 'success');
+  state.currentDream = { ...dream };
+  state.blocks = (dream.blocks || []).map(b => ({
+    ...b,
+    rollingSummary: b.rollingSummary || null,
+    turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
+  }));
+  state.globalFinalInterpretation = dream.globalFinalInterpretation || null;
+  state.chatHistory = {};
+  for (const b of state.blocks) {
+    state.chatHistory[b.id] = (b.chat || []).map(m => {
+      if (typeof m === 'string') return { role: 'user', content: m };
+      if (m && typeof m === 'object' && m.role && m.content) return m;
+      return { role: 'user', content: String(m) };
+    });
+  }
+  state.uiStep = 1;
+  ui.showMain();
+  ui.setStep(1);
+  document.getElementById('dream').value = dream.dreamText || '';
+  utils.showToast('Сон загружен для редактирования', 'success');
   }
 };
 
@@ -1073,17 +1077,24 @@ const session = {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   },
   import(json) {
-    try {
-      const data = JSON.parse(json);
-      if (!data.dream || !Array.isArray(data.blocks)) throw new Error();
-      state.currentDream = data.dream;
-      state.blocks = data.blocks;
-      state.chatHistory = data.chatHistory || {};
-      state.globalFinalInterpretation = data.globalFinalInterpretation || null;
-      ui.showMain();
-      ui.setStep(1);
-      document.getElementById('dream').value = data.dream.dreamText || '';
-      utils.showToast('Сессия импортирована', 'success');
+  try {
+    const data = JSON.parse(json);
+    if (!data.dream || !Array.isArray(data.blocks)) throw new Error();
+    state.currentDream = data.dream;
+    state.blocks = data.blocks;
+    state.chatHistory = {};
+    for (const blockId in (data.chatHistory || {})) {
+      state.chatHistory[blockId] = (data.chatHistory[blockId] || []).map(m => {
+        if (typeof m === 'string') return { role: 'user', content: m };
+        if (m && typeof m === 'object' && m.role && m.content) return m;
+        return { role: 'user', content: String(m) };
+      });
+    }
+    state.globalFinalInterpretation = data.globalFinalInterpretation || null;
+    ui.showMain();
+    ui.setStep(1);
+    document.getElementById('dream').value = data.dream.dreamText || '';
+    utils.showToast('Сессия импортирована', 'success');
     } catch {
       utils.showToast('Ошибка импорта', 'error');
     }
