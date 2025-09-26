@@ -675,13 +675,12 @@ const chat = {
       });
       const history = state.chatHistory[blockId] || [];
       const payload = buildAnalyzePayload({
-        fullHistory: history,
-        blockText: block.text,
-        rollingSummary: block.rollingSummary,
-        extraSystemPrompt: null,
-        maxTurns: MAX_LAST_TURNS_TO_SEND
-      });
-
+  fullHistory: state.chatHistory[blockId], // вся история!
+  blockText: block.text,
+  rollingSummary: block.rollingSummary,
+  extraSystemPrompt: null,
+  maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
+});
       const res = await api.analyze(payload);
       let aiMsg = res?.choices?.[0]?.message?.content;
       if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
@@ -698,7 +697,6 @@ const chat = {
           existingSummary: block.rollingSummary || ''
         });
         block.rollingSummary = resSum.summary || block.rollingSummary;
-        state.chatHistory[blockId] = state.chatHistory[blockId].slice(-MAX_LAST_TURNS_TO_SEND);
         block.turnsCount = 0;
       }
 
