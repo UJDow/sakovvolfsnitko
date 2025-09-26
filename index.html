@@ -1656,13 +1656,14 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  height: 100%;
+  height: 80vh;         /* или 100%, если родитель ограничен */
   min-height: 0 !important;
-  max-height: none !important;
+  max-height: 90vh;     /* чтобы не вылезало за экран */
 }
 @media (max-width: 600px) {
   #step3 .card {
-    padding: 16px !important;
+    height: 96vh;
+    max-height: 98vh;
   }
 }
 
@@ -1675,12 +1676,12 @@ body.modal-open {
 
 #step3 .chat-wrap.surface {
   flex: 1 1 auto;
-  min-height: 320px;
-  max-height: none;
+  min-height: 0;
+  max-height: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden;     /* важно! */
 }
 
 #step3 .chat {
