@@ -930,16 +930,17 @@ updateChat() {
 },
 
  // Вставь эти две функции ОДИН РАЗ где-нибудь в коде (например, в utils или рядом с updateProgressMoon)
-function polarToCartesian(cx, cy, r, angleInDegrees) {
+utils.polarToCartesian = (cx, cy, r, angleInDegrees) => {
   const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
   return {
     x: cx + (r * Math.cos(angleInRadians)),
     y: cy + (r * Math.sin(angleInRadians))
   };
-}
-function describeArc(cx, cy, r, startAngle, endAngle) {
-  const start = polarToCartesian(cx, cy, r, endAngle);
-  const end = polarToCartesian(cx, cy, r, startAngle);
+};
+
+utils.describeArc = (cx, cy, r, startAngle, endAngle) => {
+  const start = utils.polarToCartesian(cx, cy, r, endAngle);
+  const end = utils.polarToCartesian(cx, cy, r, startAngle);
   const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
   return [
     "M", start.x, start.y,
@@ -947,47 +948,27 @@ function describeArc(cx, cy, r, startAngle, endAngle) {
     "L", cx, cy,
     "Z"
   ].join(" ");
-}
+};
 
-// А это твоя финальная функция:
-function updateProgressMoon(flash = false) {
+updateProgressMoon(flash = false) {
   const moonBtn = document.getElementById('moonBtn');
   const block = state.currentBlock;
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
 
+  // 10 шагов: заполнение начинается только после первого шага
   let percent = 0;
   if (count > 0) percent = Math.min(count / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
 
-  // Заполнение идёт по нижней дуге слева направо (от 180° до 360°)
-  const arcPath = percent > 0
-    ? describeArc(cx, cy, r, 180, 180 + 180 * percent)
-    : "";
-
-  const craters = [
-    [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
-    [cx - 5, cy + 7, 1.7, "#888", 0.38],
-    [cx + 10, cy + 4, 1.3, "#a0a0a0", 0.33],
-    [cx - 8, cy - 4, 1.1, "#666", 0.35],
-    [cx - 2, cy - 8, 1.6, "#bfc4cc", 0.5],
-    [cx + 5, cy + 10, 1.2, "#888", 0.4],
-    [cx + 2, cy - 12, 0.9, "#d1d5db", 0.32],
-    [cx - 10, cy + 2, 1.8, "#6b7280", 0.28],
-    [cx + 12, cy - 2, 1.4, "#9ca3af", 0.36],
-    [cx - 6, cy - 10, 1.1, "#b0b0b0", 0.42],
-    [cx + 8, cy + 8, 1.6, "#a3a3a3", 0.29],
-    [cx - 12, cy + 8, 1.3, "#6b7280", 0.22],
-    [cx + 13, cy - 8, 0.8, "#bfc4cc", 0.38],
-    [cx - 13, cy - 7, 1.2, "#888", 0.31],
-    [cx + 3, cy + 13, 1.5, "#b0b0b0", 0.27],
-    [cx - 3, cy + 13, 1.1, "#6b7280", 0.19],
-    [cx + 14, cy + 6, 0.9, "#a0a0a0", 0.21],
-    [cx - 14, cy - 2, 1.0, "#9ca3af", 0.25],
-    [cx + 6, cy - 14, 1.2, "#d1d5db", 0.23],
-    [cx - 9, cy + 12, 1.4, "#888", 0.34],
-  ];
+  // Заполнение по нижней дуге (от 180° до 180+180*percent)
+  let arcPath = '';
+  if (percent > 0) {
+    const startAngle = 180;
+    const endAngle = 180 + 180 * percent;
+    arcPath = utils.describeArc(cx, cy, r, startAngle, endAngle);
+  }
 
   moonBtn.innerHTML = `
     <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44" width="44" height="44">
@@ -1004,16 +985,17 @@ function updateProgressMoon(flash = false) {
           <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
       </defs>
-      <!-- Серый фон луны -->
+      <!-- Серый фон луны с текстурой -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <!-- Заполнение луны (желтая дуга) -->
+      <!-- Заполнение луны по дуге -->
       ${percent > 0 ? `
         <path d="${arcPath}" fill="#ffe066" opacity="0.85"/>
       ` : ''}
-      <!-- Кратеры всегда поверх! -->
-      ${craters.map(([x, y, rad, color, op]) =>
-        `<circle cx="${x}" cy="${y}" r="${rad}" fill="${color}" opacity="${op}"/>`
-      ).join('')}
+      <!-- Кратеры -->
+      <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#e0e0e0" opacity="0.25"/>
+      <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#e0e0e0" opacity="0.18"/>
+      <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#e0e0e0" opacity="0.13"/>
+      <circle cx="${cx - 8}" cy="${cy - 4}" r="0.9" fill="#e0e0e0" opacity="0.15"/>
     </svg>
   `;
   if (flash) {
