@@ -912,9 +912,10 @@ const ui = {
     }
     chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
     setTimeout(() => {
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-    updateJumpToBottomVisibility();
-  }, 0);
+    setTimeout(() => {
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+  ui.updateJumpToBottomVisibility();
+}, 0);
     bindChatEvents();
 },
 
@@ -927,8 +928,9 @@ const ui = {
   },
 
   setThinking(isThinking) {
-    document.getElementById('thinking').style.display = isThinking ? 'block' : 'none';
-  },
+  const thinkingEl = document.getElementById('thinking');
+  if (thinkingEl) thinkingEl.style.display = isThinking ? 'block' : 'none';
+},
 
   updateProgressMoon(flash = false) {
     // Анимация луны (SVG) — flash при flash=true
