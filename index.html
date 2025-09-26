@@ -1644,15 +1644,18 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: min(92vh, 720px);
-  max-height: calc(100svh - (env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 24px));
-  padding-bottom: clamp(12px, 5vh, 24px);
-  margin-bottom: clamp(12px, 4vh, 24px);
+  height: auto; /* вместо min(92vh, 720px) */
+  min-height: calc(100svh - (env(safe-area-inset-top, 0px) + 170px));
+  max-height: calc(100svh - (env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 18px));
+  padding: clamp(16px, 3vh, 22px) clamp(16px, 4vw, 24px);
+  margin-top: clamp(8px, 1.5vh, 16px);
+  margin-bottom: clamp(8px, 2vh, 16px);
 }
 
-@supports (height: 100dvh) {
+@media (max-width: 600px) {
   #step3 .card {
-    max-height: calc(100dvh - (env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 24px));
+    min-height: calc(100svh - (env(safe-area-inset-top, 0px) + 140px));
+    padding-block: clamp(14px, 4vh, 20px);
   }
 }
 
