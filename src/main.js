@@ -606,84 +606,104 @@ function refreshSelectedBlocksUnified() {
 const chat = {
   // chat.sendUserMessage
   async sendUserMessage(msg) {
-    console.log('[debug] sendUserMessage called', msg);
-    if (!state.currentBlock) return;
-    if (msg.length > MAX_USER_INPUT_LEN) {
-      utils.showToast('Слишком длинное сообщение (макс. 1200 символов)', 'error');
-      return;
-    }
-    const blockId = state.currentBlock.id;
-    if (!state.chatHistory[blockId]) state.chatHistory[blockId] = [];
-    state.chatHistory[blockId].push({ role: 'user', content: msg });
-    ui.updateChat();
-    console.log('[debug] calling sendToAI with', blockId);
-    await chat.sendToAI(blockId);
-  },
++    console.log('[debug] sendUserMessage called', msg);
++    if (!state.currentBlock) return;
++    if (msg.length > MAX_USER_INPUT_LEN) {
++      utils.showToast('Слишком длинное сообщение (макс. 1200 символов)', 'error');
++      return;
++    }
++    const blockId = state.currentBlock.id;
++    if (!state.chatHistory[blockId]) state.chatHistory[blockId] = [];
++    // --- Миграция старых сообщений (если есть) ---
++    state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
++      if (typeof m === 'string') return { role: 'user', content: m };
++      if (m && typeof m === 'object' && m.role && m.content) return m;
++      // fallback: всё остальное — пользовательское сообщение
++      return { role: 'user', content: String(m) };
++    });
++    state.chatHistory[blockId].push({ role: 'user', content: msg });
++    ui.updateChat();
++    console.log('[debug] calling sendToAI with', blockId);
++    await chat.sendToAI(blockId);
++  },
 
   // chat.sendToAI
-  async sendToAI(blockId) {
-    console.log('[debug] sendToAI called', blockId);
-    const block = state.blocks.find(b => b.id === blockId);
-    if (!block) {
-      console.log('[debug] block not found for id', blockId, state.blocks);
-      return;
-    }
-    ui.setThinking(true);
-    console.log('[debug] setThinking(true) called');
-    try {
-      const history = state.chatHistory[blockId] || [];
-      const lastTurns = history.slice(-MAX_LAST_TURNS_TO_SEND);
-      const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
-      const rollingSummary = block.rollingSummary || null;
-
-      console.log('[debug] calling api.analyze', { blockText, lastTurns, rollingSummary });
-      const res = await api.analyze({
-        blockText,
-        lastTurns,
-        rollingSummary
-      });
-      console.log('[debug] api.analyze result', res);
-
-      let aiMsg = res?.choices?.[0]?.message?.content;
-if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
-  aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
-}
-state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
-
-      block.turnsCount = (block.turnsCount || 0) + 1;
-
-      if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
-        if (window.DEV_LOGS !== false) {
-          console.log('[debug] summarize triggered', { blockId, turnsCount: block.turnsCount, historyLen: history.length });
-        }
-        const resSum = await api.summarize({
-          history,
-          blockText,
-          existingSummary: block.rollingSummary || ''
-        });
-        block.rollingSummary = resSum.summary || block.rollingSummary;
-        state.chatHistory[blockId] = state.chatHistory[blockId].slice(-MAX_LAST_TURNS_TO_SEND);
-        block.turnsCount = 0;
-        if (window.DEV_LOGS !== false) {
-          console.log('[debug] rolling summary updated/trimmed', {
-            blockId,
-            newSummaryLen: block.rollingSummary?.length,
-            keptTurns: MAX_LAST_TURNS_TO_SEND
-          });
-        }
-      }
-
-      ui.updateChat();
-      ui.updateProgressMoon();
-      if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
-    } catch (e) {
-      console.error('[debug] error in sendToAI', e);
-      state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
-      ui.updateChat();
-    }
-    ui.setThinking(false);
-  }
-};
+ async sendToAI(blockId) {
++    console.log('[debug] sendToAI called', blockId);
++    const block = state.blocks.find(b => b.id === blockId);
++    if (!block) {
++      console.log('[debug] block not found for id', blockId, state.blocks);
++      return;
++    }
++    ui.setThinking(true);
++    console.log('[debug] setThinking(true) called');
++    try {
++      // --- Миграция старых сообщений (если есть) ---
++      state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
++        if (typeof m === 'string') return { role: 'user', content: m };
++        if (m && typeof m === 'object' && m.role && m.content) return m;
++        // fallback: всё остальное — пользовательское сообщение
++        return { role: 'user', content: String(m) };
++      });
++      const history = state.chatHistory[blockId] || [];
++      // Только последние MAX_LAST_TURNS_TO_SEND сообщений, формат строго {role, content}
++      const lastTurns = history.slice(-MAX_LAST_TURNS_TO_SEND).map(m => ({
++        role: m.role === 'assistant' ? 'assistant' : 'user',
++        content: String(m.content || '')
++      }));
++      const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
++      const rollingSummary = block.rollingSummary || null;
++      // extraSystemPrompt — если используется, добавить сюда
++      const extraSystemPrompt = null;
++
++      console.log('[debug] calling api.analyze', { blockText, lastTurns, rollingSummary, extraSystemPrompt });
++      const res = await api.analyze({
++        blockText,
++        lastTurns,
++        rollingSummary,
++        extraSystemPrompt
++      });
++      console.log('[debug] api.analyze result', res);
++
++      let aiMsg = res?.choices?.[0]?.message?.content;
++      if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
++        aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
++      }
++      state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
++
++      block.turnsCount = (block.turnsCount || 0) + 1;
++
++      if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
++        if (window.DEV_LOGS !== false) {
++          console.log('[debug] summarize triggered', { blockId, turnsCount: block.turnsCount, historyLen: history.length });
++        }
++        const resSum = await api.summarize({
++          history,
++          blockText,
++          existingSummary: block.rollingSummary || ''
++        });
++        block.rollingSummary = resSum.summary || block.rollingSummary;
++        state.chatHistory[blockId] = state.chatHistory[blockId].slice(-MAX_LAST_TURNS_TO_SEND);
++        block.turnsCount = 0;
++        if (window.DEV_LOGS !== false) {
++          console.log('[debug] rolling summary updated/trimmed', {
++            blockId,
++            newSummaryLen: block.rollingSummary?.length,
++            keptTurns: MAX_LAST_TURNS_TO_SEND
++          });
++        }
++      }
++
++      ui.updateChat();
++      ui.updateProgressMoon();
++      if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
++    } catch (e) {
++      console.error('[debug] error in sendToAI', e);
++      state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
++      ui.updateChat();
++    }
++    ui.setThinking(false);
++  }
 ///////////////////////
 // === UI === //
 ///////////////////////
