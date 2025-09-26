@@ -1745,6 +1745,23 @@ body.step-3-active #step3 .card {
 #jumpToBottom {
   display: none;
 }
+
+#thinking.sticky-thinking {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 64px; /* чуть выше input-бар */
+  z-index: 100;
+  background: var(--card-bg, #fff);
+  color: var(--text-secondary, #64748b);
+  text-align: center;
+  font-size: 15px;
+  padding: 10px 0 8px 0;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+  border-top: 1px solid var(--border, #e2e8f0);
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
   
   </style>
 </head>
