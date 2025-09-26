@@ -929,21 +929,43 @@ updateChat() {
   }
 },
 
- updateProgressMoon(flash = false) {
+ // Вставь эти две функции ОДИН РАЗ где-нибудь в коде (например, в utils или рядом с updateProgressMoon)
+function polarToCartesian(cx, cy, r, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+  return {
+    x: cx + (r * Math.cos(angleInRadians)),
+    y: cy + (r * Math.sin(angleInRadians))
+  };
+}
+function describeArc(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return [
+    "M", start.x, start.y,
+    "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+    "L", cx, cy,
+    "Z"
+  ].join(" ");
+}
+
+// А это твоя финальная функция:
+function updateProgressMoon(flash = false) {
   const moonBtn = document.getElementById('moonBtn');
   const block = state.currentBlock;
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
 
-  // percent: 0 (пусто) ... 1 (полная луна)
   let percent = 0;
   if (count > 0) percent = Math.min(count / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
-  // Новый расчет центра маски для равномерного заполнения дугой!
-  const maskCx = cx + r * Math.cos(Math.PI * (1 - percent));
 
-  // Кратеры
+  // Заполнение идёт по нижней дуге слева направо (от 180° до 360°)
+  const arcPath = percent > 0
+    ? describeArc(cx, cy, r, 180, 180 + 180 * percent)
+    : "";
+
   const craters = [
     [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
     [cx - 5, cy + 7, 1.7, "#888", 0.38],
@@ -981,19 +1003,12 @@ updateChat() {
           <stop offset="0%" stop-color="#e2e8f0"/>
           <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
-        <!-- Маска для дуги: второй круг сдвигается по дуге! -->
-        <mask id="phaseMask">
-          <rect x="0" y="0" width="44" height="44" fill="white"/>
-          <circle cx="${maskCx}" cy="${cy}" r="${r}" fill="black"/>
-        </mask>
       </defs>
       <!-- Серый фон луны -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <!-- Заполнение луны (желтый полумесяц) -->
-      ${count > 0 ? `
-        <g mask="url(#phaseMask)">
-          <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
-        </g>
+      <!-- Заполнение луны (желтая дуга) -->
+      ${percent > 0 ? `
+        <path d="${arcPath}" fill="#ffe066" opacity="0.85"/>
       ` : ''}
       <!-- Кратеры всегда поверх! -->
       ${craters.map(([x, y, rad, color, op]) =>
