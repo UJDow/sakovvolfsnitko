@@ -1133,7 +1133,7 @@ if (addWholeFromHint) {
   };
 
   // --- ШАГ 2 ---
- document.getElementById('toStep3').onclick = async () => {
+ document.getElementById('toStep3').onclick = async function() {
   if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
   state.currentBlock = state.blocks[0];
   ui.setStep(3);
@@ -1143,7 +1143,11 @@ if (addWholeFromHint) {
   // --- Сразу отправляем первый запрос к AI ---
   const blockId = state.currentBlock.id;
   if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-    await chat.sendToAI(blockId);
+    try {
+      await chat.sendToAI(blockId);
+    } catch (e) {
+      console.error('Ошибка при первом запросе к AI:', e);
+    }
   }
 };
   document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
