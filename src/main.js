@@ -644,8 +644,11 @@ const chat = {
       });
       console.log('[debug] api.analyze result', res);
 
-      const aiMsg = res?.choices?.[0]?.message?.content || 'Ошибка анализа';
-      state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
+      let aiMsg = res?.choices?.[0]?.message?.content;
+if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
+  aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
+}
+state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
 
       block.turnsCount = (block.turnsCount || 0) + 1;
 
