@@ -935,28 +935,33 @@ updateChat() {
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
   let percent = utils.clamp(count / 10, 0, 1);
-  let color = percent === 1 ? '#10b981' : '#2563eb';
 
-  // Параметры луны
   const r = 20, cx = 22, cy = 22;
-  // Сдвиг "тени" — от -r (новолуние) до +r (полнолуние)
   const dx = (1 - 2 * percent) * r;
 
   moonBtn.innerHTML = `
     <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44" width="44" height="44">
-      <!-- Glow -->
-      <filter id="moon-glow" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="3" result="glow"/>
-        <feMerge>
-          <feMergeNode in="glow"/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-      <!-- Луна -->
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="#fffbe6" stroke="${color}" stroke-width="3" filter="url(#moon-glow)"/>
-      <!-- Тень (фаза) -->
-      <circle cx="${cx + dx}" cy="${cy}" r="${r}" fill="#e2e8f0"/>
-      <!-- Кратеры -->
+      <defs>
+        <filter id="moon-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="3" result="glow"/>
+          <feMerge>
+            <feMergeNode in="glow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <radialGradient id="moonTexture" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fffbe6"/>
+          <stop offset="100%" stop-color="#e2e8f0"/>
+        </radialGradient>
+        <mask id="phaseMask">
+          <rect x="0" y="0" width="44" height="44" fill="white"/>
+          <circle cx="${cx + dx}" cy="${cy}" r="${r}" fill="black"/>
+        </mask>
+      </defs>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
+      <g mask="url(#phaseMask)">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
+      </g>
       <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#e0e0e0" opacity="0.25"/>
       <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#e0e0e0" opacity="0.18"/>
       <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#e0e0e0" opacity="0.13"/>
