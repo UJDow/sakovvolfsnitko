@@ -558,6 +558,7 @@ const blocks = {
     ui.updateBlocks();       // только панель чипсов
     ui.renderDreamTiles();   // отдельно — только dreamView
     ui.updateChat();         // обновить чат
+    ui.updateBlockInterpretButton();
   }
 };
 
@@ -630,8 +631,10 @@ const chat = {
     });
     state.chatHistory[blockId].push({ role: 'user', content: msg });
     ui.updateChat();
-    console.log('[debug] calling sendToAI with', blockId);
-    await chat.sendToAI(blockId);
+const tooltip = document.getElementById('moonTooltip');
+if (tooltip) tooltip.classList.remove('show');
+console.log('[debug] calling sendToAI with', blockId);
+await chat.sendToAI(blockId);
   },
 
   // chat.sendToAI
@@ -916,6 +919,8 @@ updateChat() {
     ui.updateJumpToBottomVisibility();
     bindChatEvents();
   }, 0);
+  
+  ui.updateBlockInterpretButton();
 },
 
   setThinking(isThinking) {
@@ -1003,6 +1008,37 @@ updateProgressMoon(flash = false) {
     setTimeout(() => {
       moonBtn.querySelector('.moon-svg').classList.remove('moon-flash');
     }, 1600);
+  }
+},
+  updateBlockInterpretButton() {
+  const btn = document.getElementById('menuBlockInterpret');
+  const tooltip = document.getElementById('moonTooltip');
+  const block = state.currentBlock;
+  if (!btn) return;
+
+  if (!block) {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    if (tooltip) tooltip.classList.remove('show');
+    return;
+  }
+
+  // Считаем количество ответов ассистента по текущему блоку
+  const blockId = block.id;
+  const answers = (state.chatHistory[blockId] || []).filter(m => m.role === 'assistant').length;
+
+  if (answers < 10) {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    if (tooltip) tooltip.classList.remove('show');
+  } else {
+    btn.disabled = false;
+    btn.classList.add('active');
+    if (tooltip) {
+      tooltip.textContent = 'Можно получить толкование блока';
+      tooltip.classList.add('show');
+      setTimeout(() => tooltip.classList.remove('show'), 3000);
+    }
   }
 },
 
@@ -1251,6 +1287,9 @@ document.getElementById('backTo2Top').onclick = () => {
 document.getElementById('moonBtn').onclick = () => {
   const menu = document.getElementById('attachMenu');
   menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  // Скрыть tooltip при открытии меню
+  const tooltip = document.getElementById('moonTooltip');
+  if (tooltip) tooltip.classList.remove('show');
 };
 document.getElementById('menuBlockInterpret').onclick = async () => {
   await chat.blockInterpretation();
