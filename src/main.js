@@ -940,10 +940,8 @@ updateChat() {
   if (count > 0) percent = Math.min(count / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
-  // dx: от -20 (лево) до +20 (право)
-  const dx = (1 - 2 * percent) * r;
 
-  // Кратеры: массив с параметрами (cx, cy, r, color, opacity)
+  // Кратеры
   const craters = [
     [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
     [cx - 5, cy + 7, 1.7, "#888", 0.38],
@@ -981,15 +979,14 @@ updateChat() {
           <stop offset="0%" stop-color="#e2e8f0"/>
           <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
-        <!-- Маска для заполнения: тень двигается слева направо -->
+        <!-- Прямоугольная маска для заполнения слева-направо -->
         <mask id="phaseMask">
-          <rect x="0" y="0" width="44" height="44" fill="white"/>
-          <circle cx="${cx + dx}" cy="${cy}" r="${r}" fill="black"/>
+          <rect x="0" y="0" width="${44 * percent}" height="44" fill="white"/>
         </mask>
       </defs>
       <!-- Серый фон луны -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <!-- Заполнение луны (желтый полумесяц) -->
+      <!-- Заполнение луны (желтый цвет) -->
       ${count > 0 ? `
         <g mask="url(#phaseMask)">
           <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
