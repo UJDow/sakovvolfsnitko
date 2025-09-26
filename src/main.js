@@ -628,7 +628,7 @@ const chat = {
   },
 
   // chat.sendToAI
- async sendToAI(blockId) {
+  async sendToAI(blockId) {
     console.log('[debug] sendToAI called', blockId);
     const block = state.blocks.find(b => b.id === blockId);
     if (!block) {
@@ -704,6 +704,7 @@ const chat = {
     }
     ui.setThinking(false);
   }
+};
 ///////////////////////
 // === UI === //
 ///////////////////////
