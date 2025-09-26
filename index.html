@@ -1653,12 +1653,12 @@ body.modal-open {
 }
 
 #step3 .card {
-  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
   min-height: 0 !important;
   max-height: none !important;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding: 22px !important;
 }
 @media (max-width: 600px) {
   #step3 .card {
@@ -1675,8 +1675,9 @@ body.modal-open {
 
 #step3 .chat-wrap.surface {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 320px;
   max-height: none;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
