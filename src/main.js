@@ -1195,25 +1195,46 @@ updateProgressMoon(flash = false) {
   }
 };
 function showSimilarModal(similarArr) {
-  // similarArr — массив строк или объектов
-  const html = Array.isArray(similarArr)
-    ? similarArr.map(item => {
-        if (typeof item === 'object') {
-          return `<div class="similar-item">
-            <b>${utils.escapeHtml(item.title || '')}</b> (${utils.escapeHtml(item.author || '')}, ${utils.escapeHtml(item.year || '')})<br>
-            <i>${utils.escapeHtml(item.type || '')}</i><br>
-            <span>${utils.escapeHtml(item.desc || item.description || '')}</span>
-          </div>`;
-        }
-        return `<div class="similar-item">${utils.escapeHtml(item)}</div>`;
-      }).join('')
-    : `<div class="similar-item">${utils.escapeHtml(similarArr)}</div>`;
+  // Если это строка с ошибкой — просто покажи её
+  if (typeof similarArr === 'string') {
+    const modal = document.createElement('div');
+    modal.className = 'modal similar-modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Похожие сценарии в искусстве</h2>
+        <div style="margin:18px 0;">${utils.escapeHtml(similarArr)}</div>
+        <button class="close-modal btn primary" style="margin-top:18px;">Закрыть</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('.close-modal').onclick = () => modal.remove();
+    return;
+  }
+
+  // Если это массив с мотивами и произведениями
+  const html = similarArr.map(motifObj => `
+    <div class="similar-motif" style="margin-bottom:24px;">
+      <div style="font-weight:bold; font-size:17px; margin-bottom:8px;">
+        ${utils.escapeHtml(motifObj.motif)}
+      </div>
+      <div>
+        ${motifObj.works.map(work => `
+          <div class="similar-work" style="margin-bottom:12px; padding-left:10px; border-left:3px solid #e0e0e0;">
+            <div><b>${utils.escapeHtml(work.title)}</b> (${utils.escapeHtml(work.year)}) — <i>${utils.escapeHtml(work.type)}</i></div>
+            <div style="color:#666;">${utils.escapeHtml(work.author)}</div>
+            <div style="margin-top:4px;">${utils.escapeHtml(work.desc)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
   const modal = document.createElement('div');
   modal.className = 'modal similar-modal';
   modal.innerHTML = `
-    <div class="modal-content" style="max-width:540px;margin:40px auto;background:var(--card-bg);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:32px 24px;position:relative;">
+    <div class="modal-content" style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:32px 24px;position:relative;">
       <h2>Похожие сценарии в искусстве</h2>
-      ${html}
+      <div style="margin:18px 0 0 0;">${html}</div>
       <button class="close-modal btn primary" style="margin-top:18px;">Закрыть</button>
     </div>
   `;
