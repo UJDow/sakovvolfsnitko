@@ -920,7 +920,13 @@ updateChat() {
 
   setThinking(isThinking) {
   const thinkingEl = document.getElementById('thinking');
-  if (thinkingEl) thinkingEl.style.display = isThinking ? 'block' : 'none';
+  if (!thinkingEl) return;
+  thinkingEl.style.display = isThinking ? 'block' : 'none';
+  if (isThinking) {
+    thinkingEl.classList.add('sticky-thinking');
+  } else {
+    thinkingEl.classList.remove('sticky-thinking');
+  }
 },
 
  updateProgressMoon(flash = false) {
