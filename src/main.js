@@ -746,13 +746,18 @@ const ui = {
     ui.showAuth();
     utils.showToast('Пробный период истёк. Зарегистрируйте новый аккаунт.', 'error', 4000);
   },
-  setStep(step) {
-    state.uiStep = step;
-    for (let i = 1; i <= 3; ++i) {
-      document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
-      document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
-      document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
-    }
+ setStep(step) {
+  state.uiStep = step;
+  document.body.classList.toggle('step-3-active', step === 3);
+
+  for (let i = 1; i <= 3; ++i) {
+    document.getElementById('step' + i).style.display = (i === step) ? 'block' : 'none';
+    document.getElementById('step' + i + '-indicator').classList.toggle('active', i === step);
+    document.getElementById('step' + i + '-indicator').classList.toggle('completed', i < step);
+  }
+  const filled = document.getElementById('progress-line-filled');
+  filled.style.width = ((step - 1) * 50) + '%';
+},
     // Прогресс-бар
     const filled = document.getElementById('progress-line-filled');
     filled.style.width = ((step - 1) * 50) + '%';
