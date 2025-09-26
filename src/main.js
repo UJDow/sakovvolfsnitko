@@ -183,6 +183,35 @@ const MAX_TURNS_BEFORE_SUMMARY = 8;
 const MAX_BLOCKTEXT_LEN_TO_SEND = 4000;
 const MAX_USER_INPUT_LEN = 1200; // ограничение на длину ввода
 
+// === Централизованная сборка payload для анализа и толкования ===
+function buildAnalyzePayload({
+  fullHistory = [],
+  blockText = '',
+  rollingSummary = null,
+  extraSystemPrompt = null,
+  maxTurns = MAX_LAST_TURNS_TO_SEND,
+  maxBlockTextLen = MAX_BLOCKTEXT_LEN_TO_SEND
+} = {}) {
+  // Обрезаем текст блока
+  const trimmedBlockText = (blockText || '').slice(0, maxBlockTextLen);
+
+  // Берём последние N сообщений
+  const lastTurns = (fullHistory || [])
+    .slice(-maxTurns)
+    .map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '')
+    }));
+
+  // Собираем payload
+  return {
+    blockText: trimmedBlockText,
+    lastTurns,
+    rollingSummary: rollingSummary || null,
+    extraSystemPrompt: extraSystemPrompt || null
+  };
+}
+
 const state = {
   user: null,
   jwt: null,
@@ -609,12 +638,9 @@ function refreshSelectedBlocksUnified() {
 // === ЧАТ И AI === //
 ///////////////////////
 const chat = {
+  // Отправка пользовательского сообщения
   async sendUserMessage(msg) {
     console.log('sendUserMessage вызван', msg);
-    console.log('state.currentBlock:', state.currentBlock);
-    console.log('sendUserMessage вызван', msg);
-    console.log('Клик по sendAnswerBtn');
-    console.log('[debug] sendUserMessage called', msg);
     if (!state.currentBlock) return;
     if (msg.length > MAX_USER_INPUT_LEN) {
       utils.showToast('Слишком длинное сообщение (макс. 1200 символов)', 'error');
@@ -622,59 +648,41 @@ const chat = {
     }
     const blockId = state.currentBlock.id;
     if (!state.chatHistory[blockId]) state.chatHistory[blockId] = [];
-    // --- Миграция старых сообщений (если есть) ---
+    // Миграция старых сообщений (если есть)
     state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
       if (typeof m === 'string') return { role: 'user', content: m };
       if (m && typeof m === 'object' && m.role && m.content) return m;
-      // fallback: всё остальное — пользовательское сообщение
       return { role: 'user', content: String(m) };
     });
     state.chatHistory[blockId].push({ role: 'user', content: msg });
     ui.updateChat();
-const tooltip = document.getElementById('moonTooltip');
-if (tooltip) tooltip.classList.remove('show');
-console.log('[debug] calling sendToAI with', blockId);
-await chat.sendToAI(blockId);
+    const tooltip = document.getElementById('moonTooltip');
+    if (tooltip) tooltip.classList.remove('show');
+    await chat.sendToAI(blockId);
   },
 
-  // chat.sendToAI
+  // Отправка истории блока в AI (обычный ход диалога)
   async sendToAI(blockId) {
-    console.log('[debug] sendToAI called', blockId);
     const block = state.blocks.find(b => b.id === blockId);
-    if (!block) {
-      console.log('[debug] block not found for id', blockId, state.blocks);
-      return;
-    }
+    if (!block) return;
     ui.setThinking(true);
-    console.log('[debug] setThinking(true) called');
     try {
-      // --- Миграция старых сообщений (если есть) ---
+      // Миграция старых сообщений (если есть)
       state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
         if (typeof m === 'string') return { role: 'user', content: m };
         if (m && typeof m === 'object' && m.role && m.content) return m;
-        // fallback: всё остальное — пользовательское сообщение
         return { role: 'user', content: String(m) };
       });
       const history = state.chatHistory[blockId] || [];
-      // Только последние MAX_LAST_TURNS_TO_SEND сообщений, формат строго {role, content}
-      const lastTurns = history.slice(-MAX_LAST_TURNS_TO_SEND).map(m => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: String(m.content || '')
-      }));
-      const blockText = (block.text || '').slice(0, MAX_BLOCKTEXT_LEN_TO_SEND);
-      const rollingSummary = block.rollingSummary || null;
-      // extraSystemPrompt — если используется, добавить сюда
-      const extraSystemPrompt = null;
-
-      console.log('[debug] calling api.analyze', { blockText, lastTurns, rollingSummary, extraSystemPrompt });
-      const res = await api.analyze({
-        blockText,
-        lastTurns,
-        rollingSummary,
-        extraSystemPrompt
+      const payload = buildAnalyzePayload({
+        fullHistory: history,
+        blockText: block.text,
+        rollingSummary: block.rollingSummary,
+        extraSystemPrompt: null,
+        maxTurns: MAX_LAST_TURNS_TO_SEND
       });
-      console.log('[debug] api.analyze result', res);
 
+      const res = await api.analyze(payload);
       let aiMsg = res?.choices?.[0]?.message?.content;
       if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
         aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
@@ -684,24 +692,14 @@ await chat.sendToAI(blockId);
       block.turnsCount = (block.turnsCount || 0) + 1;
 
       if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
-        if (window.DEV_LOGS !== false) {
-          console.log('[debug] summarize triggered', { blockId, turnsCount: block.turnsCount, historyLen: history.length });
-        }
         const resSum = await api.summarize({
           history,
-          blockText,
+          blockText: block.text,
           existingSummary: block.rollingSummary || ''
         });
         block.rollingSummary = resSum.summary || block.rollingSummary;
         state.chatHistory[blockId] = state.chatHistory[blockId].slice(-MAX_LAST_TURNS_TO_SEND);
         block.turnsCount = 0;
-        if (window.DEV_LOGS !== false) {
-          console.log('[debug] rolling summary updated/trimmed', {
-            blockId,
-            newSummaryLen: block.rollingSummary?.length,
-            keptTurns: MAX_LAST_TURNS_TO_SEND
-          });
-        }
       }
 
       ui.updateChat();
@@ -713,8 +711,71 @@ await chat.sendToAI(blockId);
       ui.updateChat();
     }
     ui.setThinking(false);
+  },
+
+  // Итоговое толкование блока
+  async blockInterpretation() {
+    if (!state.currentBlock) {
+      utils.showToast('Блок не выбран', 'error');
+      return;
+    }
+    const block = state.currentBlock;
+    const blockId = block.id;
+    const history = state.chatHistory[blockId] || [];
+    ui.setThinking(true);
+    try {
+      const payload = buildAnalyzePayload({
+        fullHistory: history,
+        blockText: block.text,
+        rollingSummary: block.rollingSummary,
+        extraSystemPrompt: "Сделай итоговое толкование этого блока сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всей истории диалога.",
+        maxTurns: 6
+      });
+      const res = await api.analyze(payload);
+      let interpretation = res?.choices?.[0]?.message?.content;
+      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+        interpretation = 'Ошибка: пустой ответ от сервера.';
+      }
+      block.finalInterpretation = interpretation;
+      ui.updateChat();
+      utils.showToast('Толкование блока готово', 'success');
+    } catch (e) {
+      utils.showToast('Ошибка при толковании блока', 'error');
+    }
+    ui.setThinking(false);
+  },
+
+  // Итоговое толкование всего сна
+  async globalInterpretation() {
+    if (!state.currentDream) {
+      utils.showToast('Сон не выбран', 'error');
+      return;
+    }
+    const dreamText = state.currentDream.dreamText || '';
+    const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
+    ui.setThinking(true);
+    try {
+      const payload = {
+        blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
+        lastTurns: [],
+        rollingSummary: allSummaries || null,
+        extraSystemPrompt: "Сделай итоговое толкование всего сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всех блоков и их истории."
+      };
+      const res = await api.analyze(payload);
+      let interpretation = res?.choices?.[0]?.message?.content;
+      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+        interpretation = 'Ошибка: пустой ответ от сервера.';
+      }
+      state.globalFinalInterpretation = interpretation;
+      ui.showFinalDialog();
+      utils.showToast('Итоговое толкование сна готово', 'success');
+    } catch (e) {
+      utils.showToast('Ошибка при итоговом толковании сна', 'error');
+    }
+    ui.setThinking(false);
   }
 };
+
 ///////////////////////
 // === UI === //
 ///////////////////////
