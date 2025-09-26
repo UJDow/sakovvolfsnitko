@@ -1770,6 +1770,30 @@ body.step-3-active #step3 .card {
   color: #f1f5f9 !important;
   background: rgba(15,23,42,0.35) !important;
 }
+
+#menuBlockInterpret:disabled,
+#menuBlockInterpret.disabled {
+  opacity: 0.5 !important;
+  pointer-events: none !important;
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+}
+#menuBlockInterpret.active {
+  background: #ffe066 !important;
+  color: #0f172a !important;
+  box-shadow: 0 0 0 2px #ffe06655;
+}
+.moon-tooltip {
+  transition: opacity 0.25s, transform 0.25s;
+  opacity: 0;
+  pointer-events: none;
+}
+.moon-tooltip.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(-8px) scale(1.05);
+}
   
   </style>
 </head>
@@ -1932,6 +1956,9 @@ body.step-3-active #step3 .card {
             <div id="chatInputBar" class="chat-input-bar" style="width:100%; position:relative;">
               <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
               <button id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны"></button>
+<div id="moonTooltip" class="moon-tooltip" style="display:none;position:absolute;top:-38px;left:50%;transform:translateX(-50%);color:#fff;background:#2563eb;padding:4px 14px;border-radius:8px;font-size:14px;z-index:10;box-shadow:0 2px 8px #2563eb22;pointer-events:none;">
+  Можно получить толкование блока
+</div>
               <div id="attachMenu" class="attach-menu" style="display:none;">
                 <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
                 <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
