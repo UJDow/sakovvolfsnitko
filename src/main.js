@@ -943,6 +943,30 @@ updateChat() {
   // dx: от -20 (лево) до +20 (право)
   const dx = (1 - 2 * percent) * r;
 
+  // Кратеры: массив с параметрами (cx, cy, r, color, opacity)
+  const craters = [
+    [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
+    [cx - 5, cy + 7, 1.7, "#888", 0.38],
+    [cx + 10, cy + 4, 1.3, "#a0a0a0", 0.33],
+    [cx - 8, cy - 4, 1.1, "#666", 0.35],
+    [cx - 2, cy - 8, 1.6, "#bfc4cc", 0.5],
+    [cx + 5, cy + 10, 1.2, "#888", 0.4],
+    [cx + 2, cy - 12, 0.9, "#d1d5db", 0.32],
+    [cx - 10, cy + 2, 1.8, "#6b7280", 0.28],
+    [cx + 12, cy - 2, 1.4, "#9ca3af", 0.36],
+    [cx - 6, cy - 10, 1.1, "#b0b0b0", 0.42],
+    [cx + 8, cy + 8, 1.6, "#a3a3a3", 0.29],
+    [cx - 12, cy + 8, 1.3, "#6b7280", 0.22],
+    [cx + 13, cy - 8, 0.8, "#bfc4cc", 0.38],
+    [cx - 13, cy - 7, 1.2, "#888", 0.31],
+    [cx + 3, cy + 13, 1.5, "#b0b0b0", 0.27],
+    [cx - 3, cy + 13, 1.1, "#6b7280", 0.19],
+    [cx + 14, cy + 6, 0.9, "#a0a0a0", 0.21],
+    [cx - 14, cy - 2, 1.0, "#9ca3af", 0.25],
+    [cx + 6, cy - 14, 1.2, "#d1d5db", 0.23],
+    [cx - 9, cy + 12, 1.4, "#888", 0.34],
+  ];
+
   moonBtn.innerHTML = `
     <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44" width="44" height="44">
       <defs>
@@ -972,12 +996,9 @@ updateChat() {
         </g>
       ` : ''}
       <!-- Кратеры всегда поверх! -->
-      <circle cx="${cx + 7}" cy="${cy - 6}" r="2" fill="#b0b0b0" opacity="0.45"/>
-      <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#888" opacity="0.38"/>
-      <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#a0a0a0" opacity="0.33"/>
-      <circle cx="${cx - 8}" cy="${cy - 4}" r="0.9" fill="#666" opacity="0.35"/>
-      <ellipse cx="${cx - 2}" cy="${cy - 8}" rx="1.2" ry="0.7" fill="#bfc4cc" opacity="0.5"/>
-      <ellipse cx="${cx + 5}" cy="${cy + 10}" rx="0.8" ry="0.5" fill="#888" opacity="0.4"/>
+      ${craters.map(([x, y, rad, color, op]) =>
+        `<circle cx="${x}" cy="${y}" r="${rad}" fill="${color}" opacity="${op}"/>`
+      ).join('')}
     </svg>
   `;
   if (flash) {
