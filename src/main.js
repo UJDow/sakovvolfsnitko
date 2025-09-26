@@ -1211,23 +1211,40 @@ function showSimilarModal(similarArr) {
     return;
   }
 
-  // Если это массив с мотивами и произведениями
-  const html = similarArr.map(motifObj => `
-    <div class="similar-motif" style="margin-bottom:24px;">
-      <div style="font-weight:bold; font-size:17px; margin-bottom:8px;">
-        ${utils.escapeHtml(motifObj.motif)}
+  // Проверяем, что это массив нужного формата
+  let html = '';
+  if (Array.isArray(similarArr) && similarArr[0]?.motif && Array.isArray(similarArr[0]?.works)) {
+    html = similarArr.map(motifObj => `
+      <div class="similar-motif" style="margin-bottom:24px;">
+        <div style="font-weight:bold; font-size:17px; margin-bottom:8px;">
+          ${utils.escapeHtml(motifObj.motif)}
+        </div>
+        <div>
+          ${motifObj.works.map(work => `
+            <div class="similar-work" style="margin-bottom:12px; padding-left:10px; border-left:3px solid #e0e0e0;">
+              <div><b>${utils.escapeHtml(work.title || '')}</b> (${utils.escapeHtml(work.year || '')}) — <i>${utils.escapeHtml(work.type || '')}</i></div>
+              <div style="color:#666;">${utils.escapeHtml(work.author || '')}</div>
+              <div style="margin-top:4px;">${utils.escapeHtml(work.desc || '')}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
-      <div>
-        ${motifObj.works.map(work => `
-          <div class="similar-work" style="margin-bottom:12px; padding-left:10px; border-left:3px solid #e0e0e0;">
-            <div><b>${utils.escapeHtml(work.title)}</b> (${utils.escapeHtml(work.year)}) — <i>${utils.escapeHtml(work.type)}</i></div>
-            <div style="color:#666;">${utils.escapeHtml(work.author)}</div>
-            <div style="margin-top:4px;">${utils.escapeHtml(work.desc)}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+  } else if (Array.isArray(similarArr)) {
+    // Если это просто массив строк или объектов старого формата
+    html = similarArr.map(item => {
+      if (typeof item === 'object') {
+        return `<div class="similar-item">
+          <b>${utils.escapeHtml(item.title || '')}</b> (${utils.escapeHtml(item.author || '')}, ${utils.escapeHtml(item.year || '')})<br>
+          <i>${utils.escapeHtml(item.type || '')}</i><br>
+          <span>${utils.escapeHtml(item.desc || item.description || '')}</span>
+        </div>`;
+      }
+      return `<div class="similar-item">${utils.escapeHtml(item)}</div>`;
+    }).join('');
+  } else {
+    html = `<div class="similar-item">${utils.escapeHtml(String(similarArr))}</div>`;
+  }
 
   const modal = document.createElement('div');
   modal.className = 'modal similar-modal';
