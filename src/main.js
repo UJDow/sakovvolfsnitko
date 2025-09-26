@@ -260,7 +260,7 @@ utils.lighten = function(hex, percent = 20) {
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
 
- // Вставь эти две функции ОДИН РАЗ где-нибудь в коде (например, в utils или рядом с updateProgressMoon)
+// В utils:
 utils.polarToCartesian = (cx, cy, r, angleInDegrees) => {
   const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
   return {
@@ -274,9 +274,9 @@ utils.describeArc = (cx, cy, r, startAngle, endAngle) => {
   const end = utils.polarToCartesian(cx, cy, r, startAngle);
   const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
   return [
-    "M", start.x, start.y,
+    "M", cx, cy,
+    "L", start.x, start.y,
     "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
-    "L", cx, cy,
     "Z"
   ].join(" ");
 };
@@ -950,23 +950,23 @@ updateChat() {
   }
 },
 
+// В твоей updateProgressMoon:
 updateProgressMoon(flash = false) {
   const moonBtn = document.getElementById('moonBtn');
   const block = state.currentBlock;
   if (!block) { moonBtn.innerHTML = ''; return; }
   const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
 
-  // 10 шагов: заполнение начинается только после первого шага
   let percent = 0;
   if (count > 0) percent = Math.min(count / 10, 1);
 
   const r = 20, cx = 22, cy = 22;
 
-  // Заполнение по нижней дуге (от 180° до 180+180*percent)
+  // Сектор "пирога": от 90° (низ) против часовой до 90 + 360*percent
   let arcPath = '';
   if (percent > 0) {
-    const startAngle = 180;
-    const endAngle = 180 + 180 * percent;
+    const startAngle = 90;
+    const endAngle = 90 + 360 * percent;
     arcPath = utils.describeArc(cx, cy, r, startAngle, endAngle);
   }
 
@@ -985,9 +985,7 @@ updateProgressMoon(flash = false) {
           <stop offset="100%" stop-color="#bfc4cc"/>
         </radialGradient>
       </defs>
-      <!-- Серый фон луны с текстурой -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <!-- Заполнение луны по дуге -->
       ${percent > 0 ? `
         <path d="${arcPath}" fill="#ffe066" opacity="0.85"/>
       ` : ''}
