@@ -744,6 +744,7 @@ const ui = {
     // Прогресс-бар
     const filled = document.getElementById('progress-line-filled');
     filled.style.width = ((step - 1) * 50) + '%';
+    if (step === 3) bindChatEvents();
   },
 
   updateBlocks() {
@@ -913,6 +914,7 @@ const ui = {
     chatDiv.scrollTop = chatDiv.scrollHeight;
     updateJumpToBottomVisibility();
   }, 0);
+    bindChatEvents();
 },
 
   updateJumpToBottomVisibility() {
@@ -1145,7 +1147,6 @@ if (addWholeFromHint) {
   };
 }
 
-
   // --- ШАГ 1 ---
   document.getElementById('step1MainBtn').onclick = async function() {
     const text = document.getElementById('dream').value.trim();
@@ -1193,44 +1194,31 @@ if (addWholeFromHint) {
     refreshBtn.onclick = refreshSelectedBlocksUnified;
   }
 
-  // --- ШАГ 3 ---
-  document.getElementById('backTo2Top').onclick = () => {
-    ui.setStep(2);
-    ui.renderDreamTiles();
-  };
-  document.getElementById('sendAnswerBtn').onclick = async () => {
-    const input = document.getElementById('userInput');
-    const msg = input.value.trim();
-    if (!msg) return;
-    input.value = '';
-    await chat.sendUserMessage(msg);
-  };
-  document.getElementById('userInput').onkeydown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      document.getElementById('sendAnswerBtn').click();
-    }
-  };
-  document.getElementById('moonBtn').onclick = () => {
-    const menu = document.getElementById('attachMenu');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-  };
-  document.getElementById('menuBlockInterpret').onclick = async () => {
-    await chat.blockInterpretation();
-    document.getElementById('attachMenu').style.display = 'none';
-  };
-  document.getElementById('menuFinalInterpret').onclick = async () => {
-    await chat.globalInterpretation();
-    document.getElementById('attachMenu').style.display = 'none';
-  };
-  document.getElementById('menuSaveToCabinet').onclick = async () => {
-    await dreams.saveCurrent();
-    document.getElementById('attachMenu').style.display = 'none';
-  };
-  document.getElementById('jumpToBottom').onclick = () => {
-    const chatDiv = document.getElementById('chat');
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-  };
+ // --- ШАГ 3 ---
+document.getElementById('backTo2Top').onclick = () => {
+  ui.setStep(2);
+  ui.renderDreamTiles();
+};
+document.getElementById('moonBtn').onclick = () => {
+  const menu = document.getElementById('attachMenu');
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+document.getElementById('menuBlockInterpret').onclick = async () => {
+  await chat.blockInterpretation();
+  document.getElementById('attachMenu').style.display = 'none';
+};
+document.getElementById('menuFinalInterpret').onclick = async () => {
+  await chat.globalInterpretation();
+  document.getElementById('attachMenu').style.display = 'none';
+};
+document.getElementById('menuSaveToCabinet').onclick = async () => {
+  await dreams.saveCurrent();
+  document.getElementById('attachMenu').style.display = 'none';
+};
+document.getElementById('jumpToBottom').onclick = () => {
+  const chatDiv = document.getElementById('chat');
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+};
 
   // --- КАБИНЕТ ---
   document.getElementById('openCabinetBtn').onclick = () => ui.showCabinetModal();
@@ -1311,6 +1299,24 @@ if (addWholeFromHint) {
   if (chatDiv) {
     chatDiv.addEventListener('scroll', ui.updateJumpToBottomVisibility);
   }
+}
+
+function bindChatEvents() {
+  const sendBtn = document.getElementById('sendAnswerBtn');
+  const input = document.getElementById('userInput');
+  if (!sendBtn || !input) return;
+  sendBtn.onclick = async () => {
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    await chat.sendUserMessage(msg);
+  };
+  input.onkeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  };
 }
 
 // ====== ТЕМЫ: UI и логика ======
