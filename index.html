@@ -1794,6 +1794,33 @@ body.step-3-active #step3 .card {
   pointer-events: auto;
   transform: translateX(-50%) translateY(-8px) scale(1.05);
 }
+
+.similar-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3002;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.similar-modal .modal-content {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 32px 24px;
+  max-width: 540px;
+  width: 96vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.similar-item {
+  margin-bottom: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 16px;
+}
+.similar-item:last-child { border-bottom: none; }
   
   </style>
 </head>
