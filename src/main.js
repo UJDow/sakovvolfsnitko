@@ -1,3 +1,5 @@
+console.log('[debug] main.js loaded');
+
 // ====== ТЕМЫ ======
 const THEMES = [
   {
