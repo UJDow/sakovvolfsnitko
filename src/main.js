@@ -260,27 +260,6 @@ utils.lighten = function(hex, percent = 20) {
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
 
-utils.polarToCartesian = (cx, cy, r, angleInDegrees) => {
-  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-  return {
-    x: cx + (r * Math.cos(angleInRadians)),
-    y: cy + (r * Math.sin(angleInRadians))
-  };
-};
-
-utils.describeArcC = (cx, cy, r, percent) => {
-  // percent: 0...1
-  const startAngle = 180;
-  const endAngle = 180 + 180 * percent;
-  const start = utils.polarToCartesian(cx, cy, r, startAngle);
-  const end = utils.polarToCartesian(cx, cy, r, endAngle);
-  const largeArcFlag = (endAngle - startAngle) > 180 ? "1" : "0";
-  return [
-    "M", start.x, start.y,
-    "A", r, r, 0, largeArcFlag, 1, end.x, end.y
-  ].join(" ");
-};
-
 ///////////////////////
 // === API === //
 ///////////////////////
