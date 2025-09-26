@@ -608,8 +608,9 @@ function refreshSelectedBlocksUnified() {
 // === ЧАТ И AI === //
 ///////////////////////
 const chat = {
-  // chat.sendUserMessage
   async sendUserMessage(msg) {
+    console.log('sendUserMessage вызван', msg);
+    console.log('state.currentBlock:', state.currentBlock);
     console.log('sendUserMessage вызван', msg);
     console.log('Клик по sendAnswerBtn');
     console.log('[debug] sendUserMessage called', msg);
