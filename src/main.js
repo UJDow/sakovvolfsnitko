@@ -923,7 +923,7 @@ updateChat() {
   if (thinkingEl) thinkingEl.style.display = isThinking ? 'block' : 'none';
 },
 
-  updateProgressMoon(flash = false) {
+ updateProgressMoon(flash = false) {
   const moonBtn = document.getElementById('moonBtn');
   const block = state.currentBlock;
   if (!block) { moonBtn.innerHTML = ''; return; }
@@ -955,8 +955,6 @@ updateChat() {
       <circle cx="${cx - 5}" cy="${cy + 7}" r="1.3" fill="#e0e0e0" opacity="0.18"/>
       <circle cx="${cx + 10}" cy="${cy + 4}" r="1.1" fill="#e0e0e0" opacity="0.13"/>
       <circle cx="${cx - 8}" cy="${cy - 4}" r="0.9" fill="#e0e0e0" opacity="0.15"/>
-      <!-- Текст -->
-      <text x="22" y="28" text-anchor="middle" font-size="15" fill="${color}" font-weight="bold">${count}/10</text>
     </svg>
   `;
   if (flash) {
