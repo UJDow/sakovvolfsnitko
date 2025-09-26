@@ -1696,15 +1696,21 @@ body.modal-open {
     }
   }
 }
-body.step-3-active #cabinetMenu {
-  flex-direction: row;
-  gap: 8px;
-  margin-top: 6px !important;
-  font-size: 13px;
+
+body.step-3-active {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
-body.step-3-active #cabinetMenu #storageIndicator {
-  display: none; /* или scale: .85; */
+body.step-3-active > .center-wrap > h1 {
+  display: none;
+}
+
+body.step-3-active #cabinetMenu {
+  display: none;
+}
+
+body.step-3-active .progress-indicator {
+  margin: clamp(8px, 1.5vh, 12px) auto clamp(10px, 2vh, 16px);
 }
   
   </style>
