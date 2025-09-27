@@ -242,35 +242,52 @@ const utils = {
       (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     );
   },
+
   showToast(msg, type = 'info', timeout = 2600) {
     const toast = document.getElementById('toastNotice');
+    if (!toast) return;
+
     toast.textContent = msg;
     toast.style.background = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#2563eb');
-    toast.style.display = 'block';
+
+    // сброс позиционирования для "центра снизу"
+    toast.style.top = '';
+    toast.style.left = '';
+    toast.style.right = '';
     toast.style.bottom = '32px';
+
+    toast.style.display = 'block';
     toast.style.opacity = '0.97';
-    setTimeout(() => {
+
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.bottom = '12px';
       setTimeout(() => { toast.style.display = 'none'; }, 350);
     }, timeout);
   },
+
   escapeHtml(str) {
     return str.replace(/[&<>"']/g, m => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
     }[m]));
   },
+
   formatDate(ts) {
     const d = new Date(ts);
     return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
   },
+
   debounce(fn, ms) {
     let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
   },
+
   clamp(n, min, max) { return Math.max(min, Math.min(max, n)); },
+
   copyToClipboard(text) {
-    if (navigator.clipboard) navigator.clipboard.writeText(text);
-    else {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    } else {
       const ta = document.createElement('textarea');
       ta.value = text; document.body.appendChild(ta);
       ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
@@ -278,6 +295,7 @@ const utils = {
     utils.showToast('Скопировано!', 'success');
   }
 };
+
 utils.lighten = function(hex, percent = 20) {
   let num = parseInt(hex.replace('#',''),16);
   let r = (num >> 16) + Math.round(2.55 * percent);
@@ -288,10 +306,79 @@ utils.lighten = function(hex, percent = 20) {
   b = Math.min(255, b);
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
+
+/**
+ * Локальный тост над кнопкой "луны"
+ */
+utils.showToastNearMoon = function(msg, type = 'info', timeout = 2600) {
+  const toast = document.getElementById('toastNotice');
+  const moonBtn = document.getElementById('moonBtn');
+  if (!toast || !moonBtn) return utils.showToast(msg, type, timeout);
+
+  toast.textContent = msg;
+  toast.style.background = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#2563eb');
+
+  // сброс позиционирования для top/left-режима
+  toast.style.right = '';
+  toast.style.bottom = '';
+  toast.style.display = 'block';
+  toast.style.opacity = '0.97';
+  toast.style.pointerEvents = 'none';
+
+  const layoutNearMoon = () => {
+    const r = moonBtn.getBoundingClientRect();
+    const centerX = r.left + r.width / 2;
+
+    // временно отключим transition, чтобы позиция не анимировалась
+    const prevTransition = toast.style.transition;
+    toast.style.transition = 'none';
+
+    const tw = toast.offsetWidth;
+    const th = toast.offsetHeight;
+    const gap = 12;
+
+    let left = Math.round(centerX - tw / 2);
+    let top = Math.round(r.top - th - gap);
+
+    const vw = window.innerWidth;
+    if (left < 8) left = 8;
+    if (left + tw > vw - 8) left = vw - 8 - tw;
+    if (top < 8) top = 8;
+
+    toast.style.left = left + 'px';
+    toast.style.top = top + 'px';
+    toast.style.transform = 'none';
+    toast.style.transition = prevTransition || 'opacity 0.3s';
+  };
+
+  requestAnimationFrame(() => {
+    layoutNearMoon();
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.style.display = 'none'; }, 350);
+    }, timeout);
+  });
+
+  const relayout = () => {
+    if (toast.style.display !== 'block' || toast.style.opacity === '0') return;
+    layoutNearMoon(); // только перепозиционирование, без перезапуска таймера
+  };
+  window.addEventListener('resize', relayout, { once: true });
+  window.addEventListener('scroll', relayout, { once: true, capture: true });
+};
+
+/**
+ * Подсчёт сообщений ассистента/системы в блоке
+ */
 function countAssistantMsgs(blockId) {
   const h = state.chatHistory[blockId] || [];
   return h.filter(m => m && (m.role === 'assistant' || m.role === 'system')).length;
 }
+
+/**
+ * Тултип над кнопкой "луны"
+ */
 function showMoonTooltip(text = 'Доступно толкование блока') {
   const tooltip = document.getElementById('moonTooltip');
   const moonBtn = document.getElementById('moonBtn');
@@ -303,6 +390,7 @@ function showMoonTooltip(text = 'Доступно толкование блок�
     const r = moonBtn.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const top = r.top;
+
     tooltip.style.position = 'fixed';
     tooltip.style.left = `${Math.round(cx)}px`;
     tooltip.style.top  = `${Math.round(top)}px`;
@@ -1231,9 +1319,10 @@ const ui = {
       btn.classList.add('active');
 
       if (!block._moonTipShownOnce && assistantSystemCount === 10) {
-        showMoonTooltip('Доступно толкование блока');
-        block._moonTipShownOnce = true;
-      }
+  showMoonTooltip('Доступно толкование блока');
+  utils.showToastNearMoon('Толкование блока доступно', 'success', 2600);
+  block._moonTipShownOnce = true;
+}
     } else {
       btn.disabled = true;
       btn.classList.remove('active');
