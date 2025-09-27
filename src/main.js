@@ -712,6 +712,9 @@ const chat = {
         aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
       }
       state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
+      if (blockId === state.currentBlock?.id) {
+  ui.updateBlockInterpretButton();
+}
 
       block.turnsCount = (block.turnsCount || 0) + 1;
 
