@@ -296,13 +296,30 @@ utils.lighten = function(hex, percent = 20) {
  */
 function showMoonTooltip(text = 'Можно получить толкование блока') {
   const tooltip = document.getElementById('moonTooltip');
-  if (!tooltip) return;
+  const moonBtn = document.getElementById('moonBtn');
+  if (!tooltip || !moonBtn) return;
+
   tooltip.textContent = text;
+
+  // Получаем координаты кнопки
+  const r = moonBtn.getBoundingClientRect();
+  const centerX = r.left + r.width / 2;
+  const aboveY = r.top; // верх кнопки
+
+  // Фиксируем позицию тултипа над кнопкой
+  // Немного сдвигаем вверх на 8–10px, визуальный отступ даст transform в CSS
+  tooltip.style.left = `${Math.round(centerX)}px`;
+  tooltip.style.top = `${Math.round(aboveY)}px`;
+
+  // Показать
   tooltip.classList.add('show');
   tooltip.style.display = 'block';
-  setTimeout(() => {
+
+  // Автоматически скрыть через 3 сек
+  clearTimeout(tooltip._hideTimer);
+  tooltip._hideTimer = setTimeout(() => {
     tooltip.classList.remove('show');
-    setTimeout(() => { tooltip.style.display = 'none'; }, 250);
+    setTimeout(() => { tooltip.style.display = 'none'; }, 200);
   }, 3000);
 }
 
