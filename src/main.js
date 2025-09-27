@@ -1195,7 +1195,6 @@ updateProgressMoon(flash = false) {
   }
 };
 function showSimilarModal(similarArr) {
-  // Встроенная функция для приведения к красивому формату
   function flattenSimilarArtworks(arr) {
     if (Array.isArray(arr) && arr[0]?.title && arr[0]?.author) return arr;
     if (Array.isArray(arr) && arr[0]?.motif && Array.isArray(arr[0]?.works)) {
@@ -1204,6 +1203,7 @@ function showSimilarModal(similarArr) {
         for (const work of motifObj.works) {
           flat.push({
             title: work.title || '',
+            type: work.type || '',
             author: work.author || '',
             desc: work.desc || '',
             value: work.value || ''
@@ -1215,7 +1215,6 @@ function showSimilarModal(similarArr) {
     return arr;
   }
 
-  // Если это строка с ошибкой — просто покажи её
   if (typeof similarArr === 'string') {
     const modal = document.createElement('div');
     modal.className = 'modal similar-modal';
@@ -1231,16 +1230,16 @@ function showSimilarModal(similarArr) {
     return;
   }
 
-  // Приводим к нужному формату
   const arr = flattenSimilarArtworks(similarArr);
 
-  // Генерируем HTML только по нужным полям
   let html = '';
   if (Array.isArray(arr) && arr.length > 0 && arr[0].title) {
     html = arr.map(item => `
       <div class="similar-item" style="margin-bottom:18px;">
         <div style="font-weight:bold;font-size:17px;">${utils.escapeHtml(item.title || '')}</div>
-        <div style="color:#666;">${utils.escapeHtml(item.author || '')}</div>
+        <div style="color:#666;">
+          ${utils.escapeHtml(item.author || '')}${item.type ? ', ' + utils.escapeHtml(item.type) : ''}
+        </div>
         <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
         <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
       </div>
@@ -1249,7 +1248,6 @@ function showSimilarModal(similarArr) {
     html = `<div style="color:#888;">Похожих произведений не найдено.</div>`;
   }
 
-  // Показываем модалку
   const modal = document.createElement('div');
   modal.className = 'modal similar-modal';
   modal.innerHTML = `
