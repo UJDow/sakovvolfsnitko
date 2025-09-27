@@ -880,22 +880,19 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 
 .moon-notice {
   position: fixed;
-  background: #fffbe6;
-  color: #222;
-  border: 1px solid #f6e27a;
-  border-radius: 12px;
-  padding: 14px 22px;
-  font-size: 15px;
-  box-shadow: 0 4px 24px rgba(246, 226, 122, 0.18);
+  top: 0; left: 0; right: 0;
   z-index: 100;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s, transform 0.3s;
-  min-width: 220px;
-  max-width: 320px;
+  background: #222;
+  color: #fff;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 15px;
+  box-shadow: 0 4px 24px rgba(246, 226, 122, 0.1);
+  opacity: 1;              /* ВСЕГДА ВИДИМО */
+  pointer-events: auto;     /* КЛИКАБЕЛЬНО */
+  transition: none;         /* Без анимации */
   text-align: center;
-  font-weight: 500;
-  line-height: 1.5;
+  display: block;           /* ВСЕГДА НА ЭКРАНЕ */
 }
 .moon-notice.show {
   opacity: 1;
