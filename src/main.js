@@ -1187,6 +1187,13 @@ updateBlockInterpretButton() {
   const userCount = history.filter(m => m.role === 'user').length;
   const assistantCount = history.filter(m => m.role === 'assistant').length;
 
+  console.log(
+    '[updateBlockInterpretButton]',
+    'userCount:', userCount,
+    'assistantCount:', assistantCount,
+    'tooltipShown:', block._interpretTooltipShown
+  );
+
   // Кнопка и тултип только если и user, и assistant >= 10
   if (userCount < 10 || assistantCount < 10) {
     btn.disabled = true;
@@ -1202,6 +1209,7 @@ updateBlockInterpretButton() {
       assistantCount === 10 &&
       userCount >= 10
     ) {
+      console.log('[TOOLTIP] Показываю тултип!');
       showMoonTooltip('Можно получить толкование блока');
       block._interpretTooltipShown = true;
     }
