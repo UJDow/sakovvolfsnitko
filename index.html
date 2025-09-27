@@ -1821,6 +1821,21 @@ body.step-3-active #step3 .card {
   font-size: 16px;
 }
 .similar-item:last-child { border-bottom: none; }
+
+.btn-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid #cbd5e1;
+  border-top: 2.5px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 7px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
   
   </style>
 </head>
