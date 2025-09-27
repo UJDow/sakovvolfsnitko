@@ -1,4 +1,3 @@
-
 // ====== ТЕМЫ ======
 const THEMES = [
   {
@@ -290,8 +289,8 @@ utils.lighten = function(hex, percent = 20) {
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
 function countAssistantMsgs(blockId) {
-const h = state.chatHistory[blockId] || [];
-return h.filter(m => m && (m.role === 'assistant' || m.role === 'system')).length;
+  const h = state.chatHistory[blockId] || [];
+  return h.filter(m => m && (m.role === 'assistant' || m.role === 'system')).length;
 }
 function showMoonTooltip(text = 'Доступно толкование блока') {
   const tooltip = document.getElementById('moonTooltip');
@@ -515,27 +514,27 @@ const dreams = {
     utils.showToast('Сон удалён', 'success');
   },
   loadToEditor(dream) {
-  state.currentDream = { ...dream };
-  state.blocks = (dream.blocks || []).map(b => ({
-    ...b,
-    finalInterpretation: typeof b.finalInterpretation === 'string' ? b.finalInterpretation : null,
-    rollingSummary: b.rollingSummary || null,
-    turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
-  }));
-  state.globalFinalInterpretation = dream.globalFinalInterpretation || null;
-  state.chatHistory = {};
-  for (const b of state.blocks) {
-    state.chatHistory[b.id] = (b.chat || []).map(m => {
-      if (typeof m === 'string') return { role: 'user', content: m };
-      if (m && typeof m === 'object' && m.role && m.content) return m;
-      return { role: 'user', content: String(m) };
-    });
-  }
-  state.uiStep = 1;
-  ui.showMain();
-  ui.setStep(1);
-  document.getElementById('dream').value = dream.dreamText || '';
-  utils.showToast('Сон загружен для редактирования', 'success');
+    state.currentDream = { ...dream };
+    state.blocks = (dream.blocks || []).map(b => ({
+      ...b,
+      finalInterpretation: typeof b.finalInterpretation === 'string' ? b.finalInterpretation : null,
+      rollingSummary: b.rollingSummary || null,
+      turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
+    }));
+    state.globalFinalInterpretation = dream.globalFinalInterpretation || null;
+    state.chatHistory = {};
+    for (const b of state.blocks) {
+      state.chatHistory[b.id] = (b.chat || []).map(m => {
+        if (typeof m === 'string') return { role: 'user', content: m };
+        if (m && typeof m === 'object' && m.role && m.content) return m;
+        return { role: 'user', content: String(m) };
+      });
+    }
+    state.uiStep = 1;
+    ui.showMain();
+    ui.setStep(1);
+    document.getElementById('dream').value = dream.dreamText || '';
+    utils.showToast('Сон загружен для редактирования', 'success');
     ui.updateFinalInterpretButton();
   }
 };
@@ -620,14 +619,14 @@ const blocks = {
   },
 
   remove(id) {
-  state.blocks = state.blocks.filter(b => b.id !== id);
-  delete state.chatHistory[id];
-  if (state.currentBlock && state.currentBlock.id === id) state.currentBlock = null;
-  ui.updateBlocks();
-  ui.renderDreamTiles();
-  ui.updateChat();
-  ui.updateFinalInterpretButton(); // ← добавь эту строку!
-},
+    state.blocks = state.blocks.filter(b => b.id !== id);
+    delete state.chatHistory[id];
+    if (state.currentBlock && state.currentBlock.id === id) state.currentBlock = null;
+    ui.updateBlocks();
+    ui.renderDreamTiles();
+    ui.updateChat();
+    ui.updateFinalInterpretButton(); // ← добавь эту строку!
+  },
 
   select(id) {
     state.currentBlock = state.blocks.find(b => b.id === id) || null;
@@ -725,12 +724,12 @@ const chat = {
       });
       const history = state.chatHistory[blockId] || [];
       const payload = buildAnalyzePayload({
-  fullHistory: state.chatHistory[blockId], // вся история!
-  blockText: block.text,
-  rollingSummary: block.rollingSummary,
-  extraSystemPrompt: null,
-  maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
-});
+        fullHistory: state.chatHistory[blockId], // вся история!
+        blockText: block.text,
+        rollingSummary: block.rollingSummary,
+        extraSystemPrompt: null,
+        maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
+      });
       const res = await api.analyze(payload);
       let aiMsg = res?.choices?.[0]?.message?.content;
       if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
@@ -738,8 +737,8 @@ const chat = {
       }
       state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
       if (blockId === state.currentBlock?.id) {
-  ui.updateBlockInterpretButton();
-}
+        ui.updateBlockInterpretButton();
+      }
 
       block.turnsCount = (block.turnsCount || 0) + 1;
 
@@ -765,69 +764,69 @@ const chat = {
   },
 
   // Итоговое толкование блока
-async blockInterpretation() {
-  if (!state.currentBlock) {
-    utils.showToast('Блок не выбран', 'error');
-    return;
-  }
-  const block = state.currentBlock;
-  const blockId = block.id;
-  const history = state.chatHistory[blockId] || [];
-  ui.setThinking(true);
-  try {
-    const payload = buildAnalyzePayload({
-      fullHistory: history,
-      blockText: block.text,
-      rollingSummary: block.rollingSummary,
-      extraSystemPrompt: "Сделай итоговое толкование этого блока сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всей истории диалога.",
-      maxTurns: 6
-    });
-    const res = await api.analyze(payload);
-    let interpretation = res?.choices?.[0]?.message?.content;
-    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-      interpretation = 'Ошибка: пустой ответ от сервера.';
+  async blockInterpretation() {
+    if (!state.currentBlock) {
+      utils.showToast('Блок не выбран', 'error');
+      return;
     }
-    block.finalInterpretation = interpretation;
-    ui.updateChat();
-    ui.updateBlockInterpretButton();      // обновляем состояние кнопки "Толкование"
-    ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
-    utils.showToast('Толкование блока готово', 'success');
-  } catch (e) {
-    utils.showToast('Ошибка при толковании блока', 'error');
-  }
-  ui.setThinking(false);
-},
+    const block = state.currentBlock;
+    const blockId = block.id;
+    const history = state.chatHistory[blockId] || [];
+    ui.setThinking(true);
+    try {
+      const payload = buildAnalyzePayload({
+        fullHistory: history,
+        blockText: block.text,
+        rollingSummary: block.rollingSummary,
+        extraSystemPrompt: "Сделай итоговое толкование этого блока сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всей истории диалога.",
+        maxTurns: 6
+      });
+      const res = await api.analyze(payload);
+      let interpretation = res?.choices?.[0]?.message?.content;
+      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+        interpretation = 'Ошибка: пустой ответ от сервера.';
+      }
+      block.finalInterpretation = interpretation;
+      ui.updateChat();
+      ui.updateBlockInterpretButton();      // обновляем состояние кнопки "Толкование"
+      ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+      utils.showToast('Толкование блока готово', 'success');
+    } catch (e) {
+      utils.showToast('Ошибка при толковании блока', 'error');
+    }
+    ui.setThinking(false);
+  },
 
-// Итоговое толкование всего сна
-async globalInterpretation() {
-  if (!state.currentDream) {
-    utils.showToast('Сон не выбран', 'error');
-    return;
-  }
-  const dreamText = state.currentDream.dreamText || '';
-  const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
-  ui.setThinking(true);
-  try {
-    const payload = {
-      blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
-      lastTurns: [],
-      rollingSummary: allSummaries || null,
-      extraSystemPrompt: "Сделай итоговое толкование всего сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всех блоков и их истории."
-    };
-    const res = await api.analyze(payload);
-    let interpretation = res?.choices?.[0]?.message?.content;
-    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-      interpretation = 'Ошибка: пустой ответ от сервера.';
+  // Итоговое толкование всего сна
+  async globalInterpretation() {
+    if (!state.currentDream) {
+      utils.showToast('Сон не выбран', 'error');
+      return;
     }
-    state.globalFinalInterpretation = interpretation;
-    ui.showFinalDialog();
-    ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
-    utils.showToast('Итоговое толкование сна готово', 'success');
-  } catch (e) {
-    utils.showToast('Ошибка при итоговом толковании сна', 'error');
+    const dreamText = state.currentDream.dreamText || '';
+    const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
+    ui.setThinking(true);
+    try {
+      const payload = {
+        blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
+        lastTurns: [],
+        rollingSummary: allSummaries || null,
+        extraSystemPrompt: "Сделай итоговое толкование всего сна. Не задавай вопросов, просто дай глубокий, развернутый анализ и интерпретацию на основе всех блоков и их истории."
+      };
+      const res = await api.analyze(payload);
+      let interpretation = res?.choices?.[0]?.message?.content;
+      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+        interpretation = 'Ошибка: пустой ответ от сервера.';
+      }
+      state.globalFinalInterpretation = interpretation;
+      ui.showFinalDialog();
+      ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+      utils.showToast('Итоговое толкование сна готово', 'success');
+    } catch (e) {
+      utils.showToast('Ошибка при итоговом толковании сна', 'error');
+    }
+    ui.setThinking(false);
   }
-  ui.setThinking(false);
-}
 };
 
 ///////////////////////
@@ -868,263 +867,263 @@ const ui = {
   },
 
   updateBlocks() {
-  // Не рендерим чипсы, просто очищаем
-  const blocksDiv = document.getElementById('blocks');
-  if (blocksDiv) blocksDiv.innerHTML = '';
-},
+    // Не рендерим чипсы, просто очищаем
+    const blocksDiv = document.getElementById('blocks');
+    if (blocksDiv) blocksDiv.innerHTML = '';
+  },
 
   // Единственное место, которое рендерит dreamView
   renderDreamTiles() {
-  const dreamView = document.getElementById('dreamView');
-  if (!dreamView) return;
+    const dreamView = document.getElementById('dreamView');
+    if (!dreamView) return;
 
-  const textEl = document.getElementById('dream');
-  const text = (textEl && textEl.value) || '';
-  dreamView.innerHTML = '';
+    const textEl = document.getElementById('dream');
+    const text = (textEl && textEl.value) || '';
+    dreamView.innerHTML = '';
 
-  // --- Кликабельная фраза "Весь текст" ---
-  const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
-  const wholeTextBtn = document.createElement('span');
-  wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
-  wholeTextBtn.textContent = 'Весь текст';
-  wholeTextBtn.onclick = function() {
-    if (state.blocks.length > 0) {
-      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+    // --- Кликабельная фраза "Весь текст" ---
+    const isWhole = state.blocks.length === 1 && state.blocks[0].start === 0 && state.blocks[0].end >= text.length;
+    const wholeTextBtn = document.createElement('span');
+    wholeTextBtn.className = 'inline-option' + (isWhole ? ' selected' : '');
+    wholeTextBtn.textContent = 'Весь текст';
+    wholeTextBtn.onclick = function() {
+      if (state.blocks.length > 0) {
+        utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+        return;
+      }
+      blocks.addWhole();
+      ui.renderDreamTiles();
+    };
+    wholeTextBtn.style.marginRight = '12px';
+
+    if (!text) return;
+
+    // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
+    const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
+    if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
+      const span = document.createElement('span');
+      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
+      span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
+      span.style.color = '#fff';
+      span.onclick = () => blocks.select(fullBlock.id);
+      span.textContent = text; // весь текст, без разрезов
+      dreamView.appendChild(span);
+      if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
       return;
     }
-    blocks.addWhole();
-    ui.renderDreamTiles();
-  };
-  wholeTextBtn.style.marginRight = '12px';
 
-  if (!text) return;
+    // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
+    let pos = 0;
+    const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
 
-  // Если есть единственный блок, покрывающий весь текст — рисуем один спан и выходим
-  const fullBlock = state.blocks.length === 1 ? state.blocks[0] : null;
-  if (fullBlock && fullBlock.start === 0 && fullBlock.end >= text.length) {
-    const span = document.createElement('span');
-    span.className = 'chip' + (state.currentBlock && state.currentBlock.id === fullBlock.id ? ' active' : '');
-    span.style.background = utils.lighten(BLOCK_COLORS[fullBlock.colorIndex], 20);
-    span.style.color = '#fff';
-    span.onclick = () => blocks.select(fullBlock.id);
-    span.textContent = text; // весь текст, без разрезов
-    dreamView.appendChild(span);
-    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-    return;
-  }
+    while (pos < text.length) {
+      const block = sortedBlocksArr.find(b => b.start === pos);
+      if (block) {
+        const span = document.createElement('span');
+        span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
+        span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
+        span.style.color = '#fff';
+        span.onclick = () => blocks.select(block.id);
+        span.textContent = text.slice(block.start, block.end);
+        dreamView.appendChild(span);
+        pos = block.end;
+      } else {
+        // свободный участок текста до следующего блока
+        const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
+        const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
+        const chunk = text.slice(pos, nextBlockStart);
+        const tokens = chunk.match(/\S+|\s+/g) || [];
+        let localPos = pos;
 
-  // Иначе — обычный режим: плитки для свободного текста, цельные спаны для готовых блоков
-  let pos = 0;
-  const sortedBlocksArr = [...state.blocks].sort((a, b) => a.start - b.start);
-
-  while (pos < text.length) {
-    const block = sortedBlocksArr.find(b => b.start === pos);
-    if (block) {
-      const span = document.createElement('span');
-      span.className = 'chip' + (state.currentBlock && state.currentBlock.id === block.id ? ' active' : '');
-      span.style.background = utils.lighten(BLOCK_COLORS[block.colorIndex], 20);
-      span.style.color = '#fff';
-      span.onclick = () => blocks.select(block.id);
-      span.textContent = text.slice(block.start, block.end);
-      dreamView.appendChild(span);
-      pos = block.end;
-    } else {
-      // свободный участок текста до следующего блока
-      const nextStarts = sortedBlocksArr.map(b => b.start).filter(s => s > pos);
-      const nextBlockStart = Math.min(...nextStarts.concat([text.length]));
-      const chunk = text.slice(pos, nextBlockStart);
-      const tokens = chunk.match(/\S+|\s+/g) || [];
-      let localPos = pos;
-
-      tokens.forEach(token => {
-        const isWord = /\S/.test(token);
-        if (isWord) {
-          const span = document.createElement('span');
-          span.className = 'tile';
-          span.textContent = token;
-          span.dataset.start = String(localPos);
-          span.dataset.end = String(localPos + token.length);
-          // --- ВСТАВЬ ВОТ ЭТОТ ОБРАБОТЧИК ---
-          span.onclick = function(e) {
-            e.preventDefault();
-            span.classList.toggle('selected');
-            const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
-            if (selected.length >= 2) {
-              // Определяем диапазон
-              const starts = selected.map(s => parseInt(s.dataset.start, 10));
-              const ends = selected.map(s => parseInt(s.dataset.end, 10));
-              const start = Math.min(...starts);
-              const end = Math.max(...ends);
-              // Проверка на пересечение
-              for (const b of state.blocks) {
-                if (!(end <= b.start || start >= b.end)) {
-                  utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+        tokens.forEach(token => {
+          const isWord = /\S/.test(token);
+          if (isWord) {
+            const span = document.createElement('span');
+            span.className = 'tile';
+            span.textContent = token;
+            span.dataset.start = String(localPos);
+            span.dataset.end = String(localPos + token.length);
+            // --- ОБРАБОТЧИК ВЫДЕЛЕНИЯ ---
+            span.onclick = function(e) {
+              e.preventDefault();
+              span.classList.toggle('selected');
+              const selected = Array.from(dreamView.querySelectorAll('.tile.selected'));
+              if (selected.length >= 2) {
+                // Определяем диапазон
+                const starts = selected.map(s => parseInt(s.dataset.start, 10));
+                const ends = selected.map(s => parseInt(s.dataset.end, 10));
+                const start = Math.min(...starts);
+                const end = Math.max(...ends);
+                // Проверка на пересечение
+                for (const b of state.blocks) {
+                  if (!(end <= b.start || start >= b.end)) {
+                    utils.showToast('Этот фрагмент пересекается с уже добавленным блоком', 'error');
+                    // Снять выделение
+                    selected.forEach(s => s.classList.remove('selected'));
+                    return;
+                  }
+                }
+                const text = document.getElementById('dream').value.slice(start, end);
+                const ok = blocks.add(start, end, text);
+                if (ok) {
                   // Снять выделение
                   selected.forEach(s => s.classList.remove('selected'));
-                  return;
+                  ui.renderDreamTiles();
+                  utils.showToast('Блок добавлен', 'success');
                 }
+              } else {
+                // Просто подсветка
+                const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+                const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+                document.querySelectorAll('.tile.selected').forEach(sel => {
+                  sel.style.background = nextColor;
+                  sel.style.color = '#fff';
+                });
+                document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
+                  sel.style.background = '';
+                  sel.style.color = '';
+                });
               }
-              const text = document.getElementById('dream').value.slice(start, end);
-              const ok = blocks.add(start, end, text);
-              if (ok) {
-                // Снять выделение
-                selected.forEach(s => s.classList.remove('selected'));
-                ui.renderDreamTiles();
-                utils.showToast('Блок добавлен', 'success');
-              }
-            } else {
-              // Просто подсветка
-              const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-              const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-              document.querySelectorAll('.tile.selected').forEach(sel => {
-                sel.style.background = nextColor;
-                sel.style.color = '#fff';
-              });
-              document.querySelectorAll('.tile:not(.selected)').forEach(sel => {
-                sel.style.background = '';
-                sel.style.color = '';
-              });
-            }
-          };
-          // --- КОНЕЦ ОБРАБОТЧИКА ---
-          dreamView.appendChild(span);
-        } else {
-          dreamView.appendChild(document.createTextNode(token));
-        }
-        localPos += token.length;
-      });
-      pos = nextBlockStart;
+            };
+            // --- КОНЕЦ ОБРАБОТЧИКА ---
+            dreamView.appendChild(span);
+          } else {
+            dreamView.appendChild(document.createTextNode(token));
+          }
+          localPos += token.length;
+        });
+        pos = nextBlockStart;
+      }
     }
-  }
 
-  // Синхронизировать цвет уже выделенных плиток
-  const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
-  const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
-  document.querySelectorAll('.tile.selected').forEach(sel => {
-    sel.style.background = nextColor;
-    sel.style.color = '#fff';
-  });
+    // Синхронизировать цвет уже выделенных плиток
+    const nextColorIndex = state.blocks.length % BLOCK_COLORS.length;
+    const nextColor = utils.lighten(BLOCK_COLORS[nextColorIndex], 20);
+    document.querySelectorAll('.tile.selected').forEach(sel => {
+      sel.style.background = nextColor;
+      sel.style.color = '#fff';
+    });
 
-  if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
-},
+    if (typeof updateAddWholeButtonState === 'function') updateAddWholeButtonState();
+  },
 
-updateChat() {
-  const chatDiv = document.getElementById('chat');
-  if (!chatDiv) return;
-  chatDiv.innerHTML = '';
-  if (!state.currentBlock) {
-    document.getElementById('currentBlock').textContent = 'Блок не выбран';
-    return;
-  }
-  document.getElementById('currentBlock').textContent =
-    'Блок: ' +
-    (state.currentBlock.text.length > 40
-      ? state.currentBlock.text.slice(0, 40) + '…'
-      : state.currentBlock.text);
+  updateChat() {
+    const chatDiv = document.getElementById('chat');
+    if (!chatDiv) return;
+    chatDiv.innerHTML = '';
+    if (!state.currentBlock) {
+      document.getElementById('currentBlock').textContent = 'Блок не выбран';
+      return;
+    }
+    document.getElementById('currentBlock').textContent =
+      'Блок: ' +
+      (state.currentBlock.text.length > 40
+        ? state.currentBlock.text.slice(0, 40) + '…'
+        : state.currentBlock.text);
 
-  const history = state.chatHistory[state.currentBlock.id] || [];
-  history.forEach(msg => {
-    const div = document.createElement('div');
-    div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
-    div.textContent = msg.content;
-    chatDiv.appendChild(div);
-  });
+    const history = state.chatHistory[state.currentBlock.id] || [];
+    history.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
+      div.textContent = msg.content;
+      chatDiv.appendChild(div);
+    });
 
-  if (state.currentBlock.finalInterpretation) {
-    const div = document.createElement('div');
-    div.className = 'msg bot final';
-    div.textContent = String(state.currentBlock.finalInterpretation || '');
-    chatDiv.appendChild(div);
-  }
+    if (state.currentBlock.finalInterpretation) {
+      const div = document.createElement('div');
+      div.className = 'msg bot final';
+      div.textContent = String(state.currentBlock.finalInterpretation || '');
+      chatDiv.appendChild(div);
+    }
 
-  chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
-  setTimeout(() => {
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-    ui.updateJumpToBottomVisibility();
-    bindChatEvents();
-  }, 0);
+    chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
+    setTimeout(() => {
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+      ui.updateJumpToBottomVisibility();
+      bindChatEvents();
+    }, 0);
 
-  ui.updateBlockInterpretButton();
-  ui.updateBlockNav();
-},
+    ui.updateBlockInterpretButton();
+    ui.updateBlockNav();
+  },
 
   updateBlockNav() {
-  const prevDiv = document.getElementById('prevPreview');
-  const nextDiv = document.getElementById('nextPreview');
-  if (!prevDiv || !nextDiv) return;
+    const prevDiv = document.getElementById('prevPreview');
+    const nextDiv = document.getElementById('nextPreview');
+    if (!prevDiv || !nextDiv) return;
 
-  const blocksArr = state.blocks;
-  const current = state.currentBlock;
-  if (!blocksArr.length || !current) {
-    prevDiv.classList.add('disabled');
-    nextDiv.classList.add('disabled');
-    prevDiv.querySelector('.label').textContent = '…';
-    nextDiv.querySelector('.label').textContent = '';
-    prevDiv.onclick = null;
-    nextDiv.onclick = null;
-    return;
-  }
+    const blocksArr = state.blocks;
+    const current = state.currentBlock;
+    if (!blocksArr.length || !current) {
+      prevDiv.classList.add('disabled');
+      nextDiv.classList.add('disabled');
+      prevDiv.querySelector('.label').textContent = '…';
+      nextDiv.querySelector('.label').textContent = '';
+      prevDiv.onclick = null;
+      nextDiv.onclick = null;
+      return;
+    }
 
-  const idx = blocksArr.findIndex(b => b.id === current.id);
+    const idx = blocksArr.findIndex(b => b.id === current.id);
 
-  // --- Предыдущий блок ---
-  if (idx > 0) {
-    const prevBlock = blocksArr[idx - 1];
-    prevDiv.classList.remove('disabled');
-    prevDiv.querySelector('.label').textContent = prevBlock.text.length > 40 ? prevBlock.text.slice(0, 40) + '…' : prevBlock.text;
-    prevDiv.onclick = async () => {
-      blocks.select(prevBlock.id);
-      ui.updateBlockNav();
-      // --- Автозапуск AI, если чат пустой ---
-      const blockId = prevBlock.id;
-      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-        try {
-          await chat.sendToAI(blockId);
-        } catch (e) {
-          console.error('Ошибка при первом запросе к AI:', e);
+    // --- Предыдущий блок ---
+    if (idx > 0) {
+      const prevBlock = blocksArr[idx - 1];
+      prevDiv.classList.remove('disabled');
+      prevDiv.querySelector('.label').textContent = prevBlock.text.length > 40 ? prevBlock.text.slice(0, 40) + '…' : prevBlock.text;
+      prevDiv.onclick = async () => {
+        blocks.select(prevBlock.id);
+        ui.updateBlockNav();
+        // --- Автозапуск AI, если чат пустой ---
+        const blockId = prevBlock.id;
+        if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+          try {
+            await chat.sendToAI(blockId);
+          } catch (e) {
+            console.error('Ошибка при первом запросе к AI:', e);
+          }
         }
-      }
-    };
-  } else {
-    prevDiv.classList.add('disabled');
-    prevDiv.querySelector('.label').textContent = '…';
-    prevDiv.onclick = null;
-  }
+      };
+    } else {
+      prevDiv.classList.add('disabled');
+      prevDiv.querySelector('.label').textContent = '…';
+      prevDiv.onclick = null;
+    }
 
-  // --- Следующий блок ---
-  if (idx < blocksArr.length - 1) {
-    const nextBlock = blocksArr[idx + 1];
-    nextDiv.classList.remove('disabled');
-    nextDiv.querySelector('.label').textContent = nextBlock.text.length > 40 ? nextBlock.text.slice(0, 40) + '…' : nextBlock.text;
-    nextDiv.onclick = async () => {
-      blocks.select(nextBlock.id);
-      ui.updateBlockNav();
-      // --- Автозапуск AI, если чат пустой ---
-      const blockId = nextBlock.id;
-      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-        try {
-          await chat.sendToAI(blockId);
-        } catch (e) {
-          console.error('Ошибка при первом запросе к AI:', e);
+    // --- Следующий блок ---
+    if (idx < blocksArr.length - 1) {
+      const nextBlock = blocksArr[idx + 1];
+      nextDiv.classList.remove('disabled');
+      nextDiv.querySelector('.label').textContent = nextBlock.text.length > 40 ? nextBlock.text.slice(0, 40) + '…' : nextBlock.text;
+      nextDiv.onclick = async () => {
+        blocks.select(nextBlock.id);
+        ui.updateBlockNav();
+        // --- Автозапуск AI, если чат пустой ---
+        const blockId = nextBlock.id;
+        if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+          try {
+            await chat.sendToAI(blockId);
+          } catch (e) {
+            console.error('Ошибка при первом запросе к AI:', e);
+          }
         }
-      }
-    };
-  } else {
-    nextDiv.classList.add('disabled');
-    nextDiv.querySelector('.label').textContent = '';
-    nextDiv.onclick = null;
-  }
-},
+      };
+    } else {
+      nextDiv.classList.add('disabled');
+      nextDiv.querySelector('.label').textContent = '';
+      nextDiv.onclick = null;
+    }
+  },
   setThinking(isThinking) {
-  const thinkingEl = document.getElementById('thinking');
-  if (!thinkingEl) return;
-  thinkingEl.style.display = isThinking ? 'block' : 'none';
-  if (isThinking) {
-    thinkingEl.classList.add('sticky-thinking');
-  } else {
-    thinkingEl.classList.remove('sticky-thinking');
-  }
-},
+    const thinkingEl = document.getElementById('thinking');
+    if (!thinkingEl) return;
+    thinkingEl.style.display = isThinking ? 'block' : 'none';
+    if (isThinking) {
+      thinkingEl.classList.add('sticky-thinking');
+    } else {
+      thinkingEl.classList.remove('sticky-thinking');
+    }
+  },
   updateJumpToBottomVisibility() {
     const chatDiv = document.getElementById('chat');
     const jumpBtn = document.getElementById('jumpToBottom');
@@ -1136,136 +1135,136 @@ updateChat() {
     }
   },
 
-updateProgressMoon(flash = false) {
-  const moonBtn = document.getElementById('moonBtn');
-  const block = state.currentBlock;
-  if (!block) { moonBtn.innerHTML = ''; return; }
-  const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
+  updateProgressMoon(flash = false) {
+    const moonBtn = document.getElementById('moonBtn');
+    const block = state.currentBlock;
+    if (!block) { moonBtn.innerHTML = ''; return; }
+    const count = (state.chatHistory[block.id] || []).filter(m => m.role === 'user').length;
 
-  // percent: 0 (пусто) ... 1 (полная луна)
-  let percent = 0;
-  if (count > 0) percent = Math.min(count / 10, 1);
+    // percent: 0 (пусто) ... 1 (полная луна)
+    let percent = 0;
+    if (count > 0) percent = Math.min(count / 10, 1);
 
-  const r = 20, cx = 22, cy = 22;
+    const r = 20, cx = 22, cy = 22;
 
-  // Кратеры
-  const craters = [
-    [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
-    [cx - 5, cy + 7, 1.7, "#888", 0.38],
-    [cx + 10, cy + 4, 1.3, "#a0a0a0", 0.33],
-    [cx - 8, cy - 4, 1.1, "#666", 0.35],
-    [cx - 2, cy - 8, 1.6, "#bfc4cc", 0.5],
-    [cx + 5, cy + 10, 1.2, "#888", 0.4],
-    [cx + 2, cy - 12, 0.9, "#d1d5db", 0.32],
-    [cx - 10, cy + 2, 1.8, "#6b7280", 0.28],
-    [cx + 12, cy - 2, 1.4, "#9ca3af", 0.36],
-    [cx - 6, cy - 10, 1.1, "#b0b0b0", 0.42],
-    [cx + 8, cy + 8, 1.6, "#a3a3a3", 0.29],
-    [cx - 12, cy + 8, 1.3, "#6b7280", 0.22],
-    [cx + 13, cy - 8, 0.8, "#bfc4cc", 0.38],
-    [cx - 13, cy - 7, 1.2, "#888", 0.31],
-    [cx + 3, cy + 13, 1.5, "#b0b0b0", 0.27],
-    [cx - 3, cy + 13, 1.1, "#6b7280", 0.19],
-    [cx + 14, cy + 6, 0.9, "#a0a0a0", 0.21],
-    [cx - 14, cy - 2, 1.0, "#9ca3af", 0.25],
-    [cx + 6, cy - 14, 1.2, "#d1d5db", 0.23],
-    [cx - 9, cy + 12, 1.4, "#888", 0.34],
-  ];
+    // Кратеры
+    const craters = [
+      [cx + 7, cy - 6, 2.5, "#b0b0b0", 0.45],
+      [cx - 5, cy + 7, 1.7, "#888", 0.38],
+      [cx + 10, cy + 4, 1.3, "#a0a0a0", 0.33],
+      [cx - 8, cy - 4, 1.1, "#666", 0.35],
+      [cx - 2, cy - 8, 1.6, "#bfc4cc", 0.5],
+      [cx + 5, cy + 10, 1.2, "#888", 0.4],
+      [cx + 2, cy - 12, 0.9, "#d1d5db", 0.32],
+      [cx - 10, cy + 2, 1.8, "#6b7280", 0.28],
+      [cx + 12, cy - 2, 1.4, "#9ca3af", 0.36],
+      [cx - 6, cy - 10, 1.1, "#b0b0b0", 0.42],
+      [cx + 8, cy + 8, 1.6, "#a3a3a3", 0.29],
+      [cx - 12, cy + 8, 1.3, "#6b7280", 0.22],
+      [cx + 13, cy - 8, 0.8, "#bfc4cc", 0.38],
+      [cx - 13, cy - 7, 1.2, "#888", 0.31],
+      [cx + 3, cy + 13, 1.5, "#b0b0b0", 0.27],
+      [cx - 3, cy + 13, 1.1, "#6b7280", 0.19],
+      [cx + 14, cy + 6, 0.9, "#a0a0a0", 0.21],
+      [cx - 14, cy - 2, 1.0, "#9ca3af", 0.25],
+      [cx + 6, cy - 14, 1.2, "#d1d5db", 0.23],
+      [cx - 9, cy + 12, 1.4, "#888", 0.34],
+    ];
 
-  moonBtn.innerHTML = `
-    <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44" width="44" height="44">
-      <defs>
-        <filter id="moon-glow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="3" result="glow"/>
-          <feMerge>
-            <feMergeNode in="glow"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <radialGradient id="moonTexture" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#e2e8f0"/>
-          <stop offset="100%" stop-color="#bfc4cc"/>
-        </radialGradient>
-        <!-- Прямоугольная маска для заполнения слева-направо -->
-        <mask id="phaseMask">
-          <rect x="0" y="0" width="${44 * percent}" height="44" fill="white"/>
-        </mask>
-      </defs>
-      <!-- Серый фон луны -->
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
-      <!-- Заполнение луны (желтый цвет) -->
-      ${count > 0 ? `
-        <g mask="url(#phaseMask)">
-          <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
-        </g>
-      ` : ''}
-      <!-- Кратеры всегда поверх! -->
-      ${craters.map(([x, y, rad, color, op]) =>
-        `<circle cx="${x}" cy="${y}" r="${rad}" fill="${color}" opacity="${op}"/>`
-      ).join('')}
-    </svg>
-  `;
-  if (flash) {
-    moonBtn.querySelector('.moon-svg').classList.add('moon-flash');
-    setTimeout(() => {
-      moonBtn.querySelector('.moon-svg').classList.remove('moon-flash');
-    }, 1600);
-  }
-},
-updateBlockInterpretButton() {
-  const btn = document.getElementById('menuBlockInterpret');
-  const tooltip = document.getElementById('moonTooltip');
-  const block = state.currentBlock;
-  if (!btn) return;
-
-  if (!block) {
-    btn.disabled = true;
-    btn.classList.remove('active');
-    if (tooltip) tooltip.classList.remove('show');
-    return;
-  }
-
-  const assistantSystemCount = countAssistantMsgs(block.id);
-
-  if (assistantSystemCount >= 10) {
-    btn.disabled = false;
-    btn.classList.add('active');
-
-    if (!block._moonTipShownOnce && assistantSystemCount === 10) {
-      showMoonTooltip('Доступно толкование блока');
-      block._moonTipShownOnce = true;
+    moonBtn.innerHTML = `
+      <svg class="moon-svg${flash ? ' moon-flash' : ''}" viewBox="0 0 44 44" width="44" height="44">
+        <defs>
+          <filter id="moon-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="3" result="glow"/>
+            <feMerge>
+              <feMergeNode in="glow"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <radialGradient id="moonTexture" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e2e8f0"/>
+            <stop offset="100%" stop-color="#bfc4cc"/>
+          </radialGradient>
+          <!-- Прямоугольная маска для заполнения слева-направо -->
+          <mask id="phaseMask">
+            <rect x="0" y="0" width="${44 * percent}" height="44" fill="white"/>
+          </mask>
+        </defs>
+        <!-- Серый фон луны -->
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#moonTexture)" filter="url(#moon-glow)" />
+        <!-- Заполнение луны (желтый цвет) -->
+        ${count > 0 ? `
+          <g mask="url(#phaseMask)">
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffe066" opacity="0.85"/>
+          </g>
+        ` : ''}
+        <!-- Кратеры всегда поверх! -->
+        ${craters.map(([x, y, rad, color, op]) =>
+          `<circle cx="${x}" cy="${y}" r="${rad}" fill="${color}" opacity="${op}"/>`
+        ).join('')}
+      </svg>
+    `;
+    if (flash) {
+      moonBtn.querySelector('.moon-svg').classList.add('moon-flash');
+      setTimeout(() => {
+        moonBtn.querySelector('.moon-svg').classList.remove('moon-flash');
+      }, 1600);
     }
-  } else {
-    btn.disabled = true;
-    btn.classList.remove('active');
-    if (tooltip) tooltip.classList.remove('show');
+  },
+  updateBlockInterpretButton() {
+    const btn = document.getElementById('menuBlockInterpret');
+    const tooltip = document.getElementById('moonTooltip');
+    const block = state.currentBlock;
+    if (!btn) return;
+
+    if (!block) {
+      btn.disabled = true;
+      btn.classList.remove('active');
+      if (tooltip) tooltip.classList.remove('show');
+      return;
+    }
+
+    const assistantSystemCount = countAssistantMsgs(block.id);
+
+    if (assistantSystemCount >= 10) {
+      btn.disabled = false;
+      btn.classList.add('active');
+
+      if (!block._moonTipShownOnce && assistantSystemCount === 10) {
+        showMoonTooltip('Доступно толкование блока');
+        block._moonTipShownOnce = true;
+      }
+    } else {
+      btn.disabled = true;
+      btn.classList.remove('active');
+      if (tooltip) tooltip.classList.remove('show');
+    }
   }
-}
-},
+  ,
   updateSendButton() {
-  const btn = document.getElementById('sendAnswerBtn');
-  const input = document.getElementById('userInput');
-  if (!btn || !input) return;
-  btn.disabled = state.isGenerating;
-  input.disabled = state.isGenerating;
-},
+    const btn = document.getElementById('sendAnswerBtn');
+    const input = document.getElementById('userInput');
+    if (!btn || !input) return;
+    btn.disabled = state.isGenerating;
+    input.disabled = state.isGenerating;
+  },
   updateFinalInterpretButton() {
-  const btn = document.getElementById('menuFinalInterpret');
-  if (!btn) return;
+    const btn = document.getElementById('menuFinalInterpret');
+    if (!btn) return;
 
-  // Считаем количество блоков с итоговым толкованием
-  const interpretedBlocks = state.blocks.filter(
-    b => typeof b.finalInterpretation === 'string' && b.finalInterpretation.trim()
-  ).length;
+    // Считаем количество блоков с итоговым толкованием
+    const interpretedBlocks = state.blocks.filter(
+      b => typeof b.finalInterpretation === 'string' && b.finalInterpretation.trim()
+    ).length;
 
-  if (interpretedBlocks < 2) {
-    btn.disabled = true;
-    btn.classList.remove('active');
-  } else {
-    btn.disabled = false;
-    btn.classList.add('active');
-  }
-},
+    if (interpretedBlocks < 2) {
+      btn.disabled = true;
+      btn.classList.remove('active');
+    } else {
+      btn.disabled = false;
+      btn.classList.add('active');
+    }
+  },
 
   updateCabinetList() {
     const listDiv = document.getElementById('cabinetList');
@@ -1334,50 +1333,51 @@ updateBlockInterpretButton() {
     document.body.classList.remove('modal-open');
   },
 
- // --- МОДАЛКА ПРОСМОТРА СНА ---
-showDreamPreviewModal(dream) {
-  const modal = document.getElementById('dreamPreviewModal');
-  const textDiv = document.getElementById('dreamPreviewText');
-  const interpDiv = document.getElementById('dreamPreviewInterpret');
-  const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
-  textDiv.textContent = dream.dreamText || '';
-  interpWrap.style.display = 'block';
-  interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
-  interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
-  state._previewedDream = dream;
-  modal.style.display = 'block';
-  document.body.classList.add('modal-open');
+  // --- МОДАЛКА ПРОСМОТРА СНА ---
+  showDreamPreviewModal(dream) {
+    const modal = document.getElementById('dreamPreviewModal');
+    const textDiv = document.getElementById('dreamPreviewText');
+    const interpDiv = document.getElementById('dreamPreviewInterpret');
+    const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
+    textDiv.textContent = dream.dreamText || '';
+    interpWrap.style.display = 'block';
+    interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
+    interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
+    state._previewedDream = dream;
+    modal.style.display = 'block';
+    document.body.classList.add('modal-open');
 
-  // --- БЛОК ПОХОЖИХ ПРОИЗВЕДЕНИЙ ---
-  let similarWrap = document.getElementById('dreamPreviewSimilarWrap');
-  if (!similarWrap) {
-    similarWrap = document.createElement('div');
-    similarWrap.id = 'dreamPreviewSimilarWrap';
-    // Вставляем сразу после interpWrap
-    interpWrap.parentNode.insertBefore(similarWrap, interpWrap.nextSibling);
-  }
-  similarWrap.innerHTML = '';
-  if (dream.similarArtworks && dream.similarArtworks.length) {
-    similarWrap.innerHTML = `
-      <div style="color:#94a3b8; font-size:14px; margin-bottom:4px;">Похожие произведения искусства</div>
-      ${dream.similarArtworks.map(item => `
-        <div class="similar-item" style="margin-bottom:12px;">
-          <div style="font-weight:bold;">${utils.escapeHtml(item.title || '')}</div>
-          <div style="color:#666;">${utils.escapeHtml(item.author || '')}${item.type ? ', ' + utils.escapeHtml(item.type) : ''}</div>
-          <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
-          <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
-        </div>
-      `).join('')}
-    `;
-  }
-},
+    // --- БЛОК ПОХОЖИХ ПРОИЗВЕДЕНИЙ ---
+    let similarWrap = document.getElementById('dreamPreviewSimilarWrap');
+    if (!similarWrap) {
+      similarWrap = document.createElement('div');
+      similarWrap.id = 'dreamPreviewSimilarWrap';
+      // Вставляем сразу после interpWrap
+      interpWrap.parentNode.insertBefore(similarWrap, interpWrap.nextSibling);
+    }
+    similarWrap.innerHTML = '';
+    if (dream.similarArtworks && dream.similarArtworks.length) {
+      similarWrap.innerHTML = `
+        <div style="color:#94a3b8; font-size:14px; margin-bottom:4px;">Похожие произведения искусства</div>
+        ${dream.similarArtworks.map(item => `
+          <div class="similar-item" style="margin-bottom:12px;">
+            <div style="font-weight:bold;">${utils.escapeHtml(item.title || '')}</div>
+            <div style="color:#666;">${utils.escapeHtml(item.author || '')}${item.type ? ', ' + utils.escapeHtml(item.type) : ''}</div>
+            <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
+            <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
+          </div>
+        `).join('')}
+      `;
+    }
+  },
 
-closeDreamPreviewModal() {
-  document.getElementById('dreamPreviewModal').style.display = 'none';
-  document.body.classList.remove('modal-open');
-  state._previewedDream = null;
-}
+  closeDreamPreviewModal() {
+    document.getElementById('dreamPreviewModal').style.display = 'none';
+    document.body.classList.remove('modal-open');
+    state._previewedDream = null;
+  }
 };
+
 function showSimilarModal(similarArr, { dreamText, interpretation, onSave } = {}) {
   function flattenSimilarArtworks(arr) {
     if (Array.isArray(arr) && arr[0]?.title && arr[0]?.author) return arr;
@@ -1495,25 +1495,25 @@ const session = {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   },
   import(json) {
-  try {
-    const data = JSON.parse(json);
-    if (!data.dream || !Array.isArray(data.blocks)) throw new Error();
-    state.currentDream = data.dream;
-    state.blocks = data.blocks;
-    state.chatHistory = {};
-    for (const blockId in (data.chatHistory || {})) {
-      state.chatHistory[blockId] = (data.chatHistory[blockId] || []).map(m => {
-        if (typeof m === 'string') return { role: 'user', content: m };
-        if (m && typeof m === 'object' && m.role && m.content) return m;
-        return { role: 'user', content: String(m) };
-      });
-    }
-    state.globalFinalInterpretation = data.globalFinalInterpretation || null;
-    ui.showMain();
-    ui.setStep(1);
-    document.getElementById('dream').value = data.dream.dreamText || '';
-    utils.showToast('Сессия импортирована', 'success');
-    ui.updateFinalInterpretButton();
+    try {
+      const data = JSON.parse(json);
+      if (!data.dream || !Array.isArray(data.blocks)) throw new Error();
+      state.currentDream = data.dream;
+      state.blocks = data.blocks;
+      state.chatHistory = {};
+      for (const blockId in (data.chatHistory || {})) {
+        state.chatHistory[blockId] = (data.chatHistory[blockId] || []).map(m => {
+          if (typeof m === 'string') return { role: 'user', content: m };
+          if (m && typeof m === 'object' && m.role && m.content) return m;
+          return { role: 'user', content: String(m) };
+        });
+      }
+      state.globalFinalInterpretation = data.globalFinalInterpretation || null;
+      ui.showMain();
+      ui.setStep(1);
+      document.getElementById('dream').value = data.dream.dreamText || '';
+      utils.showToast('Сессия импортирована', 'success');
+      ui.updateFinalInterpretButton();
     } catch {
       utils.showToast('Ошибка импорта', 'error');
     }
@@ -1551,16 +1551,16 @@ function bindEvents() {
   document.getElementById('registerForm').onsubmit = e => { e.preventDefault(); auth.register(); };
 
   const addWholeFromHint = document.getElementById('addWholeFromHint');
-if (addWholeFromHint) {
-  addWholeFromHint.onclick = function() {
-    if (state.blocks.length > 0) {
-      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
-      return;
-    }
-    blocks.addWhole();
-    ui.renderDreamTiles();
-  };
-}
+  if (addWholeFromHint) {
+    addWholeFromHint.onclick = function() {
+      if (state.blocks.length > 0) {
+        utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+        return;
+      }
+      blocks.addWhole();
+      ui.renderDreamTiles();
+    };
+  }
 
   // --- ШАГ 1 ---
   document.getElementById('step1MainBtn').onclick = async function() {
@@ -1583,67 +1583,67 @@ if (addWholeFromHint) {
   };
 
   // --- ШАГ 2 ---
-document.getElementById('toStep3').onclick = async function() {
-  if (!state.blocks.length) {
-    utils.showToast('Добавьте хотя бы один блок', 'error');
-    return;
-  }
-
-  // --- Логика выбора блока ---
-  if (!state.currentBlock || !state.blocks.find(b => b.id === state.currentBlock.id)) {
-    // Если блок не выбран или выбранный блок не найден (например, был удалён) — выбираем первый
-    state.currentBlock = state.blocks[0];
-  }
-  // Если выбран — используем его
-
-  ui.setStep(3);
-  ui.updateChat();
-  ui.updateProgressMoon();
-
-  // --- Сразу отправляем первый запрос к AI ---
-  const blockId = state.currentBlock.id;
-  if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-    try {
-      await chat.sendToAI(blockId);
-    } catch (e) {
-      console.error('Ошибка при первом запросе к AI:', e);
+  document.getElementById('toStep3').onclick = async function() {
+    if (!state.blocks.length) {
+      utils.showToast('Добавьте хотя бы один блок', 'error');
+      return;
     }
-  }
-};
 
-document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
-ui.renderDreamTiles();
+    // --- Логика выбора блока ---
+    if (!state.currentBlock || !state.blocks.find(b => b.id === state.currentBlock.id)) {
+      // Если блок не выбран или выбранный блок не найден (например, был удалён) — выбираем первый
+      state.currentBlock = state.blocks[0];
+    }
+    // Если выбран — используем его
 
-// refreshInline — прямой обработчик
-const refreshBtn = document.getElementById('refreshInline');
-if (refreshBtn) {
-  refreshBtn.onclick = refreshSelectedBlocksUnified;
-}
+    ui.setStep(3);
+    ui.updateChat();
+    ui.updateProgressMoon();
 
- // --- ШАГ 3 ---
-document.getElementById('backTo2Top').onclick = () => {
-  ui.setStep(2);
+    // --- Сразу отправляем первый запрос к AI ---
+    const blockId = state.currentBlock.id;
+    if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+      try {
+        await chat.sendToAI(blockId);
+      } catch (e) {
+        console.error('Ошибка при первом запросе к AI:', e);
+      }
+    }
+  };
+
+  document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
   ui.renderDreamTiles();
-};
-document.getElementById('moonBtn').onclick = () => {
-  const menu = document.getElementById('attachMenu');
-  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-  // Скрыть tooltip при открытии меню
-  const tooltip = document.getElementById('moonTooltip');
-  if (tooltip) tooltip.classList.remove('show');
-};
-document.getElementById('menuBlockInterpret').onclick = async () => {
-  await chat.blockInterpretation();
-  document.getElementById('attachMenu').style.display = 'none';
-};
-document.getElementById('menuFinalInterpret').onclick = async () => {
-  await chat.globalInterpretation();
-  document.getElementById('attachMenu').style.display = 'none';
-};
-document.getElementById('jumpToBottom').onclick = () => {
-  const chatDiv = document.getElementById('chat');
-  chatDiv.scrollTop = chatDiv.scrollHeight;
-};
+
+  // refreshInline — прямой обработчик
+  const refreshBtn = document.getElementById('refreshInline');
+  if (refreshBtn) {
+    refreshBtn.onclick = refreshSelectedBlocksUnified;
+  }
+
+  // --- ШАГ 3 ---
+  document.getElementById('backTo2Top').onclick = () => {
+    ui.setStep(2);
+    ui.renderDreamTiles();
+  };
+  document.getElementById('moonBtn').onclick = () => {
+    const menu = document.getElementById('attachMenu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    // Скрыть tooltip при открытии меню
+    const tooltip = document.getElementById('moonTooltip');
+    if (tooltip) tooltip.classList.remove('show');
+  };
+  document.getElementById('menuBlockInterpret').onclick = async () => {
+    await chat.blockInterpretation();
+    document.getElementById('attachMenu').style.display = 'none';
+  };
+  document.getElementById('menuFinalInterpret').onclick = async () => {
+    await chat.globalInterpretation();
+    document.getElementById('attachMenu').style.display = 'none';
+  };
+  document.getElementById('jumpToBottom').onclick = () => {
+    const chatDiv = document.getElementById('chat');
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  };
 
   // --- КАБИНЕТ ---
   document.getElementById('openCabinetBtn').onclick = () => ui.showCabinetModal();
@@ -1720,52 +1720,52 @@ document.getElementById('jumpToBottom').onclick = () => {
   };
 
   document.getElementById('findSimilarBtn').onclick = async () => {
-  const dream = state._previewedDream;
-  if (!dream || !dream.dreamText) {
-    utils.showToast('Нет текста сна', 'error');
-    return;
-  }
-  // Показываем спиннер
-  const btn = document.getElementById('findSimilarBtn');
-  const oldHtml = btn.innerHTML;
-  btn.innerHTML = `<span class="btn-spinner"></span>Поиск...`;
-  btn.disabled = true;
-  try {
-    const resp = await fetch(API_URL + '/find_similar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
-      body: JSON.stringify({ summary: dream.dreamText })
-    });
-    if (!resp.ok) throw new Error('Ошибка поиска');
-    const data = await resp.json();
-    if (data.similar && data.similar.length) {
-      showSimilarModal(data.similar, {
-        dreamText: dream.dreamText,
-        interpretation: dream.globalFinalInterpretation,
-        onSave: async (similarArtworks) => {
-          try {
-            await api.saveDream({
-              ...dream,
-              similarArtworks: similarArtworks.slice(0, 5)
-            });
-            utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
-            await dreams.load();
-          } catch (e) {
-            utils.showToast('Ошибка сохранения', 'error');
-          }
-        }
-      });
-    } else {
-      showSimilarModal('Похожих сценариев не найдено');
+    const dream = state._previewedDream;
+    if (!dream || !dream.dreamText) {
+      utils.showToast('Нет текста сна', 'error');
+      return;
     }
-  } catch (e) {
-    showSimilarModal('Ошибка поиска похожих сценариев');
-  }
-  btn.innerHTML = oldHtml;
-  btn.disabled = false;
-};
+    // Показываем спиннер
+    const btn = document.getElementById('findSimilarBtn');
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = `<span class="btn-spinner"></span>Поиск...`;
+    btn.disabled = true;
+    try {
+      const resp = await fetch(API_URL + '/find_similar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
+        body: JSON.stringify({ summary: dream.dreamText })
+      });
+      if (!resp.ok) throw new Error('Ошибка поиска');
+      const data = await resp.json();
+      if (data.similar && data.similar.length) {
+        showSimilarModal(data.similar, {
+          dreamText: dream.dreamText,
+          interpretation: dream.globalFinalInterpretation,
+          onSave: async (similarArtworks) => {
+            try {
+              await api.saveDream({
+                ...dream,
+                similarArtworks: similarArtworks.slice(0, 5)
+              });
+              utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
+              await dreams.load();
+            } catch (e) {
+              utils.showToast('Ошибка сохранения', 'error');
+            }
+          }
+        });
+      } else {
+        showSimilarModal('Похожих сценариев не найдено');
+      }
+    } catch (e) {
+      showSimilarModal('Ошибка поиска похожих сценариев');
+    }
+    btn.innerHTML = oldHtml;
+    btn.disabled = false;
+  };
 
-// --- Обработчик прокрутки чата для кнопки "вниз" ---
+  // --- Обработчик прокрутки чата для кнопки "вниз" ---
   const chatDiv = document.getElementById('chat');
   if (chatDiv) {
     chatDiv.addEventListener('scroll', ui.updateJumpToBottomVisibility);
