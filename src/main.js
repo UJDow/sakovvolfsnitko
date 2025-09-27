@@ -321,9 +321,15 @@ utils.showToastNearMoon = function(msg, type = 'info', timeout = 2600) {
   toast.textContent = msg;
   toast.style.background = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#2563eb');
 
-  // сброс позиционирования для top/left-режима
+  // сброс позиционирования и анимаций, чтобы не тянуло вниз и не было "карандаша"
   toast.style.right = '';
   toast.style.bottom = '';
+  toast.style.top = '';      // на всякий случай чистим остатки
+  toast.style.left = '';     // на всякий случай чистим остатки
+  toast.style.transform = 'none';
+  toast.style.transition = 'opacity 0.3s';
+
+  // показать
   toast.style.display = 'block';
   toast.style.opacity = '0.97';
   toast.style.pointerEvents = 'none';
@@ -336,6 +342,7 @@ utils.showToastNearMoon = function(msg, type = 'info', timeout = 2600) {
     const prevTransition = toast.style.transition;
     toast.style.transition = 'none';
 
+    // принудительно измерим размеры после display:block
     const tw = toast.offsetWidth;
     const th = toast.offsetHeight;
     const gap = 12;
@@ -365,7 +372,7 @@ utils.showToastNearMoon = function(msg, type = 'info', timeout = 2600) {
 
   const relayout = () => {
     if (toast.style.display !== 'block' || toast.style.opacity === '0') return;
-    layoutNearMoon(); // только перепозиционирование, без перезапуска таймера
+    layoutNearMoon(); // перепозиционирование без перезапуска таймера
   };
   window.addEventListener('resize', relayout, { once: true });
   window.addEventListener('scroll', relayout, { once: true, capture: true });
