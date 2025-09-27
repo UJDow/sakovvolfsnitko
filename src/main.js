@@ -476,6 +476,7 @@ const dreams = {
   state.currentDream = { ...dream };
   state.blocks = (dream.blocks || []).map(b => ({
     ...b,
+    finalInterpretation: typeof b.finalInterpretation === 'string' ? b.finalInterpretation : null,
     rollingSummary: b.rollingSummary || null,
     turnsCount: typeof b.turnsCount === 'number' ? b.turnsCount : 0
   }));
@@ -574,13 +575,14 @@ const blocks = {
   },
 
   remove(id) {
-    state.blocks = state.blocks.filter(b => b.id !== id);
-    delete state.chatHistory[id];
-    if (state.currentBlock && state.currentBlock.id === id) state.currentBlock = null;
-    ui.updateBlocks();       // только чипсы
-    ui.renderDreamTiles();   // обновить dreamView после удаления
-    ui.updateChat();         // обновить чат, если удалили текущий блок
-  },
+  state.blocks = state.blocks.filter(b => b.id !== id);
+  delete state.chatHistory[id];
+  if (state.currentBlock && state.currentBlock.id === id) state.currentBlock = null;
+  ui.updateBlocks();
+  ui.renderDreamTiles();
+  ui.updateChat();
+  ui.updateFinalInterpretButton(); // ← добавь эту строку!
+},
 
   select(id) {
     state.currentBlock = state.blocks.find(b => b.id === id) || null;
@@ -1180,7 +1182,7 @@ updateBlockInterpretButton() {
 
   // Считаем количество блоков с итоговым толкованием
   const interpretedBlocks = state.blocks.filter(
-    b => b.finalInterpretation && b.finalInterpretation.trim()
+    b => typeof b.finalInterpretation === 'string' && b.finalInterpretation.trim()
   ).length;
 
   if (interpretedBlocks < 2) {
