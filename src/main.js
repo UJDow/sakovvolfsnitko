@@ -1,5 +1,4 @@
 
-window.state = state;
 // ====== ТЕМЫ ======
 const THEMES = [
   {
@@ -497,6 +496,8 @@ const dreams = {
   utils.showToast('Сон загружен для редактирования', 'success');
   }
 };
+
+window.state = state;
 
 ///////////////////////
 // === БЛОКИ === //
