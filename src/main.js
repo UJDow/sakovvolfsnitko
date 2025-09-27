@@ -1718,6 +1718,12 @@ function bindChatEvents() {
   const input = document.getElementById('userInput');
   if (!sendBtn || !input) return;
 
+  // Автоматический рост textarea
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
   sendBtn.onclick = async () => {
     if (state.isGenerating) return; // Блокировка двойной отправки
     const msg = input.value.trim();
