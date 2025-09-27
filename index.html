@@ -1792,9 +1792,20 @@ body.step-3-active #step3 .card {
   box-shadow: 0 0 0 2px #ffe06655;
 }
 .moon-tooltip {
-  transition: opacity 0.25s, transform 0.25s;
+  position: absolute;
+  left: 50%;
+  top: -38px;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 10;
 }
 .moon-tooltip.show {
   opacity: 1;
