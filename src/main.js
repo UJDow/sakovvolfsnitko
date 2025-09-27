@@ -1173,28 +1173,51 @@ updateProgressMoon(flash = false) {
     document.body.classList.remove('modal-open');
   },
 
-  // --- МОДАЛКА ПРОСМОТРА СНА ---
-  showDreamPreviewModal(dream) {
-    const modal = document.getElementById('dreamPreviewModal');
-    const textDiv = document.getElementById('dreamPreviewText');
-    const interpDiv = document.getElementById('dreamPreviewInterpret');
-    const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
-    textDiv.textContent = dream.dreamText || '';
-    interpWrap.style.display = 'block';
-    interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
-    interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
-    state._previewedDream = dream;
-    modal.style.display = 'block';
-    document.body.classList.add('modal-open');
-  },
+ // --- МОДАЛКА ПРОСМОТРА СНА ---
+showDreamPreviewModal(dream) {
+  const modal = document.getElementById('dreamPreviewModal');
+  const textDiv = document.getElementById('dreamPreviewText');
+  const interpDiv = document.getElementById('dreamPreviewInterpret');
+  const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
+  textDiv.textContent = dream.dreamText || '';
+  interpWrap.style.display = 'block';
+  interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
+  interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
+  state._previewedDream = dream;
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
 
-  closeDreamPreviewModal() {
-    document.getElementById('dreamPreviewModal').style.display = 'none';
-    document.body.classList.remove('modal-open');
-    state._previewedDream = null;
+  // --- БЛОК ПОХОЖИХ ПРОИЗВЕДЕНИЙ ---
+  let similarWrap = document.getElementById('dreamPreviewSimilarWrap');
+  if (!similarWrap) {
+    similarWrap = document.createElement('div');
+    similarWrap.id = 'dreamPreviewSimilarWrap';
+    // Вставляем сразу после interpWrap
+    interpWrap.parentNode.insertBefore(similarWrap, interpWrap.nextSibling);
   }
+  similarWrap.innerHTML = '';
+  if (dream.similarArtworks && dream.similarArtworks.length) {
+    similarWrap.innerHTML = `
+      <div style="color:#94a3b8; font-size:14px; margin-bottom:4px;">Похожие произведения искусства</div>
+      ${dream.similarArtworks.map(item => `
+        <div class="similar-item" style="margin-bottom:12px;">
+          <div style="font-weight:bold;">${utils.escapeHtml(item.title || '')}</div>
+          <div style="color:#666;">${utils.escapeHtml(item.author || '')}${item.type ? ', ' + utils.escapeHtml(item.type) : ''}</div>
+          <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
+          <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+},
+
+closeDreamPreviewModal() {
+  document.getElementById('dreamPreviewModal').style.display = 'none';
+  document.body.classList.remove('modal-open');
+  state._previewedDream = null;
+}
 };
-function showSimilarModal(similarArr) {
+function showSimilarModal(similarArr, { dreamText, interpretation, onSave } = {}) {
   function flattenSimilarArtworks(arr) {
     if (Array.isArray(arr) && arr[0]?.title && arr[0]?.author) return arr;
     if (Array.isArray(arr) && arr[0]?.motif && Array.isArray(arr[0]?.works)) {
@@ -1252,13 +1275,27 @@ function showSimilarModal(similarArr) {
   modal.className = 'modal similar-modal';
   modal.innerHTML = `
     <div class="modal-content" style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:32px 24px;position:relative;">
+      <button class="modal-close-btn" style="position:absolute;top:16px;right:16px;font-size:22px;background:none;border:none;cursor:pointer;" aria-label="Закрыть">×</button>
       <h2>Похожие произведения искусства</h2>
       <div style="margin:18px 0 0 0;">${html}</div>
-      <button class="close-modal btn primary" style="margin-top:18px;">Закрыть</button>
+      <button class="save-modal btn primary" style="margin-top:18px;width:100%;">Сохранить</button>
     </div>
   `;
   document.body.appendChild(modal);
-  modal.querySelector('.close-modal').onclick = () => modal.remove();
+
+  // Крестик
+  modal.querySelector('.modal-close-btn').onclick = () => modal.remove();
+
+  // Кнопка "Сохранить"
+  const saveBtn = modal.querySelector('.save-modal');
+  saveBtn.onclick = async () => {
+    if (typeof onSave === 'function') {
+      saveBtn.disabled = true;
+      await onSave(arr);
+      saveBtn.disabled = false;
+      modal.remove();
+    }
+  };
 }
 
 ///////////////////////
@@ -1532,10 +1569,25 @@ document.getElementById('jumpToBottom').onclick = () => {
     if (!resp.ok) throw new Error('Ошибка поиска');
     const data = await resp.json();
     if (data.similar && data.similar.length) {
-      showSimilarModal(data.similar);
-    } else {
-      showSimilarModal('Похожих сценариев не найдено');
+  showSimilarModal(data.similar, {
+    dreamText: dream.dreamText,
+    interpretation: dream.globalFinalInterpretation,
+    onSave: async (similarArtworks) => {
+      try {
+        await api.saveDream({
+          ...dream,
+          similarArtworks: similarArtworks.slice(0, 5)
+        });
+        utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
+        await dreams.load();
+      } catch (e) {
+        utils.showToast('Ошибка сохранения', 'error');
+      }
     }
+  });
+} else {
+  showSimilarModal('Похожих сценариев не найдено');
+}
   } catch (e) {
     showSimilarModal('Ошибка поиска похожих сценариев');
   }
