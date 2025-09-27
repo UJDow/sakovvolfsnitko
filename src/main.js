@@ -226,6 +226,7 @@ const state = {
   trialDaysLeft: null,
   globalFinalInterpretation: null,
   importSession: null,
+  isGenerating: false,
 };
 
 const BLOCK_COLORS = [
@@ -594,6 +595,7 @@ const blocks = {
     ui.updateChat();         // обновить чат
     ui.updateBlockInterpretButton();
     ui.updateBlockNav();
+    ui.updateSendButton();
   }
 };
 
@@ -818,6 +820,7 @@ const ui = {
     const filled = document.getElementById('progress-line-filled');
     filled.style.width = ((step - 1) * 50) + '%';
     if (step === 3) bindChatEvents();
+    ui.updateSendButton();
   },
 
   updateBlocks() {
@@ -1180,6 +1183,13 @@ updateBlockInterpretButton() {
     }
   }
 },
+  updateSendButton() {
+  const btn = document.getElementById('sendAnswerBtn');
+  const input = document.getElementById('userInput');
+  if (!btn || !input) return;
+  btn.disabled = state.isGenerating;
+  input.disabled = state.isGenerating;
+},
   updateFinalInterpretButton() {
   const btn = document.getElementById('menuFinalInterpret');
   if (!btn) return;
@@ -1389,6 +1399,7 @@ function showSimilarModal(similarArr, { dreamText, interpretation, onSave } = {}
     }
   };
 }
+
 
 ///////////////////////
 // === ЭКСПОРТ/ИМПОРТ === //
@@ -1706,15 +1717,26 @@ function bindChatEvents() {
   const sendBtn = document.getElementById('sendAnswerBtn');
   const input = document.getElementById('userInput');
   if (!sendBtn || !input) return;
+
   sendBtn.onclick = async () => {
+    if (state.isGenerating) return; // Блокировка двойной отправки
     const msg = input.value.trim();
     if (!msg) return;
     input.value = '';
-    await chat.sendUserMessage(msg);
+    state.isGenerating = true;
+    ui.updateSendButton();
+    try {
+      await chat.sendUserMessage(msg);
+    } finally {
+      state.isGenerating = false;
+      ui.updateSendButton();
+    }
   };
+
   input.onkeydown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      if (state.isGenerating) return;
       sendBtn.click();
     }
   };
@@ -1851,6 +1873,7 @@ async function init() {
   } else {
     ui.showAuth();
   }
+  ui.updateSendButton();
 }
 
 window.DEV_LOGS = true;
