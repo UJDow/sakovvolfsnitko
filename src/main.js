@@ -588,6 +588,7 @@ const blocks = {
     ui.renderDreamTiles();   // отдельно — только dreamView
     ui.updateChat();         // обновить чат
     ui.updateBlockInterpretButton();
+    ui.updateBlockNav();
   }
 };
 
@@ -983,6 +984,57 @@ updateChat() {
   }, 0);
   
   ui.updateBlockInterpretButton();
+  ui.updateBlockNav();
+},
+
+  updateBlockNav() {
+  const prevDiv = document.getElementById('prevPreview');
+  const nextDiv = document.getElementById('nextPreview');
+  if (!prevDiv || !nextDiv) return;
+
+  const blocksArr = state.blocks;
+  const current = state.currentBlock;
+  if (!blocksArr.length || !current) {
+    prevDiv.classList.add('disabled');
+    nextDiv.classList.add('disabled');
+    prevDiv.querySelector('.label').textContent = '…';
+    nextDiv.querySelector('.label').textContent = '';
+    prevDiv.onclick = null;
+    nextDiv.onclick = null;
+    return;
+  }
+
+  const idx = blocksArr.findIndex(b => b.id === current.id);
+
+  // --- Предыдущий блок ---
+  if (idx > 0) {
+    const prevBlock = blocksArr[idx - 1];
+    prevDiv.classList.remove('disabled');
+    prevDiv.querySelector('.label').textContent = prevBlock.text.length > 40 ? prevBlock.text.slice(0, 40) + '…' : prevBlock.text;
+    prevDiv.onclick = () => {
+      blocks.select(prevBlock.id);
+      ui.updateBlockNav();
+    };
+  } else {
+    prevDiv.classList.add('disabled');
+    prevDiv.querySelector('.label').textContent = '…';
+    prevDiv.onclick = null;
+  }
+
+  // --- Следующий блок ---
+  if (idx < blocksArr.length - 1) {
+    const nextBlock = blocksArr[idx + 1];
+    nextDiv.classList.remove('disabled');
+    nextDiv.querySelector('.label').textContent = nextBlock.text.length > 40 ? nextBlock.text.slice(0, 40) + '…' : nextBlock.text;
+    nextDiv.onclick = () => {
+      blocks.select(nextBlock.id);
+      ui.updateBlockNav();
+    };
+  } else {
+    nextDiv.classList.add('disabled');
+    nextDiv.querySelector('.label').textContent = '';
+    nextDiv.onclick = null;
+  }
 },
 
   setThinking(isThinking) {
