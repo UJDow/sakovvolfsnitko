@@ -568,22 +568,21 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
   min-height: 56px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   padding: 8px 0;
   box-sizing: border-box;
 }
 
 #userInput {
   width: 100%;
-  height: auto;
   min-height: 44px;
   max-height: 120px;
-  padding: 12px 60px 12px 16px;
+  padding: 12px 120px 12px 16px; /* ← справа 120px, чтобы не залезал текст на кнопки */
   border-radius: 20px;
   font-size: 16px;
   line-height: 1.4;
   resize: none;
-  overflow: hidden;
+  overflow-y: auto; /* ← обязательно! */
   background: rgba(255,255,255,0.97);
   border: 1px solid var(--border);
   box-sizing: border-box;
@@ -597,11 +596,9 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 }
 
 @media (max-width: 600px) {
-  :root {
-    --surface-min-height: 32vh;
-  }
   #userInput {
-    padding: 12px 120px 12px 16px;
+    padding: 12px 120px 12px 16px; /* для мобильных — тоже большой отступ справа */
+    font-size: 16px;
   }
 }
 
