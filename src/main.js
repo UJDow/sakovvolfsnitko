@@ -1555,10 +1555,10 @@ document.getElementById('jumpToBottom').onclick = () => {
     utils.showToast('Нет текста сна', 'error');
     return;
   }
-  // Показываем лоадер
+  // Показываем спиннер
   const btn = document.getElementById('findSimilarBtn');
-  const oldText = btn.textContent;
-  btn.textContent = 'Поиск...';
+  const oldHtml = btn.innerHTML;
+  btn.innerHTML = `<span class="btn-spinner"></span>Поиск...`;
   btn.disabled = true;
   try {
     const resp = await fetch(API_URL + '/find_similar', {
@@ -1569,29 +1569,29 @@ document.getElementById('jumpToBottom').onclick = () => {
     if (!resp.ok) throw new Error('Ошибка поиска');
     const data = await resp.json();
     if (data.similar && data.similar.length) {
-  showSimilarModal(data.similar, {
-    dreamText: dream.dreamText,
-    interpretation: dream.globalFinalInterpretation,
-    onSave: async (similarArtworks) => {
-      try {
-        await api.saveDream({
-          ...dream,
-          similarArtworks: similarArtworks.slice(0, 5)
-        });
-        utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
-        await dreams.load();
-      } catch (e) {
-        utils.showToast('Ошибка сохранения', 'error');
-      }
+      showSimilarModal(data.similar, {
+        dreamText: dream.dreamText,
+        interpretation: dream.globalFinalInterpretation,
+        onSave: async (similarArtworks) => {
+          try {
+            await api.saveDream({
+              ...dream,
+              similarArtworks: similarArtworks.slice(0, 5)
+            });
+            utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
+            await dreams.load();
+          } catch (e) {
+            utils.showToast('Ошибка сохранения', 'error');
+          }
+        }
+      });
+    } else {
+      showSimilarModal('Похожих сценариев не найдено');
     }
-  });
-} else {
-  showSimilarModal('Похожих сценариев не найдено');
-}
   } catch (e) {
     showSimilarModal('Ошибка поиска похожих сценариев');
   }
-  btn.textContent = oldText;
+  btn.innerHTML = oldHtml;
   btn.disabled = false;
 };
 
