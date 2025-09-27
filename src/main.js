@@ -303,32 +303,50 @@ function showMoonTooltip(text = 'Доступно толкование блок�
     const r = moonBtn.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const top = r.top;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Горизонтальная защита от выхода за края
+    const safeX = Math.max(8, Math.min(vw - 8, Math.round(cx)));
+
+    // Вертикальная — якорим у верхней границы кнопки, но не ближе 8px к верху/низу
+    const safeTop = Math.max(8, Math.min(vh - 8, Math.round(top)));
+
     tooltip.style.position = 'fixed';
-    tooltip.style.left = `${Math.round(cx)}px`;
-    tooltip.style.top  = `${Math.round(top)}px`;
-    tooltip.style.display = 'block';
+    tooltip.style.left = `${safeX}px`;
+    tooltip.style.top  = `${safeTop}px`;
+    tooltip.setAttribute('aria-hidden', 'false');
   };
 
   const onRelayout = () => {
-    if (tooltip.style.display === 'block' && tooltip.classList.contains('show')) {
-      place();
-    }
+    if (tooltip.classList.contains('show')) place();
   };
 
   requestAnimationFrame(() => {
     place();
     tooltip.classList.remove('show');
     requestAnimationFrame(() => tooltip.classList.add('show'));
+
     clearTimeout(tooltip._hideTimer);
     tooltip._hideTimer = setTimeout(() => {
-      tooltip.classList.remove('show');
-      setTimeout(() => { tooltip.style.display = 'none'; }, 200);
+      hideMoonTooltip();
       window.removeEventListener('scroll', onRelayout, true);
       window.removeEventListener('resize', onRelayout, true);
     }, 3000);
+
     window.addEventListener('scroll', onRelayout, true);
     window.addEventListener('resize', onRelayout, true);
   });
+}
+
+function hideMoonTooltip() {
+  const tooltip = document.getElementById('moonTooltip');
+  if (!tooltip) return;
+  tooltip.classList.remove('show');
+  tooltip.setAttribute('aria-hidden', 'true');
+  // подождём анимацию перед display:none
+  setTimeout(() => { tooltip.style.display = 'none'; }, 200);
 }
 ///////////////////////
 // === API === //
@@ -706,7 +724,7 @@ const chat = {
     state.chatHistory[blockId].push({ role: 'user', content: msg });
     ui.updateChat();
     const tooltip = document.getElementById('moonTooltip');
-    if (tooltip) tooltip.classList.remove('show');
+    hideMoonTooltip();
     await chat.sendToAI(blockId);
   },
 
@@ -1220,7 +1238,7 @@ const ui = {
     if (!block) {
       btn.disabled = true;
       btn.classList.remove('active');
-      if (tooltip) tooltip.classList.remove('show');
+      hideMoonTooltip();
       return;
     }
 
@@ -1235,10 +1253,10 @@ const ui = {
         block._moonTipShownOnce = true;
       }
     } else {
-      btn.disabled = true;
-      btn.classList.remove('active');
-      if (tooltip) tooltip.classList.remove('show');
-    }
+  btn.disabled = true;
+  btn.classList.remove('active');
+  hideMoonTooltip();
+}
   }
   ,
   updateSendButton() {
@@ -1629,8 +1647,7 @@ function bindEvents() {
     const menu = document.getElementById('attachMenu');
     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     // Скрыть tooltip при открытии меню
-    const tooltip = document.getElementById('moonTooltip');
-    if (tooltip) tooltip.classList.remove('show');
+    hideMoonTooltip();
   };
   document.getElementById('menuBlockInterpret').onclick = async () => {
     await chat.blockInterpretation();
@@ -1819,7 +1836,7 @@ document.addEventListener('click', function(e) {
   menu.style.display = 'none';
   // И заодно скрываем тултип, если он был
   const tooltip = document.getElementById('moonTooltip');
-  if (tooltip) tooltip.classList.remove('show');
+  hideMoonTooltip();
 });
 
 // ====== ТЕМЫ: UI и логика ======
