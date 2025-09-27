@@ -1792,30 +1792,30 @@ body.step-3-active #step3 .card {
   box-shadow: 0 0 0 2px #ffe06655;
 }
 .moon-tooltip {
-  position: fixed; /* фикс — не клипится родителями */
-  left: 0;
+  position: fixed; /* не клипится родителями */
+  left: 0;         /* реальные координаты ставим из JS */
   top: 0;
-  transform: translate(-50%, calc(-100% - 10px)); /* строго над кнопкой, центр по X */
-  background: #111;
-  color: #fff;
+  transform: translate(-50%, calc(-100% - 10px)); /* центр по X над якорем */
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
-  line-height: 1.2;
+  line-height: 1.25;
   white-space: nowrap;
   z-index: 9999;
   display: none;
   opacity: 0;
-  transition: opacity .2s ease, transform .2s ease;
+  transition: opacity .18s ease, transform .18s ease;
   pointer-events: none; /* не перехватывает клики */
+  box-shadow: 0 8px 24px var(--tooltip-shadow);
+  border: 1px solid var(--tooltip-border);
 }
-
 .moon-tooltip.show {
   display: block;
   opacity: 1;
   transform: translate(-50%, calc(-100% - 6px));
 }
-
 .moon-tooltip::after {
   content: '';
   position: absolute;
@@ -1824,9 +1824,8 @@ body.step-3-active #step3 .card {
   transform: translateX(-50%);
   border-width: 6px 6px 0 6px;
   border-style: solid;
-  border-color: #111 transparent transparent transparent; /* цвет совпадает с фоном */
+  border-color: var(--tooltip-bg) transparent transparent transparent; /* цвет фона */
 }
-
 .similar-modal {
   position: fixed;
   inset: 0;
@@ -2030,7 +2029,9 @@ body.step-3-active #step3 .card {
             <div id="chatInputBar" class="chat-input-bar" style="width:100%; position:relative;">
               <textarea id="userInput" placeholder="Ответить Saviora..." rows="1"></textarea>
               <button id="moonBtn" class="attach-icon-btn" title="Прогресс луны" tabindex="0" aria-label="Прогресс луны"></button>
-              <div id="moonTooltip" class="moon-tooltip"> Можно получить толкование блока </div>
+              <div id="moonTooltip" class="moon-tooltip" role="tooltip" aria-hidden="true">
+  Доступно толкование блока
+</div>
               <div id="attachMenu" class="attach-menu" style="display:none;">
                 <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
                 <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
