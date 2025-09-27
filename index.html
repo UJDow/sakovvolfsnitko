@@ -1801,24 +1801,26 @@ body.step-3-active #step3 .card {
   box-shadow: 0 0 0 2px #ffe06655;
 }
 .moon-tooltip {
-  position: fixed; /* не клипится родителями */
-  left: 0;         /* реальные координаты ставим из JS */
+  position: fixed;
+  left: 0;
   top: 0;
-  transform: translate(-50%, calc(-100% - 10px)); /* центр по X над якорем */
+  transform: translate(-50%, calc(-100% - 10px));
   background: var(--tooltip-bg);
   color: var(--tooltip-fg);
   padding: 8px 10px;
   border-radius: 8px;
   font-size: 12px;
   line-height: 1.25;
-  white-space: nowrap;
+  white-space: normal;        /* вместо nowrap */
+  max-width: min(70vw, 280px);/* не шире экрана */
   z-index: 9999;
   display: none;
   opacity: 0;
   transition: opacity .18s ease, transform .18s ease;
-  pointer-events: none; /* не перехватывает клики */
+  pointer-events: none;
   box-shadow: 0 8px 24px var(--tooltip-shadow);
   border: 1px solid var(--tooltip-border);
+  word-break: break-word;
 }
 .moon-tooltip.show {
   display: block;
