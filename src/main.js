@@ -1180,9 +1180,9 @@ updateBlockInterpretButton() {
   const btn = document.getElementById('menuFinalInterpret');
   if (!btn) return;
 
-  // Считаем количество блоков с итоговым толкованием
+  // Считаем количество блоков, у которых есть хотя бы одна интерпретация
   const interpretedBlocks = state.blocks.filter(
-    b => typeof b.finalInterpretation === 'string' && b.finalInterpretation.trim()
+    b => Array.isArray(b.interpretations) && b.interpretations.length > 0
   ).length;
 
   if (interpretedBlocks < 2) {
