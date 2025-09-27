@@ -290,6 +290,22 @@ utils.lighten = function(hex, percent = 20) {
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
 
+/**
+ * Показывает тултип над кнопкой луны на 3 секунды.
+ * @param {string} text - Текст тултипа.
+ */
+function showMoonTooltip(text = 'Можно получить толкование блока') {
+  const tooltip = document.getElementById('moonTooltip');
+  if (!tooltip) return;
+  tooltip.textContent = text;
+  tooltip.classList.add('show');
+  tooltip.style.display = 'block';
+  setTimeout(() => {
+    tooltip.classList.remove('show');
+    setTimeout(() => { tooltip.style.display = 'none'; }, 250);
+  }, 3000);
+}
+
 ///////////////////////
 // === API === //
 ///////////////////////
@@ -1176,10 +1192,8 @@ updateBlockInterpretButton() {
     btn.classList.add('active');
     // Показываем тултип только если он ещё не показывался для этого блока
     if (tooltip && !block._interpretTooltipShown) {
-      tooltip.textContent = 'Можно получить толкование блока';
-      tooltip.classList.add('show');
+      showMoonTooltip('Можно получить толкование блока');
       block._interpretTooltipShown = true;
-      setTimeout(() => tooltip.classList.remove('show'), 3000);
     }
   }
 },
