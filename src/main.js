@@ -1746,6 +1746,13 @@ document.getElementById('jumpToBottom').onclick = () => {
   btn.disabled = false;
 };
 
+// --- Обработчик прокрутки чата для кнопки "вниз" ---
+  const chatDiv = document.getElementById('chat');
+  if (chatDiv) {
+    chatDiv.addEventListener('scroll', ui.updateJumpToBottomVisibility);
+  }
+}
+
 function bindChatEvents() {
   const sendBtn = document.getElementById('sendAnswerBtn');
   const input = document.getElementById('userInput');
