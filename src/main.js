@@ -494,6 +494,7 @@ const dreams = {
   ui.setStep(1);
   document.getElementById('dream').value = dream.dreamText || '';
   utils.showToast('Сон загружен для редактирования', 'success');
+    **ui.updateFinalInterpretButton();
   }
 };
 
@@ -630,6 +631,7 @@ function refreshSelectedBlocksUnified() {
   if (typeof ui.renderDreamTiles === 'function') ui.renderDreamTiles();
   if (typeof ui.updateChat === 'function') ui.updateChat();
   if (typeof ui.updateProgressMoon === 'function') ui.updateProgressMoon();
+  **if (typeof ui.updateFinalInterpretButton === 'function') ui.updateFinalInterpretButton();
 
   // Если были на шаге 3, а блоков больше нет — вернём на шаг 2
   if (typeof ui.setStep === 'function' && state.uiStep === 3) {
@@ -1441,6 +1443,7 @@ const session = {
     ui.setStep(1);
     document.getElementById('dream').value = data.dream.dreamText || '';
     utils.showToast('Сессия импортирована', 'success');
+    **ui.updateFinalInterpretButton();
     } catch {
       utils.showToast('Ошибка импорта', 'error');
     }
