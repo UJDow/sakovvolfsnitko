@@ -1768,6 +1768,18 @@ function bindChatEvents() {
     }
   };
 }
+// --- Автоматическое закрытие меню луны при клике вне ---
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('attachMenu');
+    const moonBtn = document.getElementById('moonBtn');
+    if (!menu || !moonBtn) return;
+    if (menu.style.display !== 'block') return;
+    if (moonBtn.contains(e.target) || menu.contains(e.target)) return;
+    menu.style.display = 'none';
+    const tooltip = document.getElementById('moonTooltip');
+    if (tooltip) tooltip.classList.remove('show');
+  });
+}
 
 // ====== ТЕМЫ: UI и логика ======
 
