@@ -1420,9 +1420,19 @@ if (addWholeFromHint) {
   };
 
   // --- ШАГ 2 ---
- document.getElementById('toStep3').onclick = async function() {
-  if (!state.blocks.length) { utils.showToast('Добавьте хотя бы один блок', 'error'); return; }
-  state.currentBlock = state.blocks[0];
+document.getElementById('toStep3').onclick = async function() {
+  if (!state.blocks.length) {
+    utils.showToast('Добавьте хотя бы один блок', 'error');
+    return;
+  }
+
+  // --- Логика выбора блока ---
+  if (!state.currentBlock || !state.blocks.find(b => b.id === state.currentBlock.id)) {
+    // Если блок не выбран или выбранный блок не найден (например, был удалён) — выбираем первый
+    state.currentBlock = state.blocks[0];
+  }
+  // Если выбран — используем его
+
   ui.setStep(3);
   ui.updateChat();
   ui.updateProgressMoon();
@@ -1437,14 +1447,15 @@ if (addWholeFromHint) {
     }
   }
 };
-  document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
-  ui.renderDreamTiles();
 
-  // refreshInline — прямой обработчик
-  const refreshBtn = document.getElementById('refreshInline');
-  if (refreshBtn) {
-    refreshBtn.onclick = refreshSelectedBlocksUnified;
-  }
+document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
+ui.renderDreamTiles();
+
+// refreshInline — прямой обработчик
+const refreshBtn = document.getElementById('refreshInline');
+if (refreshBtn) {
+  refreshBtn.onclick = refreshSelectedBlocksUnified;
+}
 
  // --- ШАГ 3 ---
 document.getElementById('backTo2Top').onclick = () => {
