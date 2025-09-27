@@ -1141,7 +1141,7 @@ updateProgressMoon(flash = false) {
     }, 1600);
   }
 },
- updateBlockInterpretButton() {
+updateBlockInterpretButton() {
   const btn = document.getElementById('menuBlockInterpret');
   const tooltip = document.getElementById('moonTooltip');
   const block = state.currentBlock;
@@ -1154,11 +1154,11 @@ updateProgressMoon(flash = false) {
     return;
   }
 
-  // Считаем количество ответов ассистента по текущему блоку
+  // Считаем ВСЕ сообщения (и user, и assistant) по текущему блоку
   const blockId = block.id;
-  const answers = (state.chatHistory[blockId] || []).filter(m => m.role === 'assistant').length;
+  const msgCount = (state.chatHistory[blockId] || []).length;
 
-  if (answers < 10) {
+  if (msgCount < 10) {
     btn.disabled = true;
     btn.classList.remove('active');
     if (tooltip) tooltip.classList.remove('show');
@@ -1172,6 +1172,23 @@ updateProgressMoon(flash = false) {
       block._interpretTooltipShown = true;
       setTimeout(() => tooltip.classList.remove('show'), 3000);
     }
+  }
+},
+  updateFinalInterpretButton() {
+  const btn = document.getElementById('menuFinalInterpret');
+  if (!btn) return;
+
+  // Считаем количество блоков с итоговым толкованием
+  const interpretedBlocks = state.blocks.filter(
+    b => b.finalInterpretation && b.finalInterpretation.trim()
+  ).length;
+
+  if (interpretedBlocks < 2) {
+    btn.disabled = true;
+    btn.classList.remove('active');
+  } else {
+    btn.disabled = false;
+    btn.classList.add('active');
   }
 },
 
@@ -1544,10 +1561,6 @@ document.getElementById('menuBlockInterpret').onclick = async () => {
 };
 document.getElementById('menuFinalInterpret').onclick = async () => {
   await chat.globalInterpretation();
-  document.getElementById('attachMenu').style.display = 'none';
-};
-document.getElementById('menuSaveToCabinet').onclick = async () => {
-  await dreams.saveCurrent();
   document.getElementById('attachMenu').style.display = 'none';
 };
 document.getElementById('jumpToBottom').onclick = () => {
