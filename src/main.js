@@ -1011,9 +1011,18 @@ updateChat() {
     const prevBlock = blocksArr[idx - 1];
     prevDiv.classList.remove('disabled');
     prevDiv.querySelector('.label').textContent = prevBlock.text.length > 40 ? prevBlock.text.slice(0, 40) + '…' : prevBlock.text;
-    prevDiv.onclick = () => {
+    prevDiv.onclick = async () => {
       blocks.select(prevBlock.id);
       ui.updateBlockNav();
+      // --- Автозапуск AI, если чат пустой ---
+      const blockId = prevBlock.id;
+      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+        try {
+          await chat.sendToAI(blockId);
+        } catch (e) {
+          console.error('Ошибка при первом запросе к AI:', e);
+        }
+      }
     };
   } else {
     prevDiv.classList.add('disabled');
@@ -1026,9 +1035,18 @@ updateChat() {
     const nextBlock = blocksArr[idx + 1];
     nextDiv.classList.remove('disabled');
     nextDiv.querySelector('.label').textContent = nextBlock.text.length > 40 ? nextBlock.text.slice(0, 40) + '…' : nextBlock.text;
-    nextDiv.onclick = () => {
+    nextDiv.onclick = async () => {
       blocks.select(nextBlock.id);
       ui.updateBlockNav();
+      // --- Автозапуск AI, если чат пустой ---
+      const blockId = nextBlock.id;
+      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+        try {
+          await chat.sendToAI(blockId);
+        } catch (e) {
+          console.error('Ошибка при первом запросе к AI:', e);
+        }
+      }
     };
   } else {
     nextDiv.classList.add('disabled');
@@ -1036,7 +1054,6 @@ updateChat() {
     nextDiv.onclick = null;
   }
 },
-
   setThinking(isThinking) {
   const thinkingEl = document.getElementById('thinking');
   if (!thinkingEl) return;
