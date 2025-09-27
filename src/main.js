@@ -1047,19 +1047,18 @@ updateChat() {
     const prevBlock = blocksArr[idx - 1];
     prevDiv.classList.remove('disabled');
     prevDiv.querySelector('.label').textContent = prevBlock.text.length > 40 ? prevBlock.text.slice(0, 40) + '…' : prevBlock.text;
-    prevDiv.onclick = () => {
-      (async () => {
-        blocks.select(prevBlock.id);
-        ui.updateBlockNav();
-        const blockId = prevBlock.id;
-        if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-          try {
-            await chat.sendToAI(blockId);
-          } catch (e) {
-            console.error('Ошибка при первом запросе к AI:', e);
-          }
+    prevDiv.onclick = async () => {
+      blocks.select(prevBlock.id);
+      ui.updateBlockNav();
+      // --- Автозапуск AI, если чат пустой ---
+      const blockId = prevBlock.id;
+      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+        try {
+          await chat.sendToAI(blockId);
+        } catch (e) {
+          console.error('Ошибка при первом запросе к AI:', e);
         }
-      })();
+      }
     };
   } else {
     prevDiv.classList.add('disabled');
@@ -1072,24 +1071,33 @@ updateChat() {
     const nextBlock = blocksArr[idx + 1];
     nextDiv.classList.remove('disabled');
     nextDiv.querySelector('.label').textContent = nextBlock.text.length > 40 ? nextBlock.text.slice(0, 40) + '…' : nextBlock.text;
-    nextDiv.onclick = () => {
-      (async () => {
-        blocks.select(nextBlock.id);
-        ui.updateBlockNav();
-        const blockId = nextBlock.id;
-        if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-          try {
-            await chat.sendToAI(blockId);
-          } catch (e) {
-            console.error('Ошибка при первом запросе к AI:', e);
-          }
+    nextDiv.onclick = async () => {
+      blocks.select(nextBlock.id);
+      ui.updateBlockNav();
+      // --- Автозапуск AI, если чат пустой ---
+      const blockId = nextBlock.id;
+      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+        try {
+          await chat.sendToAI(blockId);
+        } catch (e) {
+          console.error('Ошибка при первом запросе к AI:', e);
         }
-      })();
+      }
     };
   } else {
     nextDiv.classList.add('disabled');
     nextDiv.querySelector('.label').textContent = '';
     nextDiv.onclick = null;
+  }
+},
+  setThinking(isThinking) {
+  const thinkingEl = document.getElementById('thinking');
+  if (!thinkingEl) return;
+  thinkingEl.style.display = isThinking ? 'block' : 'none';
+  if (isThinking) {
+    thinkingEl.classList.add('sticky-thinking');
+  } else {
+    thinkingEl.classList.remove('sticky-thinking');
   }
 },
 
@@ -1524,119 +1532,109 @@ function bindEvents() {
   document.getElementById('registerForm').onsubmit = e => { e.preventDefault(); auth.register(); };
 
   const addWholeFromHint = document.getElementById('addWholeFromHint');
-  if (addWholeFromHint) {
-    addWholeFromHint.onclick = function() {
-      if (state.blocks.length > 0) {
-        utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
-        return;
-      }
-      blocks.addWhole();
-      ui.renderDreamTiles();
-    };
-  }
+if (addWholeFromHint) {
+  addWholeFromHint.onclick = function() {
+    if (state.blocks.length > 0) {
+      utils.showToast('Нельзя выделить весь текст: уже начаты блоки', 'error');
+      return;
+    }
+    blocks.addWhole();
+    ui.renderDreamTiles();
+  };
+}
 
   // --- ШАГ 1 ---
-  document.getElementById('step1MainBtn').onclick = function() {
-    (async () => {
-      const text = document.getElementById('dream').value.trim();
-      if (!text) { utils.showToast('Введите текст сна', 'error'); return; }
-      state.currentDream = { dreamText: text, title: '', blocks: [], globalFinalInterpretation: null };
-      state.blocks = [];
-      await dreams.saveCurrent();
+  document.getElementById('step1MainBtn').onclick = async function() {
+    const text = document.getElementById('dream').value.trim();
+    if (!text) { utils.showToast('Введите текст сна', 'error'); return; }
+    state.currentDream = { dreamText: text, title: '', blocks: [], globalFinalInterpretation: null };
+    state.blocks = [];
+    await dreams.saveCurrent();
 
-      // Заменяем кнопку на "Далее →"
-      const controls = document.getElementById('step1Controls');
-      controls.innerHTML = `<button id="step1NextBtn" class="btn primary">Далее →</button>`;
-      utils.showToast('Сон сохранён в кабинет', 'success');
+    // Заменяем кнопку на "Далее →"
+    const controls = document.getElementById('step1Controls');
+    controls.innerHTML = `<button id="step1NextBtn" class="btn primary">Далее →</button>`;
+    utils.showToast('Сон сохранён в кабинет', 'success');
 
-      // Навешиваем обработчик на новую кнопку
-      document.getElementById('step1NextBtn').onclick = function() {
-        ui.setStep(2);
-        ui.renderDreamTiles();
-      };
-    })();
+    // Навешиваем обработчик на новую кнопку
+    document.getElementById('step1NextBtn').onclick = function() {
+      ui.setStep(2);
+      ui.renderDreamTiles();
+    };
   };
 
   // --- ШАГ 2 ---
-  document.getElementById('toStep3').onclick = function() {
-    (async () => {
-      if (!state.blocks.length) {
-        utils.showToast('Добавьте хотя бы один блок', 'error');
-        return;
-      }
-
-      // --- Логика выбора блока ---
-      if (!state.currentBlock || !state.blocks.find(b => b.id === state.currentBlock.id)) {
-        // Если блок не выбран или выбранный блок не найден (например, был удалён) — выбираем первый
-        state.currentBlock = state.blocks[0];
-      }
-      // Если выбран — используем его
-
-      ui.setStep(3);
-      ui.updateChat();
-      ui.updateProgressMoon();
-
-      // --- Сразу отправляем первый запрос к AI ---
-      const blockId = state.currentBlock.id;
-      if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
-        try {
-          await chat.sendToAI(blockId);
-        } catch (e) {
-          console.error('Ошибка при первом запросе к AI:', e);
-        }
-      }
-    })();
-  };
-
-  document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
-  ui.renderDreamTiles();
-
-  // refreshInline — прямой обработчик
-  const refreshBtn = document.getElementById('refreshInline');
-  if (refreshBtn) {
-    refreshBtn.onclick = refreshSelectedBlocksUnified;
+document.getElementById('toStep3').onclick = async function() {
+  if (!state.blocks.length) {
+    utils.showToast('Добавьте хотя бы один блок', 'error');
+    return;
   }
 
-  // --- ШАГ 3 ---
-  document.getElementById('backTo2Top').onclick = () => {
-    ui.setStep(2);
-    ui.renderDreamTiles();
-  };
-  document.getElementById('moonBtn').onclick = () => {
-    const menu = document.getElementById('attachMenu');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    // Скрыть tooltip при открытии меню
-    const tooltip = document.getElementById('moonTooltip');
-    if (tooltip) tooltip.classList.remove('show');
-  };
-  document.getElementById('menuBlockInterpret').onclick = function() {
-    (async () => {
-      await chat.blockInterpretation();
-      document.getElementById('attachMenu').style.display = 'none';
-    })();
-  };
-  document.getElementById('menuFinalInterpret').onclick = function() {
-    (async () => {
-      await chat.globalInterpretation();
-      document.getElementById('attachMenu').style.display = 'none';
-    })();
-  };
-  document.getElementById('jumpToBottom').onclick = () => {
-    const chatDiv = document.getElementById('chat');
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-  };
+  // --- Логика выбора блока ---
+  if (!state.currentBlock || !state.blocks.find(b => b.id === state.currentBlock.id)) {
+    // Если блок не выбран или выбранный блок не найден (например, был удалён) — выбираем первый
+    state.currentBlock = state.blocks[0];
+  }
+  // Если выбран — используем его
+
+  ui.setStep(3);
+  ui.updateChat();
+  ui.updateProgressMoon();
+
+  // --- Сразу отправляем первый запрос к AI ---
+  const blockId = state.currentBlock.id;
+  if (!state.chatHistory[blockId] || state.chatHistory[blockId].length === 0) {
+    try {
+      await chat.sendToAI(blockId);
+    } catch (e) {
+      console.error('Ошибка при первом запросе к AI:', e);
+    }
+  }
+};
+
+document.getElementById('backTo1Top').onclick = () => ui.setStep(1);
+ui.renderDreamTiles();
+
+// refreshInline — прямой обработчик
+const refreshBtn = document.getElementById('refreshInline');
+if (refreshBtn) {
+  refreshBtn.onclick = refreshSelectedBlocksUnified;
+}
+
+ // --- ШАГ 3 ---
+document.getElementById('backTo2Top').onclick = () => {
+  ui.setStep(2);
+  ui.renderDreamTiles();
+};
+document.getElementById('moonBtn').onclick = () => {
+  const menu = document.getElementById('attachMenu');
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  // Скрыть tooltip при открытии меню
+  const tooltip = document.getElementById('moonTooltip');
+  if (tooltip) tooltip.classList.remove('show');
+};
+document.getElementById('menuBlockInterpret').onclick = async () => {
+  await chat.blockInterpretation();
+  document.getElementById('attachMenu').style.display = 'none';
+};
+document.getElementById('menuFinalInterpret').onclick = async () => {
+  await chat.globalInterpretation();
+  document.getElementById('attachMenu').style.display = 'none';
+};
+document.getElementById('jumpToBottom').onclick = () => {
+  const chatDiv = document.getElementById('chat');
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+};
 
   // --- КАБИНЕТ ---
   document.getElementById('openCabinetBtn').onclick = () => ui.showCabinetModal();
   document.getElementById('closeCabinetBtn').onclick = () => ui.closeCabinetModal();
   document.getElementById('logoutBtn').onclick = () => { auth.logout(); ui.closeCabinetModal(); };
-  document.getElementById('clearCabinetBtn').onclick = function() {
-    (async () => {
-      if (confirm('Удалить все сны?')) {
-        for (const d of state.dreams) await dreams.delete(d.id);
-        ui.closeCabinetModal();
-      }
-    })();
+  document.getElementById('clearCabinetBtn').onclick = async () => {
+    if (confirm('Удалить все сны?')) {
+      for (const d of state.dreams) await dreams.delete(d.id);
+      ui.closeCabinetModal();
+    }
   };
 
   // --- МОДАЛКИ ---
@@ -1656,11 +1654,9 @@ function bindEvents() {
 
   // --- ЭКСПОРТ/ИМПОРТ ---
   document.getElementById('exportFinalDialogBtn').onclick = () => session.export('txt');
-  document.getElementById('saveToCabinetBtn').onclick = function() {
-    (async () => {
-      await dreams.saveCurrent();
-      ui.closeFinalDialog();
-    })();
+  document.getElementById('saveToCabinetBtn').onclick = async () => {
+    await dreams.saveCurrent();
+    ui.closeFinalDialog();
   };
 
   // --- Импорт через drag&drop (можно добавить кнопку) ---
@@ -1704,55 +1700,53 @@ function bindEvents() {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 
-  document.getElementById('findSimilarBtn').onclick = function() {
-    (async () => {
-      const dream = state._previewedDream;
-      if (!dream || !dream.dreamText) {
-        utils.showToast('Нет текста сна', 'error');
-        return;
-      }
-      // Показываем спиннер
-      const btn = document.getElementById('findSimilarBtn');
-      const oldHtml = btn.innerHTML;
-      btn.innerHTML = `<span class="btn-spinner"></span>Поиск...`;
-      btn.disabled = true;
-      try {
-        const resp = await fetch(API_URL + '/find_similar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
-          body: JSON.stringify({ summary: dream.dreamText })
-        });
-        if (!resp.ok) throw new Error('Ошибка поиска');
-        const data = await resp.json();
-        if (data.similar && data.similar.length) {
-          showSimilarModal(data.similar, {
-            dreamText: dream.dreamText,
-            interpretation: dream.globalFinalInterpretation,
-            onSave: async (similarArtworks) => {
-              try {
-                await api.saveDream({
-                  ...dream,
-                  similarArtworks: similarArtworks.slice(0, 5)
-                });
-                utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
-                await dreams.load();
-              } catch (e) {
-                utils.showToast('Ошибка сохранения', 'error');
-              }
-            }
-          });
-        } else {
-          showSimilarModal('Похожих сценариев не найдено');
+  document.getElementById('findSimilarBtn').onclick = async () => {
+  const dream = state._previewedDream;
+  if (!dream || !dream.dreamText) {
+    utils.showToast('Нет текста сна', 'error');
+    return;
+  }
+  // Показываем спиннер
+  const btn = document.getElementById('findSimilarBtn');
+  const oldHtml = btn.innerHTML;
+  btn.innerHTML = `<span class="btn-spinner"></span>Поиск...`;
+  btn.disabled = true;
+  try {
+    const resp = await fetch(API_URL + '/find_similar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
+      body: JSON.stringify({ summary: dream.dreamText })
+    });
+    if (!resp.ok) throw new Error('Ошибка поиска');
+    const data = await resp.json();
+    if (data.similar && data.similar.length) {
+      showSimilarModal(data.similar, {
+        dreamText: dream.dreamText,
+        interpretation: dream.globalFinalInterpretation,
+        onSave: async (similarArtworks) => {
+          try {
+            await api.saveDream({
+              ...dream,
+              similarArtworks: similarArtworks.slice(0, 5)
+            });
+            utils.showToast('Сон и подборка сохранены в личный кабинет', 'success');
+            await dreams.load();
+          } catch (e) {
+            utils.showToast('Ошибка сохранения', 'error');
+          }
         }
-      } catch (e) {
-        showSimilarModal('Ошибка поиска похожих сценариев');
-      }
-      btn.innerHTML = oldHtml;
-      btn.disabled = false;
-    })();
-  };
+      });
+    } else {
+      showSimilarModal('Похожих сценариев не найдено');
+    }
+  } catch (e) {
+    showSimilarModal('Ошибка поиска похожих сценариев');
+  }
+  btn.innerHTML = oldHtml;
+  btn.disabled = false;
+};
 
-  // --- Обработчик прокрутки чата для кнопки "вниз" ---
+// --- Обработчик прокрутки чата для кнопки "вниз" ---
   const chatDiv = document.getElementById('chat');
   if (chatDiv) {
     chatDiv.addEventListener('scroll', ui.updateJumpToBottomVisibility);
@@ -1770,21 +1764,19 @@ function bindChatEvents() {
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
   });
 
-  sendBtn.onclick = function() {
-    (async () => {
-      if (state.isGenerating) return; // Блокировка двойной отправки
-      const msg = input.value.trim();
-      if (!msg) return;
-      input.value = '';
-      state.isGenerating = true;
+  sendBtn.onclick = async () => {
+    if (state.isGenerating) return; // Блокировка двойной отправки
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    state.isGenerating = true;
+    ui.updateSendButton();
+    try {
+      await chat.sendUserMessage(msg);
+    } finally {
+      state.isGenerating = false;
       ui.updateSendButton();
-      try {
-        await chat.sendUserMessage(msg);
-      } finally {
-        state.isGenerating = false;
-        ui.updateSendButton();
-      }
-    })();
+    }
   };
 
   input.onkeydown = e => {
@@ -1795,7 +1787,6 @@ function bindChatEvents() {
     }
   };
 }
-
 // --- Автоматическое закрытие меню луны при клике вне ---
 document.addEventListener('click', function(e) {
   const menu = document.getElementById('attachMenu');
