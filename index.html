@@ -1772,14 +1772,24 @@ body.step-3-active #step3 .card {
 }
 
 #menuBlockInterpret:disabled,
-#menuBlockInterpret.disabled {
+#menuBlockInterpret.disabled,
+#menuFinalInterpret:disabled,
+#menuFinalInterpret.disabled {
   opacity: 0.5 !important;
   pointer-events: none !important;
   background: #cbd5e1 !important;
   color: #64748b !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 #menuBlockInterpret.active {
+  background: #ffe066 !important;
+  color: #0f172a !important;
+  box-shadow: 0 0 0 2px #ffe06655;
+}
+
+#menuFinalInterpret.active {
   background: #ffe066 !important;
   color: #0f172a !important;
   box-shadow: 0 0 0 2px #ffe06655;
@@ -2004,7 +2014,6 @@ body.step-3-active #step3 .card {
               <div id="attachMenu" class="attach-menu" style="display:none;">
                 <button id="menuBlockInterpret" class="attach-item">📖 Толкование</button>
                 <button id="menuFinalInterpret" class="attach-item">🎯 Итог</button>
-                <button id="menuSaveToCabinet" class="attach-item">💾 Сохранить в кабинет</button>
               </div>
               <button id="sendAnswerBtn" class="send-icon-btn" title="Отправить" aria-label="Отправить">➤</button>
             </div>
