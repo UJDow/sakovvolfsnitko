@@ -1,4 +1,5 @@
 
+window.state = state;
 // ====== ТЕМЫ ======
 const THEMES = [
   {
