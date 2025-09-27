@@ -1195,13 +1195,33 @@ updateProgressMoon(flash = false) {
   }
 };
 function showSimilarModal(similarArr) {
+  // Встроенная функция для приведения к красивому формату
+  function flattenSimilarArtworks(arr) {
+    if (Array.isArray(arr) && arr[0]?.title && arr[0]?.author) return arr;
+    if (Array.isArray(arr) && arr[0]?.motif && Array.isArray(arr[0]?.works)) {
+      let flat = [];
+      for (const motifObj of arr) {
+        for (const work of motifObj.works) {
+          flat.push({
+            title: work.title || '',
+            author: work.author || '',
+            desc: work.desc || '',
+            value: work.value || ''
+          });
+        }
+      }
+      return flat.slice(0, 5);
+    }
+    return arr;
+  }
+
   // Если это строка с ошибкой — просто покажи её
   if (typeof similarArr === 'string') {
     const modal = document.createElement('div');
     modal.className = 'modal similar-modal';
     modal.innerHTML = `
       <div class="modal-content">
-        <h2>Похожие сценарии в искусстве</h2>
+        <h2>Похожие произведения искусства</h2>
         <div style="margin:18px 0;">${utils.escapeHtml(similarArr)}</div>
         <button class="close-modal btn primary" style="margin-top:18px;">Закрыть</button>
       </div>
@@ -1211,46 +1231,30 @@ function showSimilarModal(similarArr) {
     return;
   }
 
-  // Проверяем, что это массив нужного формата
+  // Приводим к нужному формату
+  const arr = flattenSimilarArtworks(similarArr);
+
+  // Генерируем HTML только по нужным полям
   let html = '';
-  if (Array.isArray(similarArr) && similarArr[0]?.motif && Array.isArray(similarArr[0]?.works)) {
-    html = similarArr.map(motifObj => `
-      <div class="similar-motif" style="margin-bottom:24px;">
-        <div style="font-weight:bold; font-size:17px; margin-bottom:8px;">
-          ${utils.escapeHtml(motifObj.motif)}
-        </div>
-        <div>
-          ${motifObj.works.map(work => `
-            <div class="similar-work" style="margin-bottom:12px; padding-left:10px; border-left:3px solid #e0e0e0;">
-              <div><b>${utils.escapeHtml(work.title || '')}</b> (${utils.escapeHtml(work.year || '')}) — <i>${utils.escapeHtml(work.type || '')}</i></div>
-              <div style="color:#666;">${utils.escapeHtml(work.author || '')}</div>
-              <div style="margin-top:4px;">${utils.escapeHtml(work.desc || '')}</div>
-            </div>
-          `).join('')}
-        </div>
+  if (Array.isArray(arr) && arr.length > 0 && arr[0].title) {
+    html = arr.map(item => `
+      <div class="similar-item" style="margin-bottom:18px;">
+        <div style="font-weight:bold;font-size:17px;">${utils.escapeHtml(item.title || '')}</div>
+        <div style="color:#666;">${utils.escapeHtml(item.author || '')}</div>
+        <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
+        <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
       </div>
     `).join('');
-  } else if (Array.isArray(similarArr)) {
-    // Если это просто массив строк или объектов старого формата
-    html = similarArr.map(item => {
-      if (typeof item === 'object') {
-        return `<div class="similar-item">
-          <b>${utils.escapeHtml(item.title || '')}</b> (${utils.escapeHtml(item.author || '')}, ${utils.escapeHtml(item.year || '')})<br>
-          <i>${utils.escapeHtml(item.type || '')}</i><br>
-          <span>${utils.escapeHtml(item.desc || item.description || '')}</span>
-        </div>`;
-      }
-      return `<div class="similar-item">${utils.escapeHtml(item)}</div>`;
-    }).join('');
   } else {
-    html = `<div class="similar-item">${utils.escapeHtml(String(similarArr))}</div>`;
+    html = `<div style="color:#888;">Похожих произведений не найдено.</div>`;
   }
 
+  // Показываем модалку
   const modal = document.createElement('div');
   modal.className = 'modal similar-modal';
   modal.innerHTML = `
     <div class="modal-content" style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:32px 24px;position:relative;">
-      <h2>Похожие сценарии в искусстве</h2>
+      <h2>Похожие произведения искусства</h2>
       <div style="margin:18px 0 0 0;">${html}</div>
       <button class="close-modal btn primary" style="margin-top:18px;">Закрыть</button>
     </div>
