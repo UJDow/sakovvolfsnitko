@@ -1179,23 +1179,30 @@ updateBlockInterpretButton() {
     return;
   }
 
-  // Считаем ВСЕ сообщения (и user, и assistant) по текущему блоку
   const blockId = block.id;
-  const msgCount = (state.chatHistory[blockId] || []).length;
+const history = state.chatHistory[blockId] || [];
+const userCount = history.filter(m => m.role === 'user').length;
+const assistantCount = history.filter(m => m.role === 'assistant').length;
 
-  if (msgCount < 10) {
-    btn.disabled = true;
-    btn.classList.remove('active');
-    if (tooltip) tooltip.classList.remove('show');
-  } else {
-    btn.disabled = false;
-    btn.classList.add('active');
-    // Показываем тултип только если он ещё не показывался для этого блока
-    if (tooltip && !block._interpretTooltipShown) {
-      showMoonTooltip('Можно получить толкование блока');
-      block._interpretTooltipShown = true;
-    }
+// Кнопка и тултип только если и user, и assistant >= 10
+if (userCount < 10 || assistantCount < 10) {
+  btn.disabled = true;
+  btn.classList.remove('active');
+  if (tooltip) tooltip.classList.remove('show');
+} else {
+  btn.disabled = false;
+  btn.classList.add('active');
+  // Показываем тултип только если он ещё не показывался для этого блока
+  // и только в момент, когда assistantCount стал равен 10
+  if (
+    tooltip &&
+    !block._interpretTooltipShown &&
+    assistantCount === 10
+  ) {
+    showMoonTooltip('Можно получить толкование блока');
+    block._interpretTooltipShown = true;
   }
+}
 },
   updateSendButton() {
   const btn = document.getElementById('sendAnswerBtn');
