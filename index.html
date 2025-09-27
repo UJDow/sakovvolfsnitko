@@ -1674,7 +1674,7 @@ body.modal-open {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;     /* важно! */
+  overflow: visible;     /* важно! */
 }
 
 #step3 .chat {
@@ -1805,7 +1805,7 @@ body.step-3-active #step3 .card {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s, transform 0.25s;
-  z-index: 10;
+  z-index: 2000;
 }
 .moon-tooltip.show {
   opacity: 1;
