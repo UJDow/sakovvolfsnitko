@@ -1837,6 +1837,29 @@ body.step-3-active #step3 .card {
   border-style: solid;
   border-color: var(--tooltip-bg) transparent transparent transparent; /* цвет фона */
 }
+
+/* Нормальный размер тоста (общий для обоих режимов) */
+#toastNotice {
+  height: auto !important;
+  min-height: 36px;
+  min-width: 140px;
+  max-width: min(80vw, 420px);
+  box-sizing: border-box;
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 500;
+
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
 .similar-modal {
   position: fixed;
   inset: 0;
