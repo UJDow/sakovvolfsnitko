@@ -289,40 +289,48 @@ utils.lighten = function(hex, percent = 20) {
   b = Math.min(255, b);
   return "#" + (0x1000000 + (r<<16) + (g<<8) + b).toString(16).slice(1);
 };
-
-/**
- * Показывает тултип над кнопкой луны на 3 секунды.
- * @param {string} text - Текст тултипа.
- */
-function showMoonTooltip(text = 'Можно получить толкование блока') {
+function countAssistantMsgs(blockId) {
+const h = state.chatHistory[blockId] || [];
+return h.filter(m => m && (m.role === 'assistant' || m.role === 'system')).length;
+}
+function showMoonTooltip(text = 'Доступно толкование блока') {
   const tooltip = document.getElementById('moonTooltip');
   const moonBtn = document.getElementById('moonBtn');
   if (!tooltip || !moonBtn) return;
 
   tooltip.textContent = text;
 
-  // Получаем координаты кнопки
-  const r = moonBtn.getBoundingClientRect();
-  const centerX = r.left + r.width / 2;
-  const aboveY = r.top; // верх кнопки
+  const place = () => {
+    const r = moonBtn.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const top = r.top;
+    tooltip.style.position = 'fixed';
+    tooltip.style.left = `${Math.round(cx)}px`;
+    tooltip.style.top  = `${Math.round(top)}px`;
+    tooltip.style.display = 'block';
+  };
 
-  // Фиксируем позицию тултипа над кнопкой
-  // Немного сдвигаем вверх на 8–10px, визуальный отступ даст transform в CSS
-  tooltip.style.left = `${Math.round(centerX)}px`;
-  tooltip.style.top = `${Math.round(aboveY)}px`;
+  const onRelayout = () => {
+    if (tooltip.style.display === 'block' && tooltip.classList.contains('show')) {
+      place();
+    }
+  };
 
-  // Показать
-  tooltip.classList.add('show');
-  tooltip.style.display = 'block';
-
-  // Автоматически скрыть через 3 сек
-  clearTimeout(tooltip._hideTimer);
-  tooltip._hideTimer = setTimeout(() => {
+  requestAnimationFrame(() => {
+    place();
     tooltip.classList.remove('show');
-    setTimeout(() => { tooltip.style.display = 'none'; }, 200);
-  }, 3000);
+    requestAnimationFrame(() => tooltip.classList.add('show'));
+    clearTimeout(tooltip._hideTimer);
+    tooltip._hideTimer = setTimeout(() => {
+      tooltip.classList.remove('show');
+      setTimeout(() => { tooltip.style.display = 'none'; }, 200);
+      window.removeEventListener('scroll', onRelayout, true);
+      window.removeEventListener('resize', onRelayout, true);
+    }, 3000);
+    window.addEventListener('scroll', onRelayout, true);
+    window.addEventListener('resize', onRelayout, true);
+  });
 }
-
 ///////////////////////
 // === API === //
 ///////////////////////
@@ -1217,38 +1225,22 @@ updateBlockInterpretButton() {
     return;
   }
 
-  const blockId = block.id;
-  const history = state.chatHistory[blockId] || [];
-  const userCount = history.filter(m => m.role === 'user').length;
-  const assistantCount = history.filter(m => m.role === 'assistant').length;
+  const assistantSystemCount = countAssistantMsgs(block.id);
 
-  console.log(
-    '[updateBlockInterpretButton]',
-    'userCount:', userCount,
-    'assistantCount:', assistantCount,
-    'tooltipShown:', block._interpretTooltipShown
-  );
+  if (assistantSystemCount >= 10) {
+    btn.disabled = false;
+    btn.classList.add('active');
 
-  // Кнопка и тултип только если и user, и assistant >= 10
-  if (userCount < 10 || assistantCount < 10) {
+    if (!block._moonTipShownOnce && assistantSystemCount === 10) {
+      showMoonTooltip('Доступно толкование блока');
+      block._moonTipShownOnce = true;
+    }
+  } else {
     btn.disabled = true;
     btn.classList.remove('active');
     if (tooltip) tooltip.classList.remove('show');
-  } else {
-    btn.disabled = false;
-    btn.classList.add('active');
-    // Тултип только если он ещё не показывался и assistantCount стало ровно 10
-    if (
-      tooltip &&
-      !block._interpretTooltipShown &&
-      assistantCount === 10 &&
-      userCount >= 10
-    ) {
-      console.log('[TOOLTIP] Показываю тултип!');
-      showMoonTooltip('Можно получить толкование блока');
-      block._interpretTooltipShown = true;
-    }
   }
+}
 },
   updateSendButton() {
   const btn = document.getElementById('sendAnswerBtn');
