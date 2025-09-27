@@ -1100,6 +1100,16 @@ updateChat() {
     thinkingEl.classList.remove('sticky-thinking');
   }
 },
+  updateJumpToBottomVisibility() {
+    const chatDiv = document.getElementById('chat');
+    const jumpBtn = document.getElementById('jumpToBottom');
+    if (!chatDiv || !jumpBtn) return;
+    if (chatDiv.scrollHeight - chatDiv.scrollTop - chatDiv.clientHeight > 60) {
+      jumpBtn.style.display = 'block';
+    } else {
+      jumpBtn.style.display = 'none';
+    }
+  },
 
 updateProgressMoon(flash = false) {
   const moonBtn = document.getElementById('moonBtn');
