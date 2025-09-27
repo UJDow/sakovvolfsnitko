@@ -985,12 +985,18 @@ const ui = {
 
 updateChat() {
   const chatDiv = document.getElementById('chat');
+  if (!chatDiv) return;
   chatDiv.innerHTML = '';
   if (!state.currentBlock) {
     document.getElementById('currentBlock').textContent = 'Блок не выбран';
     return;
   }
-  document.getElementById('currentBlock').textContent = 'Блок: ' + (state.currentBlock.text.length > 40 ? state.currentBlock.text.slice(0, 40) + '…' : state.currentBlock.text);
+  document.getElementById('currentBlock').textContent =
+    'Блок: ' +
+    (state.currentBlock.text.length > 40
+      ? state.currentBlock.text.slice(0, 40) + '…'
+      : state.currentBlock.text);
+
   const history = state.chatHistory[state.currentBlock.id] || [];
   history.forEach(msg => {
     const div = document.createElement('div');
@@ -998,19 +1004,21 @@ updateChat() {
     div.textContent = msg.content;
     chatDiv.appendChild(div);
   });
+
   if (state.currentBlock.finalInterpretation) {
     const div = document.createElement('div');
     div.className = 'msg bot final';
-    div.textContent = state.currentBlock.finalInterpretation;
+    div.textContent = String(state.currentBlock.finalInterpretation || '');
     chatDiv.appendChild(div);
   }
+
   chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
   setTimeout(() => {
     chatDiv.scrollTop = chatDiv.scrollHeight;
     ui.updateJumpToBottomVisibility();
     bindChatEvents();
   }, 0);
-  
+
   ui.updateBlockInterpretButton();
   ui.updateBlockNav();
 },
