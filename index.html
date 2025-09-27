@@ -1792,10 +1792,7 @@ body.step-3-active #step3 .card {
   box-shadow: 0 0 0 2px #ffe06655;
 }
 .moon-tooltip {
-  position: absolute;
-  left: 50%;
-  top: -38px;
-  transform: translateX(-50%);
+  position: fixed;                  /* было absolute */
   background: #222;
   color: #fff;
   padding: 6px 14px;
@@ -1804,13 +1801,26 @@ body.step-3-active #step3 .card {
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s;
-  z-index: 2000;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 3000;                    /* выше кнопок/меню */
+  transform: translate(-50%, -8px) scale(1.0); /* по умолчанию чуть сдвинут вверх */
 }
 .moon-tooltip.show {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(-8px) scale(1.05);
+  transform: translate(-50%, -12px) scale(1.02); /* лёгкая анимация */
+}
+    /* Носик снизу тултипа, указывает на кнопку */
+.moon-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #222;
 }
 
 .similar-modal {
