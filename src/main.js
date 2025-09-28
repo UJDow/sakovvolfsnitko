@@ -319,6 +319,7 @@ utils.lighten = function(hex, percent = 20) {
 /**
  * Локальный тост над кнопкой "луны"
  */
+// utils.js или в main.js
 utils.showToastNearMoon = function(msg, type = 'info', timeout = 2600) {
   const toast = document.getElementById('toastNotice');
   const moonBtn = document.getElementById('moonBtn');
@@ -326,59 +327,39 @@ utils.showToastNearMoon = function(msg, type = 'info', timeout = 2600) {
 
   toast.textContent = msg;
   toast.style.background = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#2563eb');
-
-  // сброс позиционирования и анимаций, чтобы не тянуло вниз и не было "карандаша"
-  toast.style.right = '';
-  toast.style.bottom = '';
-  toast.style.top = '';      // на всякий случай чистим остатки
-  toast.style.left = '';     // на всякий случай чистим остатки
-  toast.style.transform = 'none';
-  toast.style.transition = 'opacity 0.3s';
-
-  // показать
   toast.style.display = 'block';
   toast.style.opacity = '0.97';
   toast.style.pointerEvents = 'none';
+  toast.style.transition = 'opacity 0.3s';
 
-  const layoutNearMoon = () => {
-    const r = moonBtn.getBoundingClientRect();
-    const centerX = r.left + r.width / 2;
+  // Позиционируем над луной
+  const r = moonBtn.getBoundingClientRect();
+  const tw = toast.offsetWidth;
+  const th = toast.offsetHeight;
+  const gap = 12;
+  const left = Math.max(8, Math.min(window.innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
+  const top = Math.max(8, r.top - th - gap);
 
-    // временно отключим transition, чтобы позиция не анимировалась
-    const prevTransition = toast.style.transition;
-    toast.style.transition = 'none';
+  toast.style.left = left + 'px';
+  toast.style.top = top + 'px';
+  toast.style.right = '';
+  toast.style.bottom = '';
+  toast.style.transform = 'none';
 
-    // принудительно измерим размеры после display:block
-    const tw = toast.offsetWidth;
-    const th = toast.offsetHeight;
-    const gap = 12;
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.style.display = 'none'; }, 350);
+  }, timeout);
 
-    let left = Math.round(centerX - tw / 2);
-    let top = Math.round(r.top - th - gap);
-
-    const vw = window.innerWidth;
-    if (left < 8) left = 8;
-    if (left + tw > vw - 8) left = vw - 8 - tw;
-    if (top < 8) top = 8;
-
-    toast.style.left = left + 'px';
-    toast.style.top = top + 'px';
-    toast.style.transform = 'none';
-    toast.style.transition = prevTransition || 'opacity 0.3s';
-  };
-
-  requestAnimationFrame(() => {
-    layoutNearMoon();
-    clearTimeout(toast._hideTimer);
-    toast._hideTimer = setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => { toast.style.display = 'none'; }, 350);
-    }, timeout);
-  });
-
+  // Перепозиционируем при ресайзе/скролле
   const relayout = () => {
     if (toast.style.display !== 'block' || toast.style.opacity === '0') return;
-    layoutNearMoon(); // перепозиционирование без перезапуска таймера
+    const r = moonBtn.getBoundingClientRect();
+    const left = Math.max(8, Math.min(window.innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
+    const top = Math.max(8, r.top - th - gap);
+    toast.style.left = left + 'px';
+    toast.style.top = top + 'px';
   };
   window.addEventListener('resize', relayout, { once: true });
   window.addEventListener('scroll', relayout, { once: true, capture: true });
