@@ -243,29 +243,30 @@ const utils = {
     );
   },
 
-  showToast(msg, type = 'info', timeout = 2600) {
+ showToast(msg, type = 'info', timeout = 2600) {
   const toast = document.getElementById('toastNotice');
   if (!toast) return;
 
   toast.textContent = msg;
-  toast.style.background = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#2563eb');
+  toast.style.background = type === 'error'
+    ? '#ef4444'
+    : (type === 'success' ? '#10b981' : '#2563eb');
 
-  // сброс позиционирования для "центра снизу"
-  toast.style.top = '';
-  toast.style.left = '';
+  // Центрирование по экрану
+  toast.style.top = '50%';
+  toast.style.left = '50%';
   toast.style.right = '';
-  toast.style.bottom = '32px';
-  toast.style.transform = 'translateX(-50%)';
+  toast.style.bottom = '';
+  toast.style.transform = 'translate(-50%, -50%)';
   toast.style.transition = 'opacity 0.3s';
 
-  // показать
   toast.style.display = 'block';
   toast.style.opacity = '0.97';
+  toast.style.pointerEvents = 'none';
 
   clearTimeout(toast._hideTimer);
   toast._hideTimer = setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.bottom = '12px';
     setTimeout(() => { toast.style.display = 'none'; }, 350);
   }, timeout);
 },
