@@ -862,38 +862,40 @@ const chat = {
   },
 
   // Итоговое толкование блока
-  async blockInterpretation() {
-    if (!state.currentBlock) {
-      utils.showToast('Блок не выбран', 'error');
-      return;
+  // Итоговое толкование блока
+async blockInterpretation() {
+  if (!state.currentBlock) {
+    utils.showToast('Блок не выбран', 'error');
+    return;
+  }
+  const block = state.currentBlock;
+  const blockId = block.id;
+  const history = state.chatHistory[blockId] || [];
+  ui.setThinking(true);
+  try {
+    const payload = buildAnalyzePayload({
+      fullHistory: history,
+      blockText: block.text,
+      rollingSummary: block.rollingSummary,
+      extraSystemPrompt: "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.",
+      maxTurns: 6
+    });
+    const res = await api.analyze(payload);
+    let interpretation = res?.choices?.[0]?.message?.content;
+    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+      interpretation = 'Ошибка: пустой ответ от сервера.';
     }
-    const block = state.currentBlock;
-    const blockId = block.id;
-    const history = state.chatHistory[blockId] || [];
-    ui.setThinking(true);
-    try {
-      const payload = buildAnalyzePayload({
-        fullHistory: history,
-        blockText: block.text,
-        rollingSummary: block.rollingSummary,
-        extraSystemPrompt: "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.",
-        maxTurns: 6
-      });
-      const res = await api.analyze(payload);
-      let interpretation = res?.choices?.[0]?.message?.content;
-      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-        interpretation = 'Ошибка: пустой ответ от сервера.';
-      }
-      block.finalInterpretation = interpretation;
-      ui.updateChat();
-      ui.updateBlockInterpretButton();      // обновляем состояние кнопки "Толкование"
-      ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
-      utils.showToast('Толкование блока готово', 'success');
-    } catch (e) {
-      utils.showToast('Ошибка при толковании блока', 'error');
-    }
-    ui.setThinking(false);
-  },
+    block.finalInterpretation = interpretation;
+    await dreams.saveCurrent(); // ← АВТОСОХРАНЕНИЕ!
+    ui.updateChat();
+    ui.updateBlockInterpretButton();
+    ui.updateFinalInterpretButton();
+    utils.showToast('Толкование блока готово', 'success');
+  } catch (e) {
+    utils.showToast('Ошибка при толковании блока', 'error');
+  }
+  ui.setThinking(false);
+},
 
   // Итоговое толкование всего сна
   async globalInterpretation() {
