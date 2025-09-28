@@ -828,22 +828,31 @@ const chat = {
       block.turnsCount = (block.turnsCount || 0) + 1;
 
       if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
-        const resSum = await api.summarize({
-          history,
-          blockText: block.text,
-          existingSummary: block.rollingSummary || ''
-        });
-        block.rollingSummary = resSum.summary || block.rollingSummary;
-        block.turnsCount = 0;
-      }
+  const resSum = await api.summarize({
+    history,
+    blockText: block.text,
+    existingSummary: block.rollingSummary || ''
+  });
+  block.rollingSummary = resSum.summary || block.rollingSummary;
+  // Обрезаем summary, если вдруг разрослось
+  if (block.rollingSummary && block.rollingSummary.length > 2000) {
+    block.rollingSummary = block.rollingSummary.slice(-2000);
+  }
+  block.turnsCount = 0;
+  // НЕ обрезай state.chatHistory[blockId] — пусть вся история остаётся для UI и подсчёта!
+}
 
       ui.updateChat();
       ui.updateProgressMoon();
       if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
     } catch (e) {
       console.error('[debug] error in sendToAI', e);
-      state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
-      ui.updateChat();
+      const history = state.chatHistory[blockId];
+if (history.length && history[history.length - 1].content && history[history.length - 1].content.startsWith('Ошибка')) {
+  history.pop();
+}
+state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
+ui.updateChat();
     }
     ui.setThinking(false);
   },
@@ -1146,11 +1155,23 @@ const ui = {
 
     const history = state.chatHistory[state.currentBlock.id] || [];
     history.forEach(msg => {
-      const div = document.createElement('div');
-      div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
-      div.textContent = msg.content;
-      chatDiv.appendChild(div);
-    });
+  const div = document.createElement('div');
+  div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
+  div.textContent = msg.content;
+
+  // Если это ошибка — добавляем кнопку "Повторить"
+  if (msg.content && msg.content.startsWith('Ошибка')) {
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'retry-btn';
+    retryBtn.textContent = 'Повторить запрос';
+    retryBtn.onclick = async () => {
+      await chat.sendToAI(state.currentBlock.id);
+    };
+    div.appendChild(retryBtn);
+  }
+
+  chatDiv.appendChild(div);
+});
 
     if (state.currentBlock.finalInterpretation) {
       const div = document.createElement('div');
