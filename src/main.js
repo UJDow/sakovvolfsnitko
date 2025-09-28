@@ -957,7 +957,7 @@ const chat = {
     utils.showToast('Ошибка при итоговом толковании сна', 'error');
   }
   ui.setThinking(false);
-},
+}
 
 ///////////////////////
 // === UI === //
