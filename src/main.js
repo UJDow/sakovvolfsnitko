@@ -177,10 +177,10 @@ const THEME_STD = "std"; // стандартная (системная)
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
 
-const MAX_LAST_TURNS_TO_SEND = 16;
-const MAX_TURNS_BEFORE_SUMMARY = 5;
-const MAX_BLOCKTEXT_LEN_TO_SEND = 4000;
-const MAX_USER_INPUT_LEN = 1200; // ограничение на длину ввода
+const MAX_LAST_TURNS_TO_SEND = 16; // было 6
+const MAX_TURNS_BEFORE_SUMMARY = 5; // было 8
+const MAX_BLOCKTEXT_LEN_TO_SEND = 3500; // можно 3500-4000, но лучше чуть меньше для устойчивости
+const MAX_USER_INPUT_LEN = 1200;
 
 // === Централизованная сборка payload для анализа и толкования ===
 function buildAnalyzePayload({
@@ -872,6 +872,7 @@ const chat = {
   const history = state.chatHistory[blockId] || [];
   ui.setThinking(true);
   let interpretation = '';
+  const SYSTEM_PROMPT_BLOCK = "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
   try {
     // Первый запрос — полный контекст
     const payload = buildAnalyzePayload({
@@ -887,8 +888,8 @@ const chat = {
     // Fallback — если пусто
     if (!interpretation) {
       const fallbackPayload = buildAnalyzePayload({
-        fullHistory: [], // убираем lastTurns
-        blockText: block.text.slice(0, 1500),
+        fullHistory: [],
+        blockText: (block.text || '').slice(0, 1500),
         rollingSummary: (block.rollingSummary || '').slice(0, 700),
         extraSystemPrompt: SYSTEM_PROMPT_BLOCK,
         maxTurns: 0
@@ -906,8 +907,8 @@ const chat = {
     utils.showToast('Ошибка при толковании блока', 'error');
   }
   ui.setThinking(false);
-}
-const SYSTEM_PROMPT_BLOCK = "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
+},
+
   // Итоговое толкование всего сна
   async globalInterpretation() {
   if (!state.currentDream) {
@@ -920,6 +921,7 @@ const SYSTEM_PROMPT_BLOCK = "Составь единое итоговое тол
     utils.showToast('Нужно минимум 2 блока с толкованием', 'error');
     return;
   }
+  const SYSTEM_PROMPT_GLOBAL = "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
   const dreamText = (state.currentDream.dreamText || '').slice(0, 2500);
   let mergedFinals = finals.join('\n').slice(0, 6000);
   ui.setThinking(true);
@@ -955,8 +957,8 @@ const SYSTEM_PROMPT_BLOCK = "Составь единое итоговое тол
     utils.showToast('Ошибка при итоговом толковании сна', 'error');
   }
   ui.setThinking(false);
-}
-const SYSTEM_PROMPT_GLOBAL = "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
+};
+
 ///////////////////////
 // === UI === //
 ///////////////////////
