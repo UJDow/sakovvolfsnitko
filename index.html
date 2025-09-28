@@ -1840,20 +1840,21 @@ body.step-3-active #step3 .card {
 
 /* Нормальный размер тоста (общий для обоих режимов) */
 #toastNotice {
-  min-width: 180px !important;
-  max-width: 320px !important;
-  padding: 12px 20px !important;
-  border-radius: 12px !important;
-  font-size: 16px !important;
-  line-height: 1.4 !important;
-  white-space: pre-line !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18) !important;
-  text-align: center !important;
-  right: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  top: auto !important;
-  transform: none !important;
+  position: fixed;
+  z-index: 9999;
+  min-width: 180px;
+  max-width: 340px;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  background: #2563eb;
+  box-shadow: 0 4px 24px rgba(30,41,59,0.13);
+  opacity: 0;
+  display: none;
+  pointer-events: none;
+  transition: opacity 0.3s;
 }
 
 .similar-modal {
