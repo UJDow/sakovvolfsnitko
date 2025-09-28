@@ -1841,12 +1841,15 @@ body.step-3-active #step3 .card {
 /* Нормальный размер тоста (общий для обоих режимов) */
 #toastNotice {
   position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 9999;
-  min-width: 180px;
+  min-width: 220px;
   max-width: 340px;
-  padding: 14px 22px;
-  border-radius: 12px;
-  font-size: 16px;
+  padding: 16px 28px;
+  border-radius: 14px;
+  font-size: 17px;
   font-weight: 500;
   color: #fff;
   background: #2563eb;
@@ -1854,7 +1857,9 @@ body.step-3-active #step3 .card {
   opacity: 0;
   display: none;
   pointer-events: none;
+  text-align: center;
   transition: opacity 0.3s;
+  word-break: break-word;
 }
 
 .similar-modal {
