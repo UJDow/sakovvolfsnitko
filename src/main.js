@@ -795,26 +795,31 @@ const chat = {
     await chat.sendToAI(blockId);
   },
 
-  // Отправка истории блока в AI (обычный ход диалога)
-  async sendToAI(blockId) {
-    const block = state.blocks.find(b => b.id === blockId);
-    if (!block) return;
-    ui.setThinking(true);
+  // Отправка истории блока в AI (обычный ход диалога) с автоповтором при ошибке
+async sendToAI(blockId) {
+  const block = state.blocks.find(b => b.id === blockId);
+  if (!block) return;
+  ui.setThinking(true);
+
+  // Миграция старых сообщений (если есть)
+  state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
+    if (typeof m === 'string') return { role: 'user', content: m };
+    if (m && typeof m === 'object' && m.role && m.content) return m;
+    return { role: 'user', content: String(m) };
+  });
+
+  const history = state.chatHistory[blockId] || [];
+  const payload = buildAnalyzePayload({
+    fullHistory: state.chatHistory[blockId], // вся история!
+    blockText: block.text,
+    rollingSummary: block.rollingSummary,
+    extraSystemPrompt: null,
+    maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
+  });
+
+  let lastError = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      // Миграция старых сообщений (если есть)
-      state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
-        if (typeof m === 'string') return { role: 'user', content: m };
-        if (m && typeof m === 'object' && m.role && m.content) return m;
-        return { role: 'user', content: String(m) };
-      });
-      const history = state.chatHistory[blockId] || [];
-      const payload = buildAnalyzePayload({
-        fullHistory: state.chatHistory[blockId], // вся история!
-        blockText: block.text,
-        rollingSummary: block.rollingSummary,
-        extraSystemPrompt: null,
-        maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
-      });
       const res = await api.analyze(payload);
       let aiMsg = res?.choices?.[0]?.message?.content;
       if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
@@ -828,34 +833,41 @@ const chat = {
       block.turnsCount = (block.turnsCount || 0) + 1;
 
       if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
-  const resSum = await api.summarize({
-    history,
-    blockText: block.text,
-    existingSummary: block.rollingSummary || ''
-  });
-  block.rollingSummary = resSum.summary || block.rollingSummary;
-  // Обрезаем summary, если вдруг разрослось
-  if (block.rollingSummary && block.rollingSummary.length > 2000) {
-    block.rollingSummary = block.rollingSummary.slice(-2000);
-  }
-  block.turnsCount = 0;
-  // НЕ обрезай state.chatHistory[blockId] — пусть вся история остаётся для UI и подсчёта!
-}
+        const resSum = await api.summarize({
+          history,
+          blockText: block.text,
+          existingSummary: block.rollingSummary || ''
+        });
+        block.rollingSummary = resSum.summary || block.rollingSummary;
+        if (block.rollingSummary && block.rollingSummary.length > 2000) {
+          block.rollingSummary = block.rollingSummary.slice(-2000);
+        }
+        block.turnsCount = 0;
+      }
 
       ui.updateChat();
       ui.updateProgressMoon();
       if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
+      ui.setThinking(false);
+      return; // Успех — выходим
     } catch (e) {
-      console.error('[debug] error in sendToAI', e);
+      lastError = e;
+      console.error(`[debug] error in sendToAI, попытка ${attempt}:`, e);
+      // Не показываем ошибку пользователю на первой попытке
+      if (attempt === 1) continue;
+      // Если это вторая попытка — показываем ошибку как обычно
       const history = state.chatHistory[blockId];
-if (history.length && history[history.length - 1].content && history[history.length - 1].content.startsWith('Ошибка')) {
-  history.pop();
-}
-state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
-ui.updateChat();
+      if (history.length && history[history.length - 1].content && history[history.length - 1].content.startsWith('Ошибка')) {
+        history.pop();
+      }
+      state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
+      ui.updateChat();
+      ui.setThinking(false);
+      return;
     }
-    ui.setThinking(false);
-  },
+  }
+  ui.setThinking(false);
+},
 
   // Итоговое толкование блока
 // Итоговое толкование блока
