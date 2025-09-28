@@ -1705,9 +1705,10 @@ const session = {
 function bindEvents() {
   // --- АВТОРИЗАЦИЯ ---
   document.getElementById('startTrialBtn').onclick = () => {
-    document.getElementById('trialStartScreen').style.display = 'none';
-    document.getElementById('authCard').style.display = 'flex';
-  };
+  document.getElementById('trialStartScreen').style.display = 'none';
+  document.getElementById('authCard').style.display = 'flex';
+  document.getElementById('tabRegister').click();
+};
   document.getElementById('showLoginLink').onclick = e => {
     e.preventDefault();
     document.getElementById('trialStartScreen').style.display = 'none';
