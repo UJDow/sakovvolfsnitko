@@ -454,17 +454,40 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 
 .btn:hover { box-shadow: 0 6px 12px -1px rgba(0,0,0,0.15); }
 .btn.primary {
-  background: var(--primary);
-  color: var(--on-primary);
-  border: none;
-  font-weight: 600;
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 700;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.10);
 }
 .btn.primary:hover {
-  /* легкое тонирование card-bg, если нет --primary-hover */
-  background: color-mix(in srgb, var(--primary) 88%, transparent);
+  background: #1d4ed8 !important;
 }
-.btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--primary); }
-.btn.secondary:hover { background: color-mix(in srgb, var(--card-bg) 85%, var(--primary) 15%); }
+
+.btn.secondary {
+  background: #fff !important;
+  color: #2563eb !important;
+  border: 1.5px solid #2563eb !important;
+  font-weight: 600;
+}
+.btn.secondary:hover {
+  background: #e0e7ef !important;
+}
+
+input, textarea {
+  color: #1e293b !important;
+  background: #fff !important;
+  border: 1.5px solid #2563eb !important;
+  font-size: 1.08rem;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+  color: #f1f5f9 !important;
+  background: #17223D !important;
+  border: 1.5px solid #4670FF !important;
+}
 
 .blocks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 
