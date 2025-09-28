@@ -1911,39 +1911,96 @@ body.step-3-active #step3 .card {
   to { transform: rotate(360deg); }
 }
 
-/* 1. Убираем лишние margin между аккордеонами */
-#dreamPreviewModal .accordion {
-  margin: 4px 0 4px 0;
-}
-#dreamPreviewModal .accordion + .accordion {
-  margin-top: 4px;
+/* --- Accordion for Dream Preview Modal --- */
+.accordion {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  margin: 10px 0 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
-/* 2. Делаем скролл внутри текста всегда рабочим */
+.accordion + .accordion {
+  margin-top: 12px;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 14px;
+  user-select: none;
+  background: color-mix(in srgb, var(--card-bg) 85%, #000 15%);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.accordion-header .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accordion-header .chev {
+  transition: transform 0.18s ease;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.accordion.expanded .accordion-header .chev {
+  transform: rotate(90deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.22s ease;
+  background: transparent;
+}
+
+.accordion-content-inner {
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* Внутренние элементы списка похожих работ */
+.accordion .similar-item {
+  margin: 0 0 14px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.accordion .similar-item:last-child {
+  border-bottom: none;
+}
+
+/* Аккордеоны в модалке "Просмотр сна": простой показ/скрытие и локальный скролл */
+#dreamPreviewModal .accordion-content {
+  display: none;               /* по умолчанию скрыто */
+}
+
+#dreamPreviewModal .accordion.expanded .accordion-content {
+  display: block;              /* показываем при .expanded */
+}
+
 #dreamPreviewModal .accordion-content-inner {
-  max-height: 50vh;
-  overflow-y: auto !important;
+  max-height: 50vh;            /* ограничиваем высоту секции */
+  overflow-y: auto;            /* локальный скролл внутри секции */
   -webkit-overflow-scrolling: touch;
-  padding: 10px 12px;
-  margin: 0;
 }
 
-/* 3. Для длинного текста сновидения — чуть больше высоты */
-#accDreamText .accordion-content-inner { max-height: 60vh; }
-
-/* 4. Убираем лишние отступы у похожих работ */
-#dreamPreviewModal .similar-item {
-  margin-bottom: 8px;
-  padding: 8px 0;
-}
-
-/* 5. Убираем лишние margin/padding у внутренних блоков */
-#dreamPreviewModal .accordion-content-inner > *:first-child {
-  margin-top: 0 !important;
-}
-#dreamPreviewModal .accordion-content-inner > *:last-child {
-  margin-bottom: 0 !important;
-}
+/* При желании — разные лимиты по секциям */
+#accDreamText .accordion-content-inner { max-height: 56vh; }
+#accGlobalInterpret .accordion-content-inner,
+#accBlockInterprets .accordion-content-inner { max-height: 44vh; }
+#accSimilarArt .accordion-content-inner { max-height: 40vh; }
   
   </style>
 </head>
