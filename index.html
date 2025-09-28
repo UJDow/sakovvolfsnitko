@@ -1842,24 +1842,21 @@ body.step-3-active #step3 .card {
 #toastNotice {
   position: fixed;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
+  bottom: 40px;
+  transform: translateX(-50%);
   min-width: 220px;
-  max-width: 340px;
-  padding: 16px 28px;
-  border-radius: 14px;
-  font-size: 17px;
-  font-weight: 500;
+  max-width: 90vw;
+  padding: 16px 24px;
+  background: #222;
   color: #fff;
-  background: #2563eb;
-  box-shadow: 0 4px 24px rgba(30,41,59,0.13);
-  opacity: 0;
-  display: none;
-  pointer-events: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  font-size: 16px;
   text-align: center;
-  transition: opacity 0.3s;
-  word-break: break-word;
+  z-index: 9999;
+  display: none; /* или block, когда показываешь */
+  pointer-events: none;
+  white-space: pre-line;
 }
 
 .similar-modal {
