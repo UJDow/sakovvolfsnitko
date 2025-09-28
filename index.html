@@ -1971,6 +1971,27 @@ body.step-3-active #step3 .card {
 .accordion .similar-item:last-child {
   border-bottom: none;
 }
+
+/* Аккордеоны в модалке "Просмотр сна": простой показ/скрытие и локальный скролл */
+#dreamPreviewModal .accordion-content {
+  display: none;               /* по умолчанию скрыто */
+}
+
+#dreamPreviewModal .accordion.expanded .accordion-content {
+  display: block;              /* показываем при .expanded */
+}
+
+#dreamPreviewModal .accordion-content-inner {
+  max-height: 50vh;            /* ограничиваем высоту секции */
+  overflow-y: auto;            /* локальный скролл внутри секции */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* При желании — разные лимиты по секциям */
+#accDreamText .accordion-content-inner { max-height: 56vh; }
+#accGlobalInterpret .accordion-content-inner,
+#accBlockInterprets .accordion-content-inner { max-height: 44vh; }
+#accSimilarArt .accordion-content-inner { max-height: 40vh; }
   
   </style>
 </head>
