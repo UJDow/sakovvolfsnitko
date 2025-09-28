@@ -816,7 +816,6 @@ const chat = {
   },
 
   // Отправка истории блока в AI (обычный ход диалога)
-  // Отправка истории блока в AI (обычный ход диалога)
 async sendToAI(blockId) {
   const block = state.blocks.find(b => b.id === blockId);
   if (!block) return;
@@ -881,7 +880,6 @@ async sendToAI(blockId) {
 },
 
   // Итоговое толкование блока
-  // Итоговое толкование блока
 async blockInterpretation() {
   if (!state.currentBlock) {
     utils.showToast('Блок не выбран', 'error');
@@ -938,7 +936,6 @@ async blockInterpretation() {
   ui.setThinking(false);
 },
 
-  // Итоговое толкование всего сна
   // Итоговое толкование всего сна
 async globalInterpretation() {
   if (!state.currentDream) {
@@ -1012,6 +1009,7 @@ async globalInterpretation() {
   }
   ui.setThinking(false);
 },
+  
 ///////////////////////
 // === UI === //
 ///////////////////////
