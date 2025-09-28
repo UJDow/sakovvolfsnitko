@@ -862,7 +862,6 @@ const chat = {
   },
 
   // Итоговое толкование блока
-  // Итоговое толкование блока
 async blockInterpretation() {
   if (!state.currentBlock) {
     utils.showToast('Блок не выбран', 'error');
@@ -918,7 +917,8 @@ async globalInterpretation() {
     if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
       interpretation = 'Ошибка: пустой ответ от сервера.';
     }
-    state.globalFinalInterpretation = interpretation;
+    // ВАЖНО: сохраняем в текущий сон!
+    state.currentDream.globalFinalInterpretation = interpretation;
     await dreams.saveCurrent(); // ← АВТОСОХРАНЕНИЕ!
     ui.showFinalDialog();
     ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
@@ -928,7 +928,6 @@ async globalInterpretation() {
   }
   ui.setThinking(false);
 }
-
 ///////////////////////
 // === UI === //
 ///////////////////////
