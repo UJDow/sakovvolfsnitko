@@ -897,26 +897,52 @@ async globalInterpretation() {
     return;
   }
   const dreamText = state.currentDream.dreamText || '';
-  const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
+
+  // 1. rolling summary блоков
+  const allSummaries = state.blocks
+    .map((b, i) => b.rollingSummary && b.rollingSummary.trim()
+      ? `Блок ${i + 1} summary: ${b.rollingSummary.trim()}`
+      : null)
+    .filter(Boolean)
+    .join('\n');
+
+  // 2. Итоговые толкования блоков
+  const blockFinals = state.blocks
+    .map((b, i) => b.finalInterpretation && b.finalInterpretation.trim()
+      ? `Блок ${i + 1} итог: ${b.finalInterpretation.trim()}`
+      : null)
+    .filter(Boolean)
+    .join('\n');
+
+  // 3. Структурированный summary
+  const combinedSummary = [
+    allSummaries ? "Summary блоков:\n" + allSummaries : "",
+    blockFinals ? "Итоговые толкования блоков:\n" + blockFinals : ""
+  ].filter(Boolean).join('\n\n');
+
   ui.setThinking(true);
   try {
     const payload = {
       blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
       lastTurns: [],
-      rollingSummary: allSummaries || null,
-      extraSystemPrompt: "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов."
+      rollingSummary: combinedSummary || null,
+      extraSystemPrompt:
+        "Составь единое итоговое толкование сновидения (5–9 предложений), " +
+        "учитывая summary и итоговые толкования блоков, а также полный текст сна. " +
+        "Свяжи общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. " +
+        "Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. " +
+        "Выведи только чистый текст без заголовков, без кода и без тегов."
     };
     const res = await api.analyze(payload);
     let interpretation = res?.choices?.[0]?.message?.content;
     if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
       interpretation = 'Ошибка: пустой ответ от сервера.';
     }
-    // ВАЖНО: сохраняем в текущий сон!
     state.currentDream.globalFinalInterpretation = interpretation;
-    await dreams.saveCurrent(); // ← АВТОСОХРАНЕНИЕ!
-    await dreams.load(); // ← ДОБАВЬ ЭТУ СТРОКУ!
+    await dreams.saveCurrent();
+    await dreams.load();
     ui.showFinalDialog();
-    ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+    ui.updateFinalInterpretButton();
     utils.showToast('Итоговое толкование сна готово', 'success');
   } catch (e) {
     utils.showToast('Ошибка при итоговом толковании сна', 'error');
