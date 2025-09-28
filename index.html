@@ -2014,6 +2014,66 @@ body.step-3-active #step3 .card {
   box-shadow: none !important;
   margin: 0 0 4px 0;
 }
+
+.btn, .icon-btn, .close-btn, .toggle-btn, .menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-height: 38px;
+  min-width: 38px;
+  padding: 10px 22px;
+  background: var(--card-bg);
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  outline: none;
+  gap: 8px;
+}
+.btn.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.btn.primary:hover, .btn.primary:focus-visible {
+  background: var(--primary-hover);
+}
+.btn.secondary {
+  background: var(--card-bg);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  font-weight: 600;
+}
+.btn.secondary:hover, .btn.secondary:focus-visible {
+  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%);
+}
+.icon-btn, .close-btn, .toggle-btn, .menu-btn {
+  padding: 0;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  font-size: 1.3em;
+  background: transparent;
+  color: var(--primary);
+  border: none;
+  box-shadow: none;
+}
+.icon-btn:hover, .close-btn:hover, .toggle-btn:hover, .menu-btn:hover {
+  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%);
+  color: var(--primary-hover);
+}
+.close-btn {
+  color: var(--text-secondary);
+  font-size: 1.5em;
+}
+.close-btn:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%);
+}
   
   </style>
 </head>
