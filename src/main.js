@@ -1539,20 +1539,21 @@ function bindAccordion(rootEl) {
     const header = acc.querySelector('.accordion-header');
     const content = acc.querySelector('.accordion-content');
     // Инициализация высоты для уже раскрытых
-    if (acc.classList.contains('expanded')) {
-      // временно ставим auto, измеряем, затем фиксируем max-height
-      content.style.maxHeight = content.scrollHeight + 'px';
-    }
-    header.onclick = () => {
-      const isOpen = acc.classList.contains('expanded');
-      if (isOpen) {
-        acc.classList.remove('expanded');
-        content.style.maxHeight = 0;
-      } else {
-        acc.classList.add('expanded');
-        content.style.maxHeight = content.scrollHeight + 'px';
-      }
-    };
+   if (acc.classList.contains('expanded')) {
+  content.style.display = 'block';
+} else {
+  content.style.display = 'none';
+}
+header.onclick = () => {
+  const isOpen = acc.classList.contains('expanded');
+  if (isOpen) {
+    acc.classList.remove('expanded');
+    content.style.display = 'none';
+  } else {
+    acc.classList.add('expanded');
+    content.style.display = 'block';
+  }
+};
   });
 }
 
