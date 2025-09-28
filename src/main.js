@@ -177,10 +177,10 @@ const THEME_STD = "std"; // стандартная (системная)
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
 
-const MAX_LAST_TURNS_TO_SEND = 16; // было 6
-const MAX_TURNS_BEFORE_SUMMARY = 5; // было 8
-const MAX_BLOCKTEXT_LEN_TO_SEND = 3500; // можно 3500-4000, но лучше чуть меньше для устойчивости
-const MAX_USER_INPUT_LEN = 1200;
+const MAX_LAST_TURNS_TO_SEND = 6;
+const MAX_TURNS_BEFORE_SUMMARY = 8;
+const MAX_BLOCKTEXT_LEN_TO_SEND = 4000;
+const MAX_USER_INPUT_LEN = 1200; // ограничение на длину ввода
 
 // === Централизованная сборка payload для анализа и толкования ===
 function buildAnalyzePayload({
@@ -863,100 +863,68 @@ const chat = {
 
   // Итоговое толкование блока
   async blockInterpretation() {
-  if (!state.currentBlock) {
-    utils.showToast('Блок не выбран', 'error');
-    return;
-  }
-  const block = state.currentBlock;
-  const blockId = block.id;
-  const history = state.chatHistory[blockId] || [];
-  ui.setThinking(true);
-  let interpretation = '';
-  const SYSTEM_PROMPT_BLOCK = "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
-  try {
-    // Первый запрос — полный контекст
-    const payload = buildAnalyzePayload({
-      fullHistory: history,
-      blockText: block.text,
-      rollingSummary: block.rollingSummary,
-      extraSystemPrompt: SYSTEM_PROMPT_BLOCK,
-      maxTurns: MAX_LAST_TURNS_TO_SEND
-    });
-    const res = await api.analyze(payload);
-    interpretation = res?.choices?.[0]?.message?.content?.trim() || '';
-
-    // Fallback — если пусто
-    if (!interpretation) {
-      const fallbackPayload = buildAnalyzePayload({
-        fullHistory: [],
-        blockText: (block.text || '').slice(0, 1500),
-        rollingSummary: (block.rollingSummary || '').slice(0, 700),
-        extraSystemPrompt: SYSTEM_PROMPT_BLOCK,
-        maxTurns: 0
-      });
-      const res2 = await api.analyze(fallbackPayload);
-      interpretation = res2?.choices?.[0]?.message?.content?.trim() || 'Ошибка: пустой ответ от сервера.';
+    if (!state.currentBlock) {
+      utils.showToast('Блок не выбран', 'error');
+      return;
     }
-    block.finalInterpretation = interpretation;
-    await dreams.saveCurrent(); // автосохранение!
-    ui.updateChat();
-    ui.updateBlockInterpretButton();
-    ui.updateFinalInterpretButton();
-    utils.showToast('Толкование блока готово', 'success');
-  } catch (e) {
-    utils.showToast('Ошибка при толковании блока', 'error');
-  }
-  ui.setThinking(false);
-},
+    const block = state.currentBlock;
+    const blockId = block.id;
+    const history = state.chatHistory[blockId] || [];
+    ui.setThinking(true);
+    try {
+      const payload = buildAnalyzePayload({
+        fullHistory: history,
+        blockText: block.text,
+        rollingSummary: block.rollingSummary,
+        extraSystemPrompt: "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.",
+        maxTurns: 6
+      });
+      const res = await api.analyze(payload);
+      let interpretation = res?.choices?.[0]?.message?.content;
+      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+        interpretation = 'Ошибка: пустой ответ от сервера.';
+      }
+      block.finalInterpretation = interpretation;
+      ui.updateChat();
+      ui.updateBlockInterpretButton();      // обновляем состояние кнопки "Толкование"
+      ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+      utils.showToast('Толкование блока готово', 'success');
+    } catch (e) {
+      utils.showToast('Ошибка при толковании блока', 'error');
+    }
+    ui.setThinking(false);
+  },
 
   // Итоговое толкование всего сна
   async globalInterpretation() {
-  if (!state.currentDream) {
-    utils.showToast('Сон не выбран', 'error');
-    return;
-  }
-  // Только если ≥2 финальных толкования
-  const finals = state.blocks.map(b => (b.finalInterpretation || '').trim()).filter(Boolean);
-  if (finals.length < 2) {
-    utils.showToast('Нужно минимум 2 блока с толкованием', 'error');
-    return;
-  }
-  const SYSTEM_PROMPT_GLOBAL = "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
-  const dreamText = (state.currentDream.dreamText || '').slice(0, 2500);
-  let mergedFinals = finals.join('\n').slice(0, 6000);
-  ui.setThinking(true);
-  let interpretation = '';
-  try {
-    const payload = {
-      blockText: dreamText,
-      lastTurns: [],
-      rollingSummary: mergedFinals,
-      extraSystemPrompt: SYSTEM_PROMPT_GLOBAL
-    };
-    const res = await api.analyze(payload);
-    interpretation = res?.choices?.[0]?.message?.content?.trim() || '';
-
-    // Fallback
-    if (!interpretation) {
-      const fallbackFinals = finals.slice(0, 8).map(f => f.slice(0, 900)).join('\n');
-      const fallbackPayload = {
-        blockText: (state.currentDream.dreamText || '').slice(0, 1500),
-        lastTurns: [],
-        rollingSummary: fallbackFinals,
-        extraSystemPrompt: SYSTEM_PROMPT_GLOBAL
-      };
-      const res2 = await api.analyze(fallbackPayload);
-      interpretation = res2?.choices?.[0]?.message?.content?.trim() || 'Ошибка: пустой ответ от сервера.';
+    if (!state.currentDream) {
+      utils.showToast('Сон не выбран', 'error');
+      return;
     }
-    state.globalFinalInterpretation = interpretation;
-    await dreams.saveCurrent(); // автосохранение!
-    ui.showFinalDialog();
-    ui.updateFinalInterpretButton();
-    utils.showToast('Итоговое толкование сна готово', 'success');
-  } catch (e) {
-    utils.showToast('Ошибка при итоговом толковании сна', 'error');
+    const dreamText = state.currentDream.dreamText || '';
+    const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
+    ui.setThinking(true);
+    try {
+      const payload = {
+        blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
+        lastTurns: [],
+        rollingSummary: allSummaries || null,
+        extraSystemPrompt: "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов."
+      };
+      const res = await api.analyze(payload);
+      let interpretation = res?.choices?.[0]?.message?.content;
+      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+        interpretation = 'Ошибка: пустой ответ от сервера.';
+      }
+      state.globalFinalInterpretation = interpretation;
+      ui.showFinalDialog();
+      ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+      utils.showToast('Итоговое толкование сна готово', 'success');
+    } catch (e) {
+      utils.showToast('Ошибка при итоговом толковании сна', 'error');
+    }
+    ui.setThinking(false);
   }
-  ui.setThinking(false);
 };
 
 ///////////////////////
