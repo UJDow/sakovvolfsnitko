@@ -1911,41 +1911,66 @@ body.step-3-active #step3 .card {
   to { transform: rotate(360deg); }
 }
 
-/* --- Исправление скролла и отступов в аккордеонах модалки сна --- */
+#dreamPreviewModal .accordion-header {
+  background: linear-gradient(90deg, #23283a 0%, #2d3147 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.08em;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 12px 0 8px 0;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  outline: none;
+  transition: background 0.18s;
+  user-select: none;
+}
+#dreamPreviewModal .accordion-header:hover,
+#dreamPreviewModal .accordion.expanded .accordion-header {
+  background: linear-gradient(90deg, #2d3147 0%, #23283a 100%);
+}
+
+#dreamPreviewModal .accordion-header .label {
+  font-size: 1.08em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  flex: 1 1 auto;
+}
+
+#dreamPreviewModal .accordion-header .chev {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 1.1em;
+  transition: transform 0.22s cubic-bezier(.4,1.4,.6,1), color 0.18s;
+  color: #a5b4fc;
+  transform: rotate(0deg);
+}
+#dreamPreviewModal .accordion.expanded .accordion-header .chev {
+  transform: rotate(90deg);
+  color: #38bdf8;
+}
+
+/* Светлая тема */
+[data-theme="light"] #dreamPreviewModal .accordion-header {
+  background: linear-gradient(90deg, #e0e7ef 0%, #f1f5f9 100%);
+  color: #1e293b;
+  box-shadow: 0 2px 8px 0 rgba(30,41,59,0.07);
+}
+[data-theme="light"] #dreamPreviewModal .accordion-header:hover,
+[data-theme="light"] #dreamPreviewModal .accordion.expanded .accordion-header {
+  background: linear-gradient(90deg, #f1f5f9 0%, #e0e7ef 100%);
+}
+
+/* Убрать лишние рамки и фоны */
 #dreamPreviewModal .accordion {
-  margin: 4px 0 4px 0;
-}
-#dreamPreviewModal .accordion + .accordion {
-  margin-top: 4px;
-}
-#dreamPreviewModal .accordion-content {
-  display: none;
-  overflow: visible !important;
-  max-height: none !important;
-  padding: 0;
-}
-#dreamPreviewModal .accordion.expanded .accordion-content {
-  display: block;
-}
-#dreamPreviewModal .accordion-content-inner {
-  max-height: 56vh;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  padding: 10px 12px;
-  margin: 0;
-}
-#accGlobalInterpret .accordion-content-inner,
-#accBlockInterprets .accordion-content-inner { max-height: 44vh; }
-#accSimilarArt .accordion-content-inner { max-height: 40vh; }
-#dreamPreviewModal .similar-item {
-  margin-bottom: 8px;
-  padding: 8px 0;
-}
-#dreamPreviewModal .accordion-content-inner > *:first-child {
-  margin-top: 0 !important;
-}
-#dreamPreviewModal .accordion-content-inner > *:last-child {
-  margin-bottom: 0 !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 0 8px 0;
 }
   
   </style>
