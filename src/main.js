@@ -865,25 +865,14 @@ async blockInterpretation() {
     return;
   }
   const block = state.currentBlock;
-  const blockId = block.id;
-  const history = state.chatHistory[blockId] || [];
   ui.setThinking(true);
   try {
-    // Берём rollingSummary (если есть) и последние 4 сообщения (user/assistant)
-    const lastTurns = history.slice(-6).map(m => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content || '')
-    }));
-
+    // rollingSummary берём, lastTurns НЕ отправляем (или отправляем пустой массив)
     const payload = {
       blockText: block.text,
-      lastTurns,
+      lastTurns: [], // Не отправляем диалоговые реплики, чтобы AI не продолжал беседу
       rollingSummary: block.rollingSummary || null,
-      const payload = {
-  blockText: block.text,
-  lastTurns: [], // или только user-сообщения, если нужно
-  rollingSummary: block.rollingSummary || null,
-  extraSystemPrompt: `
+      extraSystemPrompt: `
 Составь итоговое толкование этого блока сновидения (3–6 предложений), используя rolling summary и сам текст блока.
 Не продолжай диалог, а выдай итоговое толкование блока на основе всей информации выше.
 Свяжи общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания.
@@ -892,7 +881,7 @@ async blockInterpretation() {
 Избегай любых психоаналитических понятий и специальных терминов.
 Выведи только чистый текст без заголовков, без кода и без тегов.
 `
-};
+    };
 
     const res = await api.analyze(payload);
     let interpretation = res?.choices?.[0]?.message?.content;
