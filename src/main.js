@@ -939,6 +939,7 @@ async globalInterpretation() {
       interpretation = 'Ошибка: пустой ответ от сервера.';
     }
     state.currentDream.globalFinalInterpretation = interpretation;
+    state.globalFinalInterpretation = interpretation;
     await dreams.saveCurrent();
     await dreams.load();
     ui.showFinalDialog();
