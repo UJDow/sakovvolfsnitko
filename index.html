@@ -1290,13 +1290,29 @@ body.modal-open {
 #authCard input,
 #registerForm input,
 #loginForm input {
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 12px;
-  padding: 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.8);
+  color: #111 !important;
+  background: #fff !important;
+  font-weight: 500;
+}
+
+[data-theme="dark"] #authCard input,
+[data-theme="dark"] #registerForm input,
+[data-theme="dark"] #loginForm input {
+  color: #fff !important;
+  background: #222c3a !important;
+}
+
+#tabLogin.btn.primary {
+  background: #fff !important;
+  color: #2563eb !important;
+  border: 2px solid #2563eb !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px #2563eb22;
+}
+
+#tabLogin.btn.primary:focus,
+#tabLogin.btn.primary:hover {
+  background: #e0e7ef !important;
 }
 
 @media (max-width: 600px) {
@@ -1970,66 +1986,6 @@ body.step-3-active #step3 .card {
   border: none !important;
   box-shadow: none !important;
   margin: 0 0 4px 0;
-}
-
-/* Кнопка "Вход" (активная) — сделать текст насыщенным и контрастным */
-#tabLogin.btn.primary {
-  color: #2563eb !important; /* ярко-синий */
-  background: #fff !important;
-  font-weight: 700 !important;
-  opacity: 1 !important;
-  border: 2px solid #2563eb !important;
-}
-
-/* Кнопка "Регистрация" (активная) — если нужно, аналогично */
-#tabRegister.btn.primary {
-  color: #2563eb !important;
-  background: #fff !important;
-  font-weight: 700 !important;
-  opacity: 1 !important;
-  border: 2px solid #2563eb !important;
-}
-
-/* Неактивные вкладки — чуть менее яркие, но читаемые */
-#tabLogin.btn.secondary,
-#tabRegister.btn.secondary {
-  color: #2563eb !important;
-  background: #e0e7ef !important;
-  font-weight: 600 !important;
-  opacity: 0.85 !important;
-  border: 1.5px solid #2563eb !important;
-}
-
-/* Текст в input — сделать темнее и насыщеннее */
-#authCard input,
-#registerForm input,
-#loginForm input {
-  color: #1e293b !important; /* насыщенный тёмный */
-  background: #fff !important;
-  border: 1.5px solid #2563eb !important;
-}
-
-/* Placeholder — сделать чуть темнее */
-#authCard input::placeholder,
-#registerForm input::placeholder,
-#loginForm input::placeholder {
-  color: #64748b !important;
-  opacity: 1 !important;
-}
-
-/* В тёмной теме — светлый текст и фон */
-[data-theme="dark"] #authCard input,
-[data-theme="dark"] #registerForm input,
-[data-theme="dark"] #loginForm input {
-  color: #f1f5f9 !important;
-  background: #1e293b !important;
-  border: 1.5px solid #60a5fa !important;
-}
-
-[data-theme="dark"] #authCard input::placeholder,
-[data-theme="dark"] #registerForm input::placeholder,
-[data-theme="dark"] #loginForm input::placeholder {
-  color: #94a3b8 !important;
 }
   
   </style>
