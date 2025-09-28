@@ -252,11 +252,16 @@ const utils = {
     ? '#ef4444'
     : (type === 'success' ? '#10b981' : '#2563eb');
 
+  // СБРОС координат
+  toast.style.top = '';
+  toast.style.left = '';
+  toast.style.right = '';
+  toast.style.bottom = '';
+  toast.style.transform = '';
+
   // Центрирование по экрану
   toast.style.top = '50%';
   toast.style.left = '50%';
-  toast.style.right = '';
-  toast.style.bottom = '';
   toast.style.transform = 'translate(-50%, -50%)';
   toast.style.transition = 'opacity 0.3s';
 
