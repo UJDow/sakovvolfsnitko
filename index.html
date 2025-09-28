@@ -1996,10 +1996,11 @@ body.step-3-active #step3 .card {
   font-weight: 600;
 }
 
-[data-theme="dark"] .login-tab-btn {
-  background: #222c3a !important;
-  color: #94a3b8 !important;
-  border: 1px solid var(--border);
+[data-theme="dark"] .login-tab-btn:not(.primary) {
+  background: transparent !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  font-weight: 600;
 }
   
   </style>
@@ -2059,7 +2060,7 @@ body.step-3-active #step3 .card {
 <div id="authCard" class="centered-card" style="display: none;">
   <div class="card card-main">
     <div style="display: flex; gap: 8px; margin-bottom: 18px;">
-      <button id="tabLogin" class="btn primary login-tab-btn">Вход</button>      
+      <button id="tabLogin" class="btn login-tab-btn">Вход</button>
       <button id="tabRegister" class="btn secondary" style="flex:1;">Регистрация</button>
     </div>
     <!-- Вход -->
