@@ -177,12 +177,19 @@ const THEME_STD = "std"; // стандартная (системная)
 const API_URL = 'https://deepseek-api-key.lexsnitko.workers.dev';
 const JWT_KEY = 'saviora_jwt';
 
-const MAX_LAST_TURNS_TO_SEND = 6;
-const MAX_TURNS_BEFORE_SUMMARY = 8;
-const MAX_BLOCKTEXT_LEN_TO_SEND = 4000;
-const MAX_USER_INPUT_LEN = 1200; // ограничение на длину ввода
+// Лимиты и устойчивость
+const MAX_LAST_TURNS_TO_SEND = 16;         // было 6
+const MAX_TURNS_BEFORE_SUMMARY = 6;        // было 8
+const MAX_BLOCKTEXT_LEN_TO_SEND = 4000;    // без изменений
+const MAX_USER_INPUT_LEN = 1200;           // без изменений
 
 // === Централизованная сборка payload для анализа и толкования ===
+
+// Системные промпты для итоговых толкований
+const SYSTEM_PROMPT_BLOCK = "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав основные повторяющиеся мотивы и чувства. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
+
+const SYSTEM_PROMPT_GLOBAL = "Составь единое итоговое толкование всего сна (5–9 предложений), связав повторяющиеся мотивы и основные чувства из финальных толкований блоков. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.";
+
 function buildAnalyzePayload({
   fullHistory = [],
   blockText = '',
@@ -809,85 +816,84 @@ const chat = {
   },
 
   // Отправка истории блока в AI (обычный ход диалога)
-  async sendToAI(blockId) {
-    const block = state.blocks.find(b => b.id === blockId);
-    if (!block) return;
-    ui.setThinking(true);
-    try {
-      // Миграция старых сообщений (если есть)
-      state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
-        if (typeof m === 'string') return { role: 'user', content: m };
-        if (m && typeof m === 'object' && m.role && m.content) return m;
-        return { role: 'user', content: String(m) };
-      });
-      const history = state.chatHistory[blockId] || [];
-      const payload = buildAnalyzePayload({
-        fullHistory: state.chatHistory[blockId], // вся история!
-        blockText: block.text,
-        rollingSummary: block.rollingSummary,
-        extraSystemPrompt: null,
-        maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
-      });
-      const res = await api.analyze(payload);
-      let aiMsg = res?.choices?.[0]?.message?.content;
-      if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
-        aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
-      }
-      state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
-      if (blockId === state.currentBlock?.id) {
-        ui.updateBlockInterpretButton();
-      }
+  // Отправка истории блока в AI (обычный ход диалога)
+async sendToAI(blockId) {
+  const block = state.blocks.find(b => b.id === blockId);
+  if (!block) return;
+  ui.setThinking(true);
+  try {
+    // Нормализация истории
+    state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
+      if (typeof m === 'string') return { role: 'user', content: m };
+      if (m && typeof m === 'object' && m.role && m.content) return m;
+      return { role: 'user', content: String(m) };
+    });
 
-      block.turnsCount = (block.turnsCount || 0) + 1;
-
-      if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
-        const resSum = await api.summarize({
-          history,
-          blockText: block.text,
-          existingSummary: block.rollingSummary || ''
-        });
-        block.rollingSummary = resSum.summary || block.rollingSummary;
-        block.turnsCount = 0;
-      }
-
-      ui.updateChat();
-      ui.updateProgressMoon();
-      if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
-    } catch (e) {
-      console.error('[debug] error in sendToAI', e);
-      state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
-      ui.updateChat();
+    // Мягкая очистка памяти истории: оставляем максимум 80 последних
+    if (state.chatHistory[blockId].length > 80) {
+      state.chatHistory[blockId] = state.chatHistory[blockId].slice(-80);
     }
-    ui.setThinking(false);
-  },
+
+    const history = state.chatHistory[blockId] || [];
+    const payload = buildAnalyzePayload({
+      fullHistory: history,               // вся история, резка произойдет внутри по maxTurns
+      blockText: block.text,
+      rollingSummary: block.rollingSummary,
+      extraSystemPrompt: null,
+      maxTurns: MAX_LAST_TURNS_TO_SEND
+    });
+
+    const res = await api.analyze(payload);
+    let aiMsg = res?.choices?.[0]?.message?.content;
+    if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
+      aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
+    }
+
+    state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
+
+    // Инкремент и условие summarize по новому порогу
+    block.turnsCount = (block.turnsCount || 0) + 1;
+
+    if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
+      const resSum = await api.summarize({
+        history,
+        blockText: block.text,
+        existingSummary: block.rollingSummary || ''
+      });
+      block.rollingSummary = resSum.summary || block.rollingSummary;
+      block.turnsCount = 0;
+    }
+
+    ui.updateChat();
+    ui.updateProgressMoon();
+    if (state.chatHistory[blockId].length >= 20) {
+      utils.showToast('Достигнут лимит сообщений', 'warning');
+    }
+    if (blockId === state.currentBlock?.id) {
+      ui.updateBlockInterpretButton();
+    }
+  } catch (e) {
+    console.error('[debug] error in sendToAI', e);
+    state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
+    ui.updateChat();
+  }
+  ui.setThinking(false);
+},
 
   // Итоговое толкование блока
-  async blockInterpretation() {
+  // Итоговое толкование блока
+async blockInterpretation() {
   if (!state.currentBlock) {
     utils.showToast('Блок не выбран', 'error');
     return;
   }
   const block = state.currentBlock;
   const blockId = block.id;
-
-  // Нормализация истории для воркера
-  state.chatHistory[blockId] = (state.chatHistory[blockId] || []).map(m => {
-    if (typeof m === 'string') return { role: 'user', content: m };
-    if (m && typeof m === 'object' && m.role && m.content) return m;
-    return { role: 'user', content: String(m) };
-  });
   const history = state.chatHistory[blockId] || [];
-
-  const SYSTEM_PROMPT_BLOCK =
-    "Составь единое итоговое толкование блока сновидения (3–6 предложений), " +
-    "связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. " +
-    "Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. " +
-    "Выведи только чистый текст без заголовков, без кода и без тегов.";
-
   ui.setThinking(true);
   try {
-    // Попытка 1: полный контекст
-    let payload = buildAnalyzePayload({
+    // Попытка 1 — полный контекст
+    const payload1 = buildAnalyzePayload({
       fullHistory: history,
       blockText: block.text,
       rollingSummary: block.rollingSummary,
@@ -895,123 +901,117 @@ const chat = {
       maxTurns: MAX_LAST_TURNS_TO_SEND
     });
 
-    let res = await api.analyze(payload);
-    let interpretation = res?.choices?.[0]?.message?.content;
+    let res = await api.analyze(payload1);
+    let interpretation = res?.choices?.[0]?.message?.content?.trim() || '';
 
-    // Фоллбек: дауншифтинг контекста
-    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-      const SHRINKED_BLOCK = (block.text || '').slice(0, Math.min(1500, MAX_BLOCKTEXT_LEN_TO_SEND));
-      payload = {
-        blockText: SHRINKED_BLOCK,
-        lastTurns: [],
-        rollingSummary: (block.rollingSummary || '').slice(0, 2000),
-        extraSystemPrompt: SYSTEM_PROMPT_BLOCK
-      };
-      res = await api.analyze(payload);
-      interpretation = res?.choices?.[0]?.message?.content;
+    // Fallback — попытка 2 (дауншифтинг)
+    if (!interpretation) {
+      const payload2 = buildAnalyzePayload({
+        fullHistory: [], // убираем lastTurns
+        blockText: (block.text || '').slice(0, 1500),
+        rollingSummary: block.rollingSummary ? String(block.rollingSummary).slice(0, 1200) : null,
+        extraSystemPrompt: SYSTEM_PROMPT_BLOCK,
+        maxTurns: 0
+      });
+      res = await api.analyze(payload2);
+      interpretation = res?.choices?.[0]?.message?.content?.trim() || '';
     }
 
-    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-      interpretation = 'Ошибка: пустой ответ от сервера.';
+    if (!interpretation) {
+      utils.showToast('Ошибка: пустой ответ при толковании блока', 'error');
+      ui.setThinking(false);
+      return;
     }
 
     block.finalInterpretation = interpretation;
+
     ui.updateChat();
     ui.updateBlockInterpretButton();
     ui.updateFinalInterpretButton();
+    utils.showToast('Толкование блока готово', 'success');
 
     // Автосохранение
-    try {
-      await dreams.saveCurrent();
-    } catch (e) {
-      console.warn('Автосохранение после толкования блока не удалось', e);
-    }
-
-    utils.showToast('Толкование блока готово', 'success');
+    await dreams.saveCurrent();
   } catch (e) {
     utils.showToast('Ошибка при толковании блока', 'error');
   }
   ui.setThinking(false);
 },
 
- // Итоговое толкование всего сна
+  // Итоговое толкование всего сна
+  // Итоговое толкование всего сна
 async globalInterpretation() {
   if (!state.currentDream) {
     utils.showToast('Сон не выбран', 'error');
     return;
   }
+  // Собираем только блоки с финальными толкованиями
+  const finalizedBlocks = state.blocks
+    .filter(b => typeof b.finalInterpretation === 'string' && b.finalInterpretation.trim());
 
-  // Собираем только финальные толкования блоков
-  const finalized = state.blocks
-    .map(b => (b.finalInterpretation || '').trim())
-    .filter(Boolean);
-
-  if (finalized.length < 2) {
+  if (finalizedBlocks.length < 2) {
     utils.showToast('Нужно минимум 2 готовых толкования блоков', 'error');
     return;
   }
 
-  const dreamTextRaw = state.currentDream.dreamText || '';
-  const DREAM_TEXT_SAFE = dreamTextRaw.slice(0, Math.min(2500, MAX_BLOCKTEXT_LEN_TO_SEND));
-  const MERGED_FINALS_FULL = finalized.join('\n\n');
-
-  const SYSTEM_PROMPT_GLOBAL =
-    "Составь единое итоговое толкование сновидения (5–9 предложений) на основе данных итоговых толкований отдельных блоков. " +
-    "Свяжи повторы и перекрёстные мотивы между блоками (части тела, числа/цифры, запретные импульсы, детские переживания). " +
-    "Не задавай вопросов и избегай психоаналитических терминов. Выведи чистый текст без заголовков, кода и тегов.";
+  const dreamText = state.currentDream.dreamText || '';
+  // Главные лимиты из ТЗ
+  const DREAM_TEXT_SAFE = dreamText.slice(0, 2500);
+  const MERGED_FINALS_FULL = finalizedBlocks
+    .map(b => b.finalInterpretation.trim())
+    .join('\n\n')
+    .slice(0, 6000);
 
   ui.setThinking(true);
-
   try {
-    // Попытка 1: с полным DREAM_TEXT_SAFE и склейкой финалов
-    let payload = {
+    // Попытка 1 — полный
+    const payload1 = {
       blockText: DREAM_TEXT_SAFE,
       lastTurns: [],
-      rollingSummary: MERGED_FINALS_FULL.slice(0, 6000),
+      rollingSummary: MERGED_FINALS_FULL, // Используем финальные тексты блоков как "сводку"
       extraSystemPrompt: SYSTEM_PROMPT_GLOBAL
     };
 
-    let res = await api.analyze(payload);
-    let interpretation = res?.choices?.[0]?.message?.content;
+    let res = await api.analyze(payload1);
+    let interpretation = res?.choices?.[0]?.message?.content?.trim() || '';
 
-    // Фоллбек: сильнее режем источники
-    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-      const DREAM_TEXT_SHRINK = dreamTextRaw.slice(0, 1500);
-      const finalsShort = finalized.slice(0, 8).map(t => t.slice(0, 900)).join('\n\n');
+    // Fallback — Попытка 2 (дауншифтинг)
+    if (!interpretation) {
+      const compactDream = dreamText.slice(0, 1500);
+      const topFinals = finalizedBlocks.slice(0, 8).map(b => {
+        const fi = b.finalInterpretation || '';
+        return fi.slice(0, 900); // 700–900 символов
+      });
+      const mergedCompact = topFinals.join('\n\n');
 
-      payload = {
-        blockText: DREAM_TEXT_SHRINK,
+      const payload2 = {
+        blockText: compactDream,
         lastTurns: [],
-        rollingSummary: finalsShort,
+        rollingSummary: mergedCompact,
         extraSystemPrompt: SYSTEM_PROMPT_GLOBAL
       };
-      res = await api.analyze(payload);
-      interpretation = res?.choices?.[0]?.message?.content;
+      res = await api.analyze(payload2);
+      interpretation = res?.choices?.[0]?.message?.content?.trim() || '';
     }
 
-    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-      interpretation = 'Ошибка: пустой ответ от сервера.';
+    if (!interpretation) {
+      utils.showToast('Ошибка: пустой ответ при итоговом толковании сна', 'error');
+      ui.setThinking(false);
+      return;
     }
 
     state.globalFinalInterpretation = interpretation;
-
-    try {
-      await dreams.saveCurrent();
-    } catch (e) {
-      console.warn('Автосохранение после итогового толкования не удалось', e);
-    }
-
     ui.showFinalDialog();
     ui.updateFinalInterpretButton();
     utils.showToast('Итоговое толкование сна готово', 'success');
+
+    // Автосохранение
+    await dreams.saveCurrent();
   } catch (e) {
     utils.showToast('Ошибка при итоговом толковании сна', 'error');
-  } finally {
-    // Гарантированно снимаем индикатор независимо от результата
-    ui.setThinking(false);
   }
+  ui.setThinking(false);
 },
-
 ///////////////////////
 // === UI === //
 ///////////////////////
@@ -1395,36 +1395,23 @@ const ui = {
     }
   },
   updateBlockInterpretButton() {
-    const btn = document.getElementById('menuBlockInterpret');
-    const tooltip = document.getElementById('moonTooltip');
-    const block = state.currentBlock;
-    if (!btn) return;
+  const btn = document.getElementById('menuBlockInterpret');
+  const tooltip = document.getElementById('moonTooltip');
+  const block = state.currentBlock;
+  if (!btn) return;
 
-    if (!block) {
-      btn.disabled = true;
-      btn.classList.remove('active');
-      if (tooltip) tooltip.classList.remove('show');
-      return;
-    }
-
-    const assistantSystemCount = countAssistantMsgs(block.id);
-
-    if (assistantSystemCount >= 10) {
-      btn.disabled = false;
-      btn.classList.add('active');
-
-      if (!block._moonTipShownOnce && assistantSystemCount === 10) {
-  showMoonTooltip('Доступно толкование блока');
-  utils.showToastNearMoon('Толкование блока доступно', 'success', 2600);
-  block._moonTipShownOnce = true;
-}
-    } else {
-      btn.disabled = true;
-      btn.classList.remove('active');
-      if (tooltip) tooltip.classList.remove('show');
-    }
+  if (!block) {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    if (tooltip) tooltip.classList.remove('show');
+    return;
   }
-  ,
+
+  // Всегда активна, если выбран блок
+  btn.disabled = false;
+  btn.classList.add('active');
+  if (tooltip) tooltip.classList.remove('show');
+},
   updateSendButton() {
     const btn = document.getElementById('sendAnswerBtn');
     const input = document.getElementById('userInput');
