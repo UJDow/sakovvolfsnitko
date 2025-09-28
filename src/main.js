@@ -1319,7 +1319,6 @@ const ui = {
       btn.classList.add('active');
 
       if (!block._moonTipShownOnce && assistantSystemCount === 10) {
-  showMoonTooltip('Доступно толкование блока');
   utils.showToastNearMoon('Толкование блока доступно', 'success', 2600);
   block._moonTipShownOnce = true;
 }
