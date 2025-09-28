@@ -927,6 +927,7 @@ async globalInterpretation() {
     utils.showToast('Ошибка при итоговом толковании сна', 'error');
   }
   ui.setThinking(false);
+}
 };
   
 ///////////////////////
