@@ -1434,41 +1434,73 @@ const ui = {
 
   // --- МОДАЛКА ПРОСМОТРА СНА ---
   showDreamPreviewModal(dream) {
-    const modal = document.getElementById('dreamPreviewModal');
-    const textDiv = document.getElementById('dreamPreviewText');
-    const interpDiv = document.getElementById('dreamPreviewInterpret');
-    const interpWrap = document.getElementById('dreamPreviewInterpretWrap');
-    textDiv.textContent = dream.dreamText || '';
-    interpWrap.style.display = 'block';
-    interpDiv.textContent = dream.globalFinalInterpretation || 'нет';
-    interpDiv.style.color = dream.globalFinalInterpretation ? '#06213a' : '#94a3b8';
-    state._previewedDream = dream;
-    modal.style.display = 'block';
-    document.body.classList.add('modal-open');
+  const modal = document.getElementById('dreamPreviewModal');
+  const root = document.getElementById('dreamPreviewContent');
 
-    // --- БЛОК ПОХОЖИХ ПРОИЗВЕДЕНИЙ ---
-    let similarWrap = document.getElementById('dreamPreviewSimilarWrap');
-    if (!similarWrap) {
-      similarWrap = document.createElement('div');
-      similarWrap.id = 'dreamPreviewSimilarWrap';
-      // Вставляем сразу после interpWrap
-      interpWrap.parentNode.insertBefore(similarWrap, interpWrap.nextSibling);
-    }
-    similarWrap.innerHTML = '';
-    if (dream.similarArtworks && dream.similarArtworks.length) {
-      similarWrap.innerHTML = `
-        <div style="color:#94a3b8; font-size:14px; margin-bottom:4px;">Похожие произведения искусства</div>
-        ${dream.similarArtworks.map(item => `
-          <div class="similar-item" style="margin-bottom:12px;">
-            <div style="font-weight:bold;">${utils.escapeHtml(item.title || '')}</div>
-            <div style="color:#666;">${utils.escapeHtml(item.author || '')}${item.type ? ', ' + utils.escapeHtml(item.type) : ''}</div>
-            <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
-            <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
-          </div>
-        `).join('')}
+  // Поля секций
+  const textDiv = document.getElementById('dreamPreviewText');
+  const globalDiv = document.getElementById('dreamPreviewInterpret');
+  const blocksDiv = document.getElementById('dreamPreviewBlocks');
+  const similarWrap = document.getElementById('dreamPreviewSimilarWrap');
+
+  // 1) Текст сна
+  textDiv.textContent = dream.dreamText || '';
+
+  // 2) Итоговое толкование
+  const hasGlobal = !!dream.globalFinalInterpretation;
+  globalDiv.textContent = hasGlobal ? dream.globalFinalInterpretation : '—';
+  globalDiv.style.color = hasGlobal ? 'var(--text-primary)' : '#94a3b8';
+
+  // 3) Толкования блоков
+  blocksDiv.innerHTML = '';
+  const blocksArr = Array.isArray(dream.blocks) ? dream.blocks : [];
+  const interpreted = blocksArr.filter(b => (b.finalInterpretation || '').trim()).length;
+
+  if (blocksArr.length === 0) {
+    blocksDiv.innerHTML = `<div style="color:#94a3b8;">Блоки отсутствуют</div>`;
+  } else if (interpreted === 0) {
+    blocksDiv.innerHTML = `<div style="color:#94a3b8;">Нет готовых толкований блоков</div>`;
+  } else {
+    blocksArr.forEach((b, i) => {
+      const fi = (b.finalInterpretation || '').trim();
+      if (!fi) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'similar-item'; // используем общий стиль разделителя
+      wrap.innerHTML = `
+        <div style="font-weight:600; margin-bottom:6px;">Блок ${i + 1}</div>
+        <div>${utils.escapeHtml(fi)}</div>
       `;
-    }
-  },
+      blocksDiv.appendChild(wrap);
+    });
+  }
+
+  // 4) Похожие произведения искусства
+  similarWrap.innerHTML = '';
+  if (dream.similarArtworks && dream.similarArtworks.length) {
+    similarWrap.innerHTML = dream.similarArtworks.map(item => `
+      <div class="similar-item">
+        <div style="font-weight:bold;">${utils.escapeHtml(item.title || '')}</div>
+        <div style="color:#666;">${utils.escapeHtml(item.author || '')}${item.type ? ', ' + utils.escapeHtml(item.type) : ''}</div>
+        <div style="margin-top:4px;">${utils.escapeHtml(item.desc || '')}</div>
+        <div style="margin-top:4px;color:#2e7d32;">${utils.escapeHtml(item.value || '')}</div>
+      </div>
+    `).join('');
+  } else {
+    similarWrap.innerHTML = `<div style="color:#94a3b8;">Нет данных</div>`;
+  }
+
+  // Показ модалки + биндим аккордеоны (после наполнения DOM)
+  state._previewedDream = dream;
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
+
+  bindAccordion(root);
+
+  // Небольшой пересчёт высоты для раскрытых секций (если контент изменился)
+  root.querySelectorAll('.accordion.expanded .accordion-content').forEach(c => {
+    c.style.maxHeight = c.scrollHeight + 'px';
+  });
+},
 
   closeDreamPreviewModal() {
     document.getElementById('dreamPreviewModal').style.display = 'none';
@@ -1476,6 +1508,29 @@ const ui = {
     state._previewedDream = null;
   }
 };
+
+function bindAccordion(rootEl) {
+  const accordions = rootEl.querySelectorAll('.accordion');
+  accordions.forEach(acc => {
+    const header = acc.querySelector('.accordion-header');
+    const content = acc.querySelector('.accordion-content');
+    // Инициализация высоты для уже раскрытых
+    if (acc.classList.contains('expanded')) {
+      // временно ставим auto, измеряем, затем фиксируем max-height
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }
+    header.onclick = () => {
+      const isOpen = acc.classList.contains('expanded');
+      if (isOpen) {
+        acc.classList.remove('expanded');
+        content.style.maxHeight = 0;
+      } else {
+        acc.classList.add('expanded');
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }
+    };
+  });
+}
 
 function showSimilarModal(similarArr, { dreamText, interpretation, onSave } = {}) {
   function flattenSimilarArtworks(arr) {
