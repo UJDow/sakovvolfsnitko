@@ -1933,11 +1933,24 @@ function bindEvents() {
     btn.innerHTML = `<span class="btn-spinner"></span>Поиск...`;
     btn.disabled = true;
     try {
-      const resp = await fetch(API_URL + '/find_similar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
-        body: JSON.stringify({ summary: dream.dreamText })
-      });
+      const blockInterps = (dream.blocks || [])
+  .map((b, i) => b.finalInterpretation && b.finalInterpretation.trim()
+    ? `Блок ${i + 1}: ${b.finalInterpretation.trim()}`
+    : null)
+  .filter(Boolean)
+  .join('\n');
+
+const payload = {
+  dreamText: dream.dreamText || '',
+  globalFinalInterpretation: dream.globalFinalInterpretation || '',
+  blockInterpretations: blockInterps
+};
+
+const resp = await fetch(API_URL + '/find_similar', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', ...(state.jwt ? { 'Authorization': 'Bearer ' + state.jwt } : {}) },
+  body: JSON.stringify(payload)
+});
       if (!resp.ok) throw new Error('Ошибка поиска');
       const data = await resp.json();
       if (data.similar && data.similar.length) {
