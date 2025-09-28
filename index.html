@@ -438,21 +438,29 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
 .controls.left { justify-content: flex-start; }
 
 .btn {
-  padding: 10px 28px;         /* Было: clamp(12px, 4vw, 16px) clamp(16px, 5vw, 24px) */
+  padding: clamp(12px, 4vw, 16px) clamp(16px, 5vw, 24px);
   border-radius: 12px;
-  font-size: 1.05rem;         /* Было: 1.08rem или 1.18rem */
-  font-weight: 700;
-  min-height: 38px;           /* Было: 44px */
-  box-shadow: 0 2px 8px rgba(37,99,235,0.10);
-  transition: all 0.18s;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  box-shadow: var(--shadow);
+  min-height: 44px;
+  flex-shrink: 0;
 }
 
+.btn:hover { box-shadow: 0 6px 12px -1px rgba(0,0,0,0.15); }
 .btn.primary {
   background: #2563eb !important;
   color: #fff !important;
   border: none !important;
+  font-weight: 700;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.10);
 }
-
 .btn.primary:hover {
   background: #1d4ed8 !important;
 }
@@ -463,38 +471,10 @@ h3 { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; margin: 0; color: 
   border: 1.5px solid #2563eb !important;
   font-weight: 600;
 }
-
 .btn.secondary:hover {
   background: #e0e7ef !important;
 }
 
-.auth-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.auth-tab-btn {
-  flex: 1;
-  padding: 10px 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  border-radius: 12px;
-  border: 2px solid #2563eb;
-  background: #fff;
-  color: #2563eb;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s, border-color 0.18s;
-  outline: none;
-}
-
-.auth-tab-btn.active {
-  background: #2563eb;
-  color: #fff;
-  border-color: #2563eb;
-  z-index: 1;
-}
-    
 input, textarea {
   color: #1e293b !important;
   background: #fff !important;
@@ -2013,66 +1993,6 @@ body.step-3-active #step3 .card {
   border: none !important;
   box-shadow: none !important;
   margin: 0 0 4px 0;
-}
-
-.btn, .icon-btn, .close-btn, .toggle-btn, .menu-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  border: none;
-  font-size: 1.05rem;
-  font-weight: 700;
-  min-height: 38px;
-  min-width: 38px;
-  padding: 10px 22px;
-  background: var(--card-bg);
-  color: var(--primary);
-  box-shadow: 0 2px 8px rgba(37,99,235,0.10);
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  outline: none;
-  gap: 8px;
-}
-.btn.primary {
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.btn.primary:hover, .btn.primary:focus-visible {
-  background: var(--primary-hover);
-}
-.btn.secondary {
-  background: var(--card-bg);
-  color: var(--primary);
-  border: 1.5px solid var(--primary);
-  font-weight: 600;
-}
-.btn.secondary:hover, .btn.secondary:focus-visible {
-  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%);
-}
-.icon-btn, .close-btn, .toggle-btn, .menu-btn {
-  padding: 0;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  min-height: 38px;
-  font-size: 1.3em;
-  background: transparent;
-  color: var(--primary);
-  border: none;
-  box-shadow: none;
-}
-.icon-btn:hover, .close-btn:hover, .toggle-btn:hover, .menu-btn:hover {
-  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%);
-  color: var(--primary-hover);
-}
-.close-btn {
-  color: var(--text-secondary);
-  font-size: 1.5em;
-}
-.close-btn:hover {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%);
 }
   
   </style>
