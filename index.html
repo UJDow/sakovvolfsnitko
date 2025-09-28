@@ -1901,6 +1901,76 @@ body.step-3-active #step3 .card {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* --- Accordion for Dream Preview Modal --- */
+.accordion {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  margin: 10px 0 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.accordion + .accordion {
+  margin-top: 12px;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 14px;
+  user-select: none;
+  background: color-mix(in srgb, var(--card-bg) 85%, #000 15%);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.accordion-header .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accordion-header .chev {
+  transition: transform 0.18s ease;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.accordion.expanded .accordion-header .chev {
+  transform: rotate(90deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.22s ease;
+  background: transparent;
+}
+
+.accordion-content-inner {
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* Внутренние элементы списка похожих работ */
+.accordion .similar-item {
+  margin: 0 0 14px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.accordion .similar-item:last-child {
+  border-bottom: none;
+}
   
   </style>
 </head>
@@ -2116,7 +2186,6 @@ body.step-3-active #step3 .card {
   <div id="cabinetModal" style="display:none; position:fixed; inset:0; z-index:2000;">
   <div class="modal-overlay"></div>
   <div class="modal-content">
-  <div class="modal-content">
 <div class="cabinet-header-row">
   <button class="howto-toggle" id="howToBtn" title="Как?">
     <span class="icon">❓</span>
@@ -2166,7 +2235,6 @@ body.step-3-active #step3 .card {
   <script type="module" src="src/main.js"></script>
     <!-- Модалка просмотра сна -->
 <div id="dreamPreviewModal" style="display:none; position:fixed; inset:0; z-index:3001; background:rgba(0,0,0,0.45);">
-  <div id="dreamPreviewModal" style="display:none; position:fixed; inset:0; z-index:3001; background:rgba(0,0,0,0.45);">
   <div id="dreamPreviewContent"
     style="max-width:540px; margin:40px auto; background:var(--card-bg); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 24px; position:relative; max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;">
     <button id="closeDreamPreviewBtn" class="modal-close-btn" aria-label="Закрыть">×</button>
