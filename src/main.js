@@ -849,6 +849,7 @@ const chat = {
   },
 
   // Итоговое толкование блока
+// Итоговое толкование блока
 async blockInterpretation() {
   if (!state.currentBlock) {
     utils.showToast('Блок не выбран', 'error');
@@ -859,13 +860,19 @@ async blockInterpretation() {
   const history = state.chatHistory[blockId] || [];
   ui.setThinking(true);
   try {
-    const payload = buildAnalyzePayload({
-      fullHistory: history,
+    // Берём rollingSummary (если есть) и последние 4 сообщения (user/assistant)
+    const lastTurns = history.slice(-6).map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '')
+    }));
+
+    const payload = {
       blockText: block.text,
-      rollingSummary: block.rollingSummary,
-      extraSystemPrompt: "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов.",
-      maxTurns: 6
-    });
+      lastTurns,
+      rollingSummary: block.rollingSummary || null,
+      extraSystemPrompt: "Составь единое итоговое толкование блока сновидения (3–6 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов."
+    };
+
     const res = await api.analyze(payload);
     let interpretation = res?.choices?.[0]?.message?.content;
     if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
