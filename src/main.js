@@ -897,36 +897,36 @@ async blockInterpretation() {
   ui.setThinking(false);
 },
 
-  // Итоговое толкование всего сна
-  async globalInterpretation() {
-    if (!state.currentDream) {
-      utils.showToast('Сон не выбран', 'error');
-      return;
-    }
-    const dreamText = state.currentDream.dreamText || '';
-    const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
-    ui.setThinking(true);
-    try {
-      const payload = {
-        blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
-        lastTurns: [],
-        rollingSummary: allSummaries || null,
-        extraSystemPrompt: "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов."
-      };
-      const res = await api.analyze(payload);
-      let interpretation = res?.choices?.[0]?.message?.content;
-      if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
-        interpretation = 'Ошибка: пустой ответ от сервера.';
-      }
-      state.globalFinalInterpretation = interpretation;
-      ui.showFinalDialog();
-      ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
-      utils.showToast('Итоговое толкование сна готово', 'success');
-    } catch (e) {
-      utils.showToast('Ошибка при итоговом толковании сна', 'error');
-    }
-    ui.setThinking(false);
+ // Итоговое толкование всего сна
+async globalInterpretation() {
+  if (!state.currentDream) {
+    utils.showToast('Сон не выбран', 'error');
+    return;
   }
+  const dreamText = state.currentDream.dreamText || '';
+  const allSummaries = state.blocks.map(b => b.rollingSummary).filter(Boolean).join('\n');
+  ui.setThinking(true);
+  try {
+    const payload = {
+      blockText: dreamText.slice(0, MAX_BLOCKTEXT_LEN_TO_SEND),
+      lastTurns: [],
+      rollingSummary: allSummaries || null,
+      extraSystemPrompt: "Составь единое итоговое толкование сновидения (5–9 предложений), связав общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания. Не задавай вопросов. Избегай любых психоаналитических понятий и специальных терминов. Выведи только чистый текст без заголовков, без кода и без тегов."
+    };
+    const res = await api.analyze(payload);
+    let interpretation = res?.choices?.[0]?.message?.content;
+    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
+      interpretation = 'Ошибка: пустой ответ от сервера.';
+    }
+    state.globalFinalInterpretation = interpretation;
+    await dreams.saveCurrent(); // ← АВТОСОХРАНЕНИЕ!
+    ui.showFinalDialog();
+    ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
+    utils.showToast('Итоговое толкование сна готово', 'success');
+  } catch (e) {
+    utils.showToast('Ошибка при итоговом толковании сна', 'error');
+  }
+  ui.setThinking(false);
 };
 
 ///////////////////////
