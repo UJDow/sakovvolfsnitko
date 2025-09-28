@@ -1840,25 +1840,34 @@ body.step-3-active #step3 .card {
 
 /* Нормальный размер тоста (общий для обоих режимов) */
 #toastNotice {
-  all: unset !important;
-  position: fixed !important;
-  min-width: 200px !important;
-  max-width: 90vw !important;
-  padding: 16px 24px !important;
-  background: #2563eb !important;
-  color: #fff !important;
-  border-radius: 8px !important;
-  font-size: 18px !important;
-  text-align: center !important;
-  z-index: 9999 !important;
-  display: block !important;
-  opacity: 1 !important;
-  pointer-events: none !important;
-  white-space: pre-line !important;
-  writing-mode: horizontal-tb !important;
-  word-break: normal !important;
-  box-sizing: border-box !important;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 220px;
+  max-width: 90vw;
+  padding: 16px 28px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 18px;
+  text-align: center;
+  z-index: 9999;
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+  white-space: pre-line;
+  box-shadow: 0 4px 24px rgba(37,99,235,0.13);
+  transition: opacity 0.3s;
 }
+#toastNotice.toast-show {
+  display: block;
+  opacity: 0.97;
+  pointer-events: auto;
+}
+#toastNotice.toast-success { background: #10b981; }
+#toastNotice.toast-error   { background: #ef4444; }
+#toastNotice.toast-info    { background: #2563eb; }
 
 .similar-modal {
   position: fixed;
