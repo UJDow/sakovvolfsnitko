@@ -914,6 +914,7 @@ async globalInterpretation() {
     // ВАЖНО: сохраняем в текущий сон!
     state.currentDream.globalFinalInterpretation = interpretation;
     await dreams.saveCurrent(); // ← АВТОСОХРАНЕНИЕ!
+    await dreams.load(); // ← ДОБАВЬ ЭТУ СТРОКУ!
     ui.showFinalDialog();
     ui.updateFinalInterpretButton();      // обновляем состояние кнопки "Итог"
     utils.showToast('Итоговое толкование сна готово', 'success');
