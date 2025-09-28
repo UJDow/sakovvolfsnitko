@@ -2166,17 +2166,57 @@ body.step-3-active #step3 .card {
   <script type="module" src="src/main.js"></script>
     <!-- Модалка просмотра сна -->
 <div id="dreamPreviewModal" style="display:none; position:fixed; inset:0; z-index:3001; background:rgba(0,0,0,0.45);">
+  <div id="dreamPreviewModal" style="display:none; position:fixed; inset:0; z-index:3001; background:rgba(0,0,0,0.45);">
   <div id="dreamPreviewContent"
     style="max-width:540px; margin:40px auto; background:var(--card-bg); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 24px; position:relative; max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;">
     <button id="closeDreamPreviewBtn" class="modal-close-btn" aria-label="Закрыть">×</button>
     <h2 style="margin-top:0;">Просмотр сна</h2>
-    <div style="color:#94a3b8; font-size:14px; margin-bottom:4px;">Текст сновидения</div>
-    <div id="dreamPreviewText" style="white-space:pre-wrap; margin-bottom:18px; font-size:16px;"></div>
-    <div id="dreamPreviewInterpretWrap" style="margin-top:22px;">
-      <div style="color:#94a3b8; font-size:14px; margin-bottom:4px;">Итоговое толкование</div>
-      <div id="dreamPreviewInterpret" style="white-space:pre-wrap; margin-bottom:18px; font-size:16px; color:var(--text-primary);"></div>
+
+    <!-- Текст сновидения -->
+    <div class="accordion expanded" id="accDreamText">
+      <div class="accordion-header">
+        <span class="label">Текст сновидения</span>
+        <span class="chev">▶</span>
+      </div>
+      <div class="accordion-content">
+        <div class="accordion-content-inner" id="dreamPreviewText"></div>
+      </div>
     </div>
-    <div style="display:flex; gap:12px; margin-top:32px; justify-content:space-between;">
+
+    <!-- Итоговое толкование -->
+    <div class="accordion" id="accGlobalInterpret">
+      <div class="accordion-header">
+        <span class="label">Итоговое толкование</span>
+        <span class="chev">▶</span>
+      </div>
+      <div class="accordion-content">
+        <div class="accordion-content-inner" id="dreamPreviewInterpret"></div>
+      </div>
+    </div>
+
+    <!-- Толкования блоков -->
+    <div class="accordion" id="accBlockInterprets">
+      <div class="accordion-header">
+        <span class="label">Толкования блоков</span>
+        <span class="chev">▶</span>
+      </div>
+      <div class="accordion-content">
+        <div class="accordion-content-inner" id="dreamPreviewBlocks"></div>
+      </div>
+    </div>
+
+    <!-- Похожие произведения искусства -->
+    <div class="accordion" id="accSimilarArt">
+      <div class="accordion-header">
+        <span class="label">Похожие произведения искусства</span>
+        <span class="chev">▶</span>
+      </div>
+      <div class="accordion-content">
+        <div class="accordion-content-inner" id="dreamPreviewSimilarWrap"></div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:16px; justify-content:space-between;">
       <button id="downloadDreamBtn" class="btn secondary" style="flex:1;">Скачать (txt)</button>
       <button id="loadDreamToEditorBtn" class="btn primary" style="flex:1;">Загрузить для толкования</button>
       <button id="findSimilarBtn" class="btn secondary" style="flex:1;">Схожий сценарий</button>
