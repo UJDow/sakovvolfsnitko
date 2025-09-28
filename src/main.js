@@ -934,8 +934,8 @@ const chat = {
   ui.setThinking(false);
 },
 
-  // Итоговое толкование всего сна
-  async globalInterpretation() {
+ // Итоговое толкование всего сна
+async globalInterpretation() {
   if (!state.currentDream) {
     utils.showToast('Сон не выбран', 'error');
     return;
@@ -961,6 +961,7 @@ const chat = {
     "Не задавай вопросов и избегай психоаналитических терминов. Выведи чистый текст без заголовков, кода и тегов.";
 
   ui.setThinking(true);
+
   try {
     // Попытка 1: с полным DREAM_TEXT_SAFE и склейкой финалов
     let payload = {
@@ -1005,9 +1006,11 @@ const chat = {
     utils.showToast('Итоговое толкование сна готово', 'success');
   } catch (e) {
     utils.showToast('Ошибка при итоговом толковании сна', 'error');
+  } finally {
+    // Гарантированно снимаем индикатор независимо от результата
+    ui.setThinking(false);
   }
-  ui.setThinking(false);
-}
+},
 
 ///////////////////////
 // === UI === //
