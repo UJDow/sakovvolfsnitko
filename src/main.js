@@ -417,33 +417,9 @@ function showMoonTooltip(text = 'Доступно толкование блок�
 }
 ///////////////////////
 // === API === //
-// --- SSE stream parser ---
-function isStreamEndpoint(path) {
-  return ['/analyze', '/summarize', '/find_similar'].includes(path);
-}
-
-async function readSSEStream(response, onChunk) {
-  const decoder = new TextDecoder();
-  const reader = response.body.getReader();
-  let buffer = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let lines = buffer.split('\n');
-    buffer = lines.pop(); // последний кусок может быть неполной строкой
-    for (const line of lines) {
-      if (line.startsWith('data:')) {
-        const data = line.slice(5).trim();
-        if (data === '[DONE]') return;
-        onChunk(data);
-      }
-    }
-  }
-}
-
+///////////////////////
 const api = {
-  async request(path, { method = 'GET', body = null, auth = true, onStream } = {}) {
+  async request(path, { method = 'GET', body = null, auth = true } = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (auth && state.jwt) headers['Authorization'] = 'Bearer ' + state.jwt;
     let resp;
@@ -470,24 +446,6 @@ const api = {
       utils.showToast('Лимит исчерпан, попробуйте позже', 'error');
       throw new Error('402');
     }
-
-    // --- Новый блок: если endpoint стримовый ---
-    if (isStreamEndpoint(path)) {
-      if (typeof onStream === 'function') {
-        await readSSEStream(resp, onStream);
-        return;
-      } else {
-        let result = '';
-        await readSSEStream(resp, chunk => { result += chunk; });
-        try {
-          return JSON.parse(result);
-        } catch {
-          return { content: result };
-        }
-      }
-    }
-
-    // --- Старое поведение для обычных endpoint'ов ---
     let data;
     try { data = await resp.json(); } catch { data = {}; }
     if (!resp.ok) {
@@ -852,90 +810,66 @@ async sendToAI(blockId) {
 
   const history = state.chatHistory[blockId] || [];
   const payload = buildAnalyzePayload({
-    fullHistory: state.chatHistory[blockId],
+    fullHistory: state.chatHistory[blockId], // вся история!
     blockText: block.text,
     rollingSummary: block.rollingSummary,
     extraSystemPrompt: null,
-    maxTurns: MAX_LAST_TURNS_TO_SEND
+    maxTurns: MAX_LAST_TURNS_TO_SEND // только для API
   });
 
-  let aiMsg = '';
   let lastError = null;
-  try {
-    await api.analyze(payload, {
-      onStream: (chunk) => {
-        // DeepSeek шлёт JSON-чанки
-        try {
-          const data = JSON.parse(chunk);
-          const delta = data.choices?.[0]?.delta?.content;
-          if (delta) {
-            aiMsg += delta;
-            // Показываем "печатающееся" сообщение в чате
-            if (!state.chatHistory[blockId]._streaming) {
-              state.chatHistory[blockId].push({ role: 'assistant', content: '' });
-              state.chatHistory[blockId]._streaming = true;
-            }
-            // Обновляем последний assistant-ответ
-            const last = state.chatHistory[blockId][state.chatHistory[blockId].length - 1];
-            last.content = aiMsg;
-            ui.updateChat();
-          }
-        } catch {
-          // Если не JSON — просто добавь chunk как есть
-          aiMsg += chunk;
-          if (!state.chatHistory[blockId]._streaming) {
-            state.chatHistory[blockId].push({ role: 'assistant', content: '' });
-            state.chatHistory[blockId]._streaming = true;
-          }
-          const last = state.chatHistory[blockId][state.chatHistory[blockId].length - 1];
-          last.content = aiMsg;
-          ui.updateChat();
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await api.analyze(payload);
+      let aiMsg = res?.choices?.[0]?.message?.content;
+      if (!aiMsg || typeof aiMsg !== 'string' || !aiMsg.trim()) {
+        aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
+      }
+      state.chatHistory[blockId].push({ role: 'assistant', content: aiMsg });
+      if (blockId === state.currentBlock?.id) {
+        ui.updateBlockInterpretButton();
+      }
+
+      block.turnsCount = (block.turnsCount || 0) + 1;
+
+      if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
+        const resSum = await api.summarize({
+          history,
+          blockText: block.text,
+          existingSummary: block.rollingSummary || ''
+        });
+        block.rollingSummary = resSum.summary || block.rollingSummary;
+        if (block.rollingSummary && block.rollingSummary.length > 2000) {
+          block.rollingSummary = block.rollingSummary.slice(-2000);
         }
+        block.turnsCount = 0;
       }
-    });
-    // После стрима — убираем флаг и сохраняем окончательный ответ
-    delete state.chatHistory[blockId]._streaming;
-    if (!aiMsg.trim()) aiMsg = 'Ошибка анализа: пустой ответ от сервера.';
-    // Уже добавлено в историю, просто обновляем UI
-    if (blockId === state.currentBlock?.id) {
-      ui.updateBlockInterpretButton();
-    }
-    block.turnsCount = (block.turnsCount || 0) + 1;
 
-    if (block.turnsCount >= MAX_TURNS_BEFORE_SUMMARY || history.length > 20) {
-      const resSum = await api.summarize({
-        history,
-        blockText: block.text,
-        existingSummary: block.rollingSummary || ''
-      });
-      block.rollingSummary = resSum.summary || block.rollingSummary;
-      if (block.rollingSummary && block.rollingSummary.length > 2000) {
-        block.rollingSummary = block.rollingSummary.slice(-2000);
+      ui.updateChat();
+      ui.updateProgressMoon();
+      if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
+      ui.setThinking(false);
+      return; // Успех — выходим
+    } catch (e) {
+      lastError = e;
+      console.error(`[debug] error in sendToAI, попытка ${attempt}:`, e);
+      // Не показываем ошибку пользователю на первой попытке
+      if (attempt === 1) continue;
+      // Если это вторая попытка — показываем ошибку как обычно
+      const history = state.chatHistory[blockId];
+      if (history.length && history[history.length - 1].content && history[history.length - 1].content.startsWith('Ошибка')) {
+        history.pop();
       }
-      block.turnsCount = 0;
+      state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
+      ui.updateChat();
+      ui.setThinking(false);
+      return;
     }
-
-    ui.updateChat();
-    ui.updateProgressMoon();
-    if (state.chatHistory[blockId].length >= 20) utils.showToast('Достигнут лимит сообщений', 'warning');
-    ui.setThinking(false);
-    return;
-  } catch (e) {
-    lastError = e;
-    console.error(`[debug] error in sendToAI:`, e);
-    // Если это ошибка — показываем как обычно
-    const history = state.chatHistory[blockId];
-    if (history.length && history[history.length - 1].content && history[history.length - 1].content.startsWith('Ошибка')) {
-      history.pop();
-    }
-    state.chatHistory[blockId].push({ role: 'assistant', content: 'Ошибка анализа' });
-    ui.updateChat();
-    ui.setThinking(false);
-    return;
   }
   ui.setThinking(false);
 },
 
+  // Итоговое толкование блока
 // Итоговое толкование блока
 async blockInterpretation() {
   if (!state.currentBlock) {
@@ -944,13 +878,13 @@ async blockInterpretation() {
   }
   const block = state.currentBlock;
   ui.setThinking(true);
-
-  // rollingSummary берём, lastTurns НЕ отправляем (или отправляем пустой массив)
-  const payload = {
-    blockText: block.text,
-    lastTurns: [],
-    rollingSummary: block.rollingSummary || null,
-    extraSystemPrompt: `
+  try {
+    // rollingSummary берём, lastTurns НЕ отправляем (или отправляем пустой массив)
+    const payload = {
+      blockText: block.text,
+      lastTurns: [], // Не отправляем диалоговые реплики, чтобы AI не продолжал беседу
+      rollingSummary: block.rollingSummary || null,
+      extraSystemPrompt: `
 Составь итоговое толкование этого блока сновидения (3–6 предложений), используя rolling summary и сам текст блока.
 Не продолжай диалог, а выдай итоговое толкование блока на основе всей информации выше.
 Свяжи общие мотивы: части тела, числа/цифры, запретные импульсы, детские переживания.
@@ -959,35 +893,14 @@ async blockInterpretation() {
 Избегай любых психоаналитических понятий и специальных терминов.
 Выведи только чистый текст без заголовков, без кода и без тегов.
 `
-  };
+    };
 
-  let interpretation = '';
-  try {
-    await api.analyze(payload, {
-      onStream: (chunk) => {
-        try {
-          const data = JSON.parse(chunk);
-          const delta = data.choices?.[0]?.delta?.content;
-          if (delta) {
-            interpretation += delta;
-            block.finalInterpretation = interpretation;
-            ui.updateChat();
-            ui.updateBlockInterpretButton();
-            ui.updateFinalInterpretButton();
-          }
-        } catch {
-          interpretation += chunk;
-          block.finalInterpretation = interpretation;
-          ui.updateChat();
-          ui.updateBlockInterpretButton();
-          ui.updateFinalInterpretButton();
-        }
-      }
-    });
-    if (!interpretation.trim()) {
+    const res = await api.analyze(payload);
+    let interpretation = res?.choices?.[0]?.message?.content;
+    if (!interpretation || typeof interpretation !== 'string' || !interpretation.trim()) {
       interpretation = 'Ошибка: пустой ответ от сервера.';
-      block.finalInterpretation = interpretation;
     }
+    block.finalInterpretation = interpretation;
     await dreams.saveCurrent(); // ← АВТОСОХРАНЕНИЕ!
     ui.updateChat();
     ui.updateBlockInterpretButton();
@@ -1240,56 +1153,56 @@ const ui = {
   },
 
   updateChat() {
-  const chatDiv = document.getElementById('chat');
-  if (!chatDiv) return;
-  chatDiv.innerHTML = '';
-  if (!state.currentBlock) {
-    document.getElementById('currentBlock').textContent = 'Блок не выбран';
-    return;
+    const chatDiv = document.getElementById('chat');
+    if (!chatDiv) return;
+    chatDiv.innerHTML = '';
+    if (!state.currentBlock) {
+      document.getElementById('currentBlock').textContent = 'Блок не выбран';
+      return;
+    }
+    document.getElementById('currentBlock').textContent =
+      'Блок: ' +
+      (state.currentBlock.text.length > 40
+        ? state.currentBlock.text.slice(0, 40) + '…'
+        : state.currentBlock.text);
+
+    const history = state.chatHistory[state.currentBlock.id] || [];
+    history.forEach(msg => {
+  const div = document.createElement('div');
+  div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
+  div.textContent = msg.content;
+
+  // Если это ошибка — добавляем кнопку "Повторить"
+  if (msg.content && msg.content.startsWith('Ошибка')) {
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'retry-btn';
+    retryBtn.textContent = 'Повторить запрос';
+    retryBtn.onclick = async () => {
+      await chat.sendToAI(state.currentBlock.id);
+    };
+    div.appendChild(retryBtn);
   }
-  document.getElementById('currentBlock').textContent =
-    'Блок: ' +
-    (state.currentBlock.text.length > 40
-      ? state.currentBlock.text.slice(0, 40) + '…'
-      : state.currentBlock.text);
 
-  const history = state.chatHistory[state.currentBlock.id] || [];
-  history.forEach(msg => {
-    const div = document.createElement('div');
-    div.className = 'msg ' + (msg.role === 'user' ? 'user' : 'bot');
-    div.textContent = msg.content;
+  chatDiv.appendChild(div);
+});
 
-    // Если это ошибка — добавляем кнопку "Повторить"
-    if (msg.content && msg.content.startsWith('Ошибка')) {
-      const retryBtn = document.createElement('button');
-      retryBtn.className = 'retry-btn';
-      retryBtn.textContent = 'Повторить запрос';
-      retryBtn.onclick = async () => {
-        await chat.sendToAI(state.currentBlock.id);
-      };
-      div.appendChild(retryBtn);
+    if (state.currentBlock.finalInterpretation) {
+      const div = document.createElement('div');
+      div.className = 'msg bot final';
+      div.textContent = String(state.currentBlock.finalInterpretation || '');
+      chatDiv.appendChild(div);
     }
 
-    chatDiv.appendChild(div);
-  });
+    chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
+    setTimeout(() => {
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+      ui.updateJumpToBottomVisibility();
+      bindChatEvents();
+    }, 0);
 
-  if (state.currentBlock.finalInterpretation) {
-    const div = document.createElement('div');
-    div.className = 'msg bot final';
-    div.textContent = String(state.currentBlock.finalInterpretation || '');
-    chatDiv.appendChild(div);
-  }
-
-  chatDiv.appendChild(document.createElement('div')).className = 'chat-stabilizer';
-  setTimeout(() => {
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-    ui.updateJumpToBottomVisibility();
-    bindChatEvents();
-  }, 0);
-
-  ui.updateBlockInterpretButton();
-  ui.updateBlockNav();
-},
+    ui.updateBlockInterpretButton();
+    ui.updateBlockNav();
+  },
 
   updateBlockNav() {
     const prevDiv = document.getElementById('prevPreview');
